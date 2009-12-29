@@ -1,0 +1,80 @@
+{%extends "tracker/base.html"%}
+
+{%load intensity_tags %}
+
+{%load humanize %}
+{%block mainmenubody%}
+<script type="text/javascript">
+    $('#tracker_account').addClass('current');
+</script>
+
+<h1>Details</h1>
+<ul>
+  {%if not is_my_account%}
+    <li>Nickname: <b>{{account.nickname}}</b></li>
+  {%else%}
+    <li>Nickname (seen by others): <b>{{account.nickname}}</b></li>
+    <li>Username: <b>{{user.username}}</b></li>
+    <li>Email: <b>{{user.email}}</b></li>
+    <!--li>Server instance time: <b>{{account.seconds_left|timesizeformat}}</b></li>
+    <li>Asset storage remaining: <b>{{account.kb_storage_left|filesizeformat}}</b></li-->
+  {%endif%}
+</ul>
+
+<br>
+
+{%if is_my_account%}
+{%if instances|length%}
+<div class="big_para">
+<p>
+Requisitioned server instances:
+<ul>
+{%for instance in instances%}
+  <li><table><tr>
+    <td><b>{{instance|hl_instance}}</b></td>
+    <td><input type="button" onclick="window.location.href='/tracker/instance/unrequisition/{{instance.uuid}}/'" value="Free"></td>
+    {{instance.component_data}}
+  </tr></table></li>
+{%endfor%}
+</ul>
+</p>
+</div>
+
+<br>
+
+{%endif%}
+<h1>Content</h1>
+<form method="GET" action="/tracker/account/error_log/view/">
+<input type="submit" value="View last error log from requisitioned server">
+</form>
+
+<p>
+<ul>
+  <li><a href="/tracker/activities/?only_mine=on">My activities</a></li>
+  <li><a href="/tracker/assets/?only_mine=on">My assets</a></li>
+</ul>
+</p>
+
+{% if tools|length %}
+<p>
+<h1>Tools</h1>
+<ul>
+  {% for tool in tools %}
+    <li>{{tool}}</li>
+  {% endfor %}
+</ul>
+</p>
+{% endif %}
+
+<p>
+<h1>Settings</h1>
+
+<form method="GET" action="/accounts/changepassword/">
+<input type="submit" value="Change password">
+</form>
+</p>
+
+{%endif%}
+
+{%endblock%}
+

@@ -1,0 +1,56 @@
+
+/*
+ *=============================================================================
+ * Copyright (C) 2008 Alon Zakai ('Kripken') kripkensteiner@gmail.com
+ *
+ * This file is part of the Intensity Engine project,
+ *    http://www.intensityengine.com
+ *
+ * The Intensity Engine is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * The Intensity Engine is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with the Intensity Engine.  If not, see
+ *     http://www.gnu.org/licenses/
+ *     http://www.gnu.org/licenses/agpl-3.0.html
+ *=============================================================================
+ */
+
+
+// General
+
+exposeToPython("initPython", initPython);
+
+exposeToPython("set_home_dir", sethomedir);
+
+exposeToPython("init_logging", &Logging::init);
+exposeToPython("curr_time",    &Utility::SystemInfo::currTime);
+
+exposeToPython("log", &Logging::log_noformat);
+exposeToPython("should_show", &logging__should_show);
+
+exposeToPython("render_progress", render_progress);
+
+// Scripting
+
+exposeToPython("has_engine", ScriptEngineManager::hasEngine);
+exposeToPython("run_script", ScriptEngineManager::runScriptNoReturn);
+exposeToPython("run_script_string", ScriptEngineManager::runScriptString);
+exposeToPython("run_script_int", ScriptEngineManager::runScriptInt);
+
+exposeToPython("run_cubescript", execute);
+
+// World
+
+exposeToPython("load_world", load_world_oneparam);
+
+
+// Include messages so Python can use them
+#include "messages_boost.cpp"
+

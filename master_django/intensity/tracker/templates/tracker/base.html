@@ -1,0 +1,20 @@
+{%extends "base.html"%}
+
+{%block mainmenu%}
+<script type="text/javascript">
+    $('#nav_tracker').addClass('current');
+</script>
+
+<div id="menu">
+    <ul>
+        <li class="first"><a style="width: 94px;" href="/tracker/overview/" id="tracker_overview">Overview</a></li>
+        <li><a style="width: 94px;" href="/tracker/account/" id="tracker_account">Accounts</a></li>
+        <li><a style="width: 141px;" href="/tracker/instances/" id="tracker_instances">Server Instances</a></li>
+        <li><a style="width: 89px;" href="/tracker/activities/" id="tracker_activities">Activities</a></li>
+        <li><a style="width: 82px;" href="/tracker/assets/" id="tracker_assets">Assets</a></li>
+        <li class="last"><a style="width: 76px;" href="/tracker/forum/" id="tracker_forum">Forum</a></li>
+    </ul>
+</div>
+<!--  class="current" -->
+{%endblock%}
+

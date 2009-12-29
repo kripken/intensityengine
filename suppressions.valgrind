@@ -1,0 +1,142 @@
+{
+   Python2.5
+   Memcheck:Addr4
+   obj:/usr/bin/python2.5
+}
+{
+   Python2.5
+   Memcheck:Cond
+   obj:/usr/bin/python2.5
+}
+{
+   Python2.5
+   Memcheck:Value4
+   obj:/usr/bin/python2.5
+}
+{
+   libasound
+   Memcheck:Param
+   semctl(IPC_SET, arg.buf)
+   obj:/lib/ld-2.8.90.so
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_dmix_open
+   fun:_snd_pcm_dmix_open
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:_snd_pcm_softvol_open
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:_snd_pcm_plug_open
+   obj:/usr/lib/libasound.so.2.0.0
+}
+{
+   NVidia
+   Memcheck:Addr4
+   obj:/usr/lib/libGLcore.so.177.80
+}
+{
+   NVidia
+   Memcheck:Cond
+   obj:/usr/lib/libGLcore.so.177.80
+}
+{
+   NVidia
+   Memcheck:Value4
+   obj:/usr/lib/libGLcore.so.177.80
+}
+{
+   SDL
+   Memcheck:Addr4
+   obj:/usr/lib/libSDL-1.2.so.0.11.1
+}
+{
+   SDL
+   Memcheck:Cond
+   obj:/usr/lib/libSDL-1.2.so.0.11.1
+}
+{
+   SDL
+   Memcheck:Value4
+   obj:/usr/lib/libSDL-1.2.so.0.11.1
+}
+{
+   PCM
+   Memcheck:Overlap
+   fun:memcpy
+   fun:snd_pcm_area_copy
+}
+{
+   asound
+   Memcheck:Param
+   ioctl(arg)
+   obj:/lib/ld-2.8.90.so
+   fun:snd_pcm_hwsync
+   obj:/usr/lib/libasound.so.2.0.0
+}
+{
+   asound
+   Memcheck:Param
+   ioctl(arg)
+   obj:/lib/ld-2.8.90.so
+   fun:snd_timer_start
+   obj:/usr/lib/libasound.so.2.0.0
+}
+{
+   snd_timer_stop
+   Memcheck:Param
+   ioctl(arg)
+   obj:/lib/ld-2.8.90.so
+   fun:snd_timer_stop
+}
+{
+   WORRYING ENet SUPPRESSION XXX FIXME TODO
+   Memcheck:Param
+   socketcall.sendmsg(msg.msg_iov[i])
+   obj:/lib/ld-2.8.90.so
+   fun:enet_protocol_send_outgoing_commands
+   fun:enet_host_service
+   fun:_Z6gets2cv
+   fun:_ZN4game11updateworldEv
+   fun:_Z10sauer_mainiPPc
+   fun:_Z11client_mainv
+   fun:_ZN5boost6python6detail6invokeIiPFvvEEEP7_objectNS1_11invoke_tag_ILb1ELb0EEERKT_RT0_
+   fun:_ZN5boost6python6detail12caller_arityILj0EE4implIPFvvENS0_21default_call_policiesENS_3mpl7vector1IvEEEclEP7_objectSD_
+   fun:_ZN5boost6python7objects23caller_py_function_implINS0_6detail6callerIPFvvENS0_21default_call_policiesENS_3mpl7vector1IvEEEEEclEP7_objectSE_
+   fun:_ZNK5boost6python7objects8function4callEP7_objectS4_
+   obj:/usr/lib/libboost_python-gcc42-1_34_1-py25.so.1.34.1
+}
+{
+   !ANOTHER! WORRYING ENet SUPPRESSION XXX FIXME TODO
+   Memcheck:Param
+   socketcall.sendmsg(msg.msg_iov[i])
+   obj:/lib/ld-2.8.90.so
+   fun:enet_protocol_send_outgoing_commands
+   fun:enet_host_service
+   fun:_Z15clientkeepalivev
+   fun:_Z14renderprogressfPKcjb
+   fun:_Z10load_worldPKcS0_
+   fun:_Z19load_world_oneparamPKc
+   fun:_ZN5boost6python6detail6invokeIiPFvPKcENS0_15arg_from_pythonIS4_EEEEP7_objectNS1_11invoke_tag_ILb1ELb0EEERKT_RT0_RT1_
+   fun:_ZN5boost6python6detail12caller_arityILj1EE4implIPFvPKcENS0_21default_call_policiesENS_3mpl7vector2IvS6_EEEclEP7_objectSF_
+   fun:_ZN5boost6python7objects23caller_py_function_implINS0_6detail6callerIPFvPKcENS0_21default_call_policiesENS_3mpl7vector2IvS6_EEEEEclEP7_objectSG_
+   fun:_ZNK5boost6python7objects8function4callEP7_objectS4_
+   obj:/usr/lib/libboost_python-gcc42-1_34_1-py25.so.1.34.1
+}
+
+{
+   V8 issue
+   Memcheck:Addr4
+   fun:_ZN2v88internal8JSObject11LocalLookupEPNS0_6StringEPNS0_12LookupResultE
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+   obj:*
+}
+
+
+
+
+
+

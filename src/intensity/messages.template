@@ -1,0 +1,861 @@
+
+//=============================================================================
+// Copyright (C) 2008 Alon Zakai ('Kripken') kripkensteiner@gmail.com
+//
+// This file is part of the Intensity Engine project,
+//    http://www.intensityengine.com
+//
+// The Intensity Engine is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published by
+// the Free Software Foundation, version 3.
+//
+// The Intensity Engine is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with the Intensity Engine.  If not, see
+//     http://www.gnu.org/licenses/
+//     http://www.gnu.org/licenses/agpl-3.0.html
+//=============================================================================
+
+
+//
+// Message template file. Actual C++ code is procedurally generated from this file.
+// The file format is intuitive, but *extremely* strict! Do not diverge!
+// Indentation is used to infer structure. Follow the examples carefully
+//
+// implicit clientNumber: a parameter, that is given to the message passer but is part of the message 'header',
+// and not in the format string. See examples for how this is used.
+//
+// Also implicit is 'sender', the server has this set to the # of the client sending the message.
+// Another implicit is 'receiver', this is the receiving client #. On the Client, we only have the Player,
+// but on the server we have multiple NPCs, each with its own client #. In the future we may also allow multiple
+// NPCs on the client, or multiple servers, etc. Note: When the server receives a message, receiver is '-1'.
+//
+// 'npc' is a bool that is set to true for npc events. Only relevant for server->client,npc (server->client is
+// of course not sent to npcs).
+//
+// client->server       - obvious
+// server->client       - obvious. Not sent to NPCs
+// server->client,npc   - Send to NPCs as well
+// server->client,dummy - Sent to the server's singleton dummy fpsclient. This lets the server's internal fpsclient be updated.
+//
+
+// A direct message from server to a single client
+PersonalServerMessage(server->client)
+    implicit clientNumber
+    int originClientNumber
+    std::string title
+    std::string content
+    receive:
+        IntensityGUI::showMessage(title, content, originClientNumber);
+end
+
+// A request for the server to send a message to all other clients
+RequestServerMessageToAll(client->server)
+    std::string message
+    receive:
+        send_PersonalServerMessage(-1, sender, "Message from Client", message);
+end
+
+
+// TODO: If LoginRequest is not called soon enough, disconnect enet clients in that state
+LoginRequest(client->server)
+    std::string code // A proof code from the master server, which can be used to verify the
+                     // identity of this user
+    receive:
+        #ifdef SERVER
+            REFLECT_PYTHON( do_login );
+
+            do_login(code, sender, getclientip(sender));
+        #else // CLIENT, during a localconnect
+            ClientSystem::uniqueId = 9999; // Dummy safe uniqueId value for localconnects. Just set it here, brute force
+
+            // Notify client of results of login
+            send_LoginResponse(sender, true, true);
+        #endif
+end
+
+// A notification sent from the server during the login process. This is sent *before* the player's logic entity
+// is activated, which would send out a notification to the player. The player needs to know their uniqueId before
+// that, which this message does.
+YourUniqueId(server->client)
+    implicit clientNumber
+    int uniqueId // the unique ID for the client (in the currently-running module) // TODO: A message for 'switchmodule', w/new uniqueID
+    send:
+        // Remember this client's unique ID. Done here so always in sync with the client's belief about its uniqueId.
+        FPSServerInterface::getUniqueId(clientNumber) = uniqueId;
+    receive:
+        Logging::log(Logging::DEBUG, "Told my unique ID: %d\r\n", uniqueId);
+
+        ClientSystem::uniqueId = uniqueId;
+end
+
+//
+LoginResponse(server->client)
+    implicit clientNumber
+    bool success
+    bool local
+    send:
+        // If logged in OK, this is the time to create a scripting logic entity for the client. Also adds to internal FPSClient
+        if (success)
+            server::createScriptingEntity(clientNumber);
+    receive:
+        if (success)
+        {
+            ClientSystem::finishLogin(local); // This player will be known as 'uniqueID' in the current module
+            conoutf("Login was successful.\r\n");
+            send_RequestCurrentScenario();
+        } else {
+            conoutf("Login failure. Please check your username and password.\r\n");
+            disconnect();
+        }
+end
+
+// Tells the client that the server is starting to run a new scenario. The client should
+// (1) stop sending position updates, (2) show a message to the client, and (3) probably stop rendering, or reduce
+// rendering to a limited capacity
+PrepareForNewScenario(server->client)
+    implicit clientNumber
+    std::string scenarioCode
+    receive:
+        IntensityGUI::showMessage("Server", "New map being prepared on server, please wait");
+        ClientSystem::prepareForNewScenario(scenarioCode);
+end
+
+//
+RequestCurrentScenario(client->server)
+    receive:
+        if (!ServerSystem::isRunningMap()) return;
+
+        REFLECT_PYTHON( send_curr_map );
+        send_curr_map(sender);
+end
+
+// Tells the client that the scenario has changed, and the client should acquire the current map, using the name
+// that we give them. The map is acquired using the asset system.
+// This message is used both for changing the map, and for notifying about an update to the map,
+// and hence it flushes the assetID cache. TODO: Make this fine-grained
+// TODO: Need activity ID?
+NotifyAboutCurrentScenario(server->client)
+    implicit clientNumber
+    std::string mapAssetId
+    std::string scenarioCode
+    receive:
+        ClientSystem::currScenarioCode = scenarioCode;
+
+        REFLECT_PYTHON( AssetManager );
+        REFLECT_PYTHON( set_map );
+
+        AssetManager.attr("clear_cache")();
+        set_map("", mapAssetId);
+end
+
+// Tells the server that it should restart, e.g., if this client has updated the map, by uploading a new version
+// to the asset server. Server clears its cache (so it will get the new version), and
+// re-starts the map
+RestartMap(client->server)
+    receive:
+        if (!ServerSystem::isRunningMap()) return;
+
+        if (!server::isAdmin(sender))
+        {
+            Logging::log(Logging::WARNING, "Non-admin tried to restart the map\r\n");
+            send_PersonalServerMessage(sender, -1, "Server", "You are not an administrator, and cannot restart the map");
+            return;
+        }
+
+        REFLECT_PYTHON( AssetManager );
+        REFLECT_PYTHON( get_curr_activity_id );
+        REFLECT_PYTHON( get_curr_map_asset_id );
+        REFLECT_PYTHON( set_map );
+
+        AssetManager.attr("clear_cache")();
+        std::string activityId = python::extract<std::string>(get_curr_activity_id());
+        std::string mapAssetId = python::extract<std::string>(get_curr_map_asset_id());
+        set_map(activityId, mapAssetId);
+end
+
+// A new Entity is asked to be created by a client
+NewEntityRequest(client->server)
+    std::string _class // In our Python system, not sauer raw types.
+    float x
+    float y
+    float z
+    std::string stateData
+    send:
+        EditingSystem::madeChanges = true;
+    receive:
+        if (!ServerSystem::isRunningMap()) return;
+
+        if (!server::isAdmin(sender))
+        {
+            Logging::log(Logging::WARNING, "Non-admin tried to add an entity\r\n");
+            send_PersonalServerMessage(sender, -1, "Server", "You are not an administrator, and cannot create entities");
+            return;
+        }
+
+        // Validate class
+
+        if (!EditingSystem::validateEntityClass(_class))
+        {
+            Logging::log(Logging::WARNING, "User tried to add an invalid entity: %s\r\n", _class.c_str());
+            send_PersonalServerMessage(
+                sender,
+                -1,
+                "Invalid entity class: " + _class,
+                "Reminder: Create entities using F8, not /newent. See the wiki for more."
+            );
+            return;
+        }
+
+        // Add entity
+
+        Logging::log(Logging::DEBUG, "Creating new entity, %s   %f,%f,%f   %s\r\n", _class.c_str(), x, y, z, stateData.c_str());
+
+        if ( !server::isRunningCurrentScenario(sender) ) return; // Silently ignore info from previous scenario
+
+        std::string sauerType = ScriptEngineManager::getGlobal()->call("getEntitySauerType", _class)->getString();
+
+        Logging::log(Logging::DEBUG, "Sauer type: %s\r\n", sauerType.c_str());
+
+        python::list params;
+        if (sauerType != "dynent")
+            params.append(findtype((char*)sauerType.c_str()));
+
+        params.append(x);
+        params.append(y);
+        params.append(z);
+
+//        REFLECT_PYTHON( persistent_add ); XXX TODO
+        // Create
+
+        ScriptValuePtr kwargs = ScriptEngineManager::createScriptObject();
+        ScriptValuePtr position = ScriptEngineManager::createScriptObject();
+
+        kwargs->setProperty("position", position);
+
+        position->setProperty("x", x);
+        position->setProperty("y", y);
+        position->setProperty("z", z);
+
+        kwargs->setProperty("stateData", stateData);
+
+        ScriptValuePtr scriptEntity = ScriptEngineManager::getGlobal()->call("newEntity",
+            ScriptValueArgs().append(_class).append(kwargs)
+        );
+
+        int newUniqueId = scriptEntity->getPropertyInt("uniqueId");
+
+        Logging::log(Logging::DEBUG, "Created Entity: %d - %s  (%f,%f,%f) \r\n",
+                                      newUniqueId, _class.c_str(), x, y, z);
+
+end
+
+// Server sending a state data change to client(s) (typically all of them). Blindly obeyed.
+StateDataUpdate(server->client,npc)
+    implicit clientNumber
+    int uniqueId
+    int keyProtocolId
+    std::string value
+    int originalClientNumber
+    send:
+        exclude = originalClientNumber;
+    receive:
+        #ifdef SERVER
+            #define STATE_DATA_UPDATE \
+                uniqueId = uniqueId;  /* Prevent warnings */ \
+                keyProtocolId = keyProtocolId; \
+                originalClientNumber = originalClientNumber; \
+                return; /* We do send this to the NPCs sometimes, as it is sent during their creation (before they are fully */ \
+                        /* registered even). But we have no need to process it on the server. */
+        #else
+            #define STATE_DATA_UPDATE \
+                assert(originalClientNumber == -1 || ClientSystem::playerNumber != originalClientNumber); /* Can be -1, or else cannot be us */ \
+                \
+                Logging::log(Logging::DEBUG, "StateDataUpdate: %d, %d, %s \r\n", uniqueId, keyProtocolId, value.c_str()); \
+                \
+                if (!ScriptEngineManager::hasEngine()) \
+                    return; \
+                \
+                ScriptEngineManager::getGlobal()->call("setStateDatum", \
+                    ScriptValueArgs().append(uniqueId).append(keyProtocolId).append(value) \
+                );
+        #endif
+
+        STATE_DATA_UPDATE
+end
+
+// Client *requests* to change a state data. Server decides what to actually do (perhaps the door can't be opened, or has
+// already been opened while the message was being transferred, etc.)
+// FIXME XXX: SECURITY: need to validate 'key' and 'value' values before being run on the server like we do here.
+StateDataChangeRequest(client->server)
+    int uniqueId
+    int keyProtocolId
+    std::string value
+    send:
+        // This isn't a perfect way to differentiate transient state data changes from permanent ones
+        // that justify saying 'changes were made', but for now it will do. Note that even checking
+        // for changes to persistent entities is not enough - transient changes on them are generally
+        // not expected to count as 'changes'. So this check, of editmode, is the best simple solution
+        // there is - if you're in edit mode, the change counts as a 'real change', that you probably
+        // want saved.
+        // Note: We don't do this with unreliable messages, meaningless anyhow.
+        if (editmode)
+            EditingSystem::madeChanges = true;
+    receive:
+        if (!ServerSystem::isRunningMap()) return;
+
+        #define STATE_DATA_REQUEST \
+        int actorUniqueId = FPSServerInterface::getUniqueId(sender); \
+        \
+        Logging::log(Logging::DEBUG, "client %d requests to change %d to value: %s\r\n", actorUniqueId, keyProtocolId, value.c_str()); \
+        \
+        if ( !server::isRunningCurrentScenario(sender) ) return; /* Silently ignore info from previous scenario */ \
+        \
+        ScriptEngineManager::getGlobal()->call("setStateDatum", \
+            ScriptValueArgs().append(uniqueId).append(keyProtocolId).append(value).append(actorUniqueId) \
+        );
+
+        STATE_DATA_REQUEST
+end
+
+UnreliableStateDataUpdate(server->client,npc)
+    unreliable
+    implicit clientNumber
+    int uniqueId
+    int keyProtocolId
+    std::string value
+    int originalClientNumber
+    send:
+        exclude = originalClientNumber;
+    receive:
+        STATE_DATA_UPDATE
+end
+
+UnreliableStateDataChangeRequest(client->server)
+    unreliable
+    int uniqueId
+    int keyProtocolId
+    std::string value
+    receive:
+        if (!ServerSystem::isRunningMap()) return;
+
+        STATE_DATA_REQUEST
+end
+
+NotifyNumEntities(server->client)
+    implicit clientNumber
+    int num
+    receive:
+        WorldSystem::setNumExpectedEntities(num);
+end
+
+// Sent by the server right after all active entities. This signals that no further entities are going to be sent,
+// and that therefore the client has all the data needed to finish loading the map and starting the scenario.
+AllActiveEntitiesSent(server->client)
+    implicit clientNumber
+    receive:
+        ClientSystem::finishLoadWorld();
+end
+
+// Loading a map is complete, asking for data on all entities, both in-map and non  (NPCs, non-Sauers, etc.)
+ActiveEntitiesRequest(client->server)
+    std::string scenarioCode // The scenario the client is running, i.e., for which it wants the entities
+    receive:
+        #ifdef SERVER
+            if (!ServerSystem::isRunningMap()) return;
+
+            // Mark the client as running the current scenario, if indeed doing so
+            server::setClientScenario(sender, scenarioCode);
+            if ( !server::isRunningCurrentScenario(sender) )
+            {
+                Logging::log(Logging::WARNING, "Client %d requested active entities for an invalid scenario: %s\r\n",
+                    sender, scenarioCode.c_str()
+                );
+                send_PersonalServerMessage(sender, -1, "Invalid scenario", "An error occured in synchronizing scenarios");
+                return;
+            }
+
+            ScriptEngineManager::getGlobal()->call("sendEntities", sender);
+
+            MessageSystem::send_AllActiveEntitiesSent(sender);
+
+            ScriptEngineManager::getGlobal()->getProperty("ApplicationManager")->getProperty("instance")->call(
+                "onPlayerLogin",
+                ScriptEngineManager::getGlobal()->call("getEntity", FPSServerInterface::getUniqueId(sender))
+            );
+
+        #else // CLIENT
+            // Send just enough info for the player's LE
+            send_LogicEntityCompleteNotification( sender,
+                                                  sender,
+                                                  9999, // TODO: this same constant appears in multiple places
+                                                  "Player",
+                                                  "{}" );
+
+            MessageSystem::send_AllActiveEntitiesSent(sender);
+
+        #endif
+end
+
+// Information about a logic entity. Arrives with full state data. For map entities, the entity already exists,
+// and this just updates the state data completely
+LogicEntityCompleteNotification(server->client,npc)
+    implicit clientNumber
+    int otherClientNumber
+    int otherUniqueId
+    std::string otherClass
+    std::string stateData
+    receive:
+        #ifdef SERVER
+            return; // We do send this to the NPCs sometimes, as it is sent during their creation (before they are fully
+                    // registered even). But we have no need to process it on the server.
+        #endif
+        if (!ScriptEngineManager::hasEngine())
+            return;
+
+        Logging::log(Logging::DEBUG, "RECEIVING LE: %d,%d,%s\r\n", otherClientNumber, otherUniqueId, otherClass.c_str());
+        INDENT_LOG(Logging::DEBUG);
+
+        // If a logic entity does not yet exist, create one
+        LogicEntityPtr entity = LogicSystem::getLogicEntity(otherUniqueId);
+        if (entity.get() == NULL)
+        {
+            Logging::log(Logging::DEBUG, "Creating new active LogicEntity\r\n");
+
+            ScriptValuePtr kwargs = ScriptEngineManager::createScriptObject();
+
+            if (otherClientNumber >= 0) // If this is another client, NPC, etc., then send the clientnumber, critical for setup
+            {
+                #ifdef CLIENT
+                    // If this is the player, validate it is the clientNumber we already have
+                    if (otherUniqueId == ClientSystem::uniqueId)
+                    {
+                        Logging::log(Logging::DEBUG, "This is the player's entity (%d), validating client num: %d,%d\r\n",
+                            otherUniqueId, otherClientNumber, ClientSystem::playerNumber);
+
+                        assert(otherClientNumber == ClientSystem::playerNumber);
+                    }
+                #endif
+
+                kwargs->setProperty("clientNumber", otherClientNumber);
+            }
+
+            ScriptEngineManager::getGlobal()->call("addEntity",
+                ScriptValueArgs().append(otherClass).append(otherUniqueId).append(kwargs)
+            );
+
+            entity = LogicSystem::getLogicEntity(otherUniqueId);
+
+            if (!entity.get())
+            {
+                Logging::log(Logging::ERROR, "Received a LogicEntityCompleteNotification for a LogicEntity that cannot be created: %d - %s. Ignoring\r\n", otherUniqueId, otherClass.c_str());
+                return;
+            }
+        } else
+            Logging::log(Logging::DEBUG, "Existing LogicEntity %d,%d,%d, no need to create\r\n", entity.get() != NULL, entity->getUniqueId(),
+                                            otherUniqueId);
+
+        // A logic entity now exists (either one did before, or we created one), we now update the stateData, if we
+        // are remotely connected (TODO: make this not segfault for localconnect)
+        Logging::log(Logging::DEBUG, "Updating stateData with: %s\r\n", stateData.c_str());
+
+        ScriptValuePtr sd = ScriptEngineManager::createScriptValue(stateData);
+        entity.get()->scriptEntity->call("_updateCompleteStateData", sd);
+
+        #ifdef CLIENT
+            // If this new entity is in fact the Player's entity, then we finally have the player's LE, and can link to it.
+            if (otherUniqueId == ClientSystem::uniqueId)
+            {
+                Logging::log(Logging::DEBUG, "Linking player information, uid: %d\r\n", otherUniqueId);
+
+                // Note in C++
+                ClientSystem::playerLogicEntity = LogicSystem::getLogicEntity(ClientSystem::uniqueId);
+
+                // Note in Scripting
+                ScriptEngineManager::getGlobal()->call("setPlayerUniqueId",ClientSystem::uniqueId);
+            }
+        #endif
+
+        // Events post-reception
+        WorldSystem::triggerReceivedEntity();
+end
+
+RequestLogicEntityRemoval(client->server)
+    int uniqueId
+    send:
+        EditingSystem::madeChanges = true;
+    receive:
+        if (!ServerSystem::isRunningMap()) return;
+
+        if (!server::isAdmin(sender))
+        {
+            Logging::log(Logging::WARNING, "Non-admin tried to remove an entity\r\n");
+            send_PersonalServerMessage(sender, -1, "Server", "You are not an administrator, and cannot remove entities");
+            return;
+        }
+
+        if ( !server::isRunningCurrentScenario(sender) ) return; // Silently ignore info from previous scenario
+
+        ScriptEngineManager::getGlobal()->call("removeEntity", uniqueId);
+end
+
+// Notifies to remove a LogicEntity
+LogicEntityRemoval(server->client)
+    implicit clientNumber
+    int uniqueId
+    receive:
+        if (!ScriptEngineManager::hasEngine())
+            return;
+
+        ScriptEngineManager::getGlobal()->call("removeEntity", uniqueId);
+end
+
+ExtentCompleteNotification(server->client)
+    implicit clientNumber
+    int otherUniqueId
+    std::string otherClass
+    std::string stateData
+    float x
+    float y
+    float z
+    int attr1
+    int attr2
+    int attr3
+    int attr4
+    receive:
+        if (!ScriptEngineManager::hasEngine())
+            return;
+
+        #if 0
+        Something like this:
+            extentity &e = *et->getents()[i];
+            removeentity(i);
+            int oldtype = e.type;
+            if(oldtype!=type) detachentity(e);
+            e.type = type;
+            e.o = o;
+            e.attr1 = attr1; e.attr2 = attr2; e.attr3 = attr3; e.attr4 = attr4;
+            addentity(i);
+        #endif
+
+        Logging::log(Logging::DEBUG, "RECEIVING Extent: %d,%s - %f,%f,%f  %d,%d,%d\r\n", otherUniqueId, otherClass.c_str(),
+            x, y, z, attr1, attr2, attr3, attr4);
+
+        INDENT_LOG(Logging::DEBUG);
+
+        // If a logic entity does not yet exist, create one
+        LogicEntityPtr entity = LogicSystem::getLogicEntity(otherUniqueId);
+        if (entity.get() == NULL)
+        {
+            Logging::log(Logging::DEBUG, "Creating new active LogicEntity\r\n");
+
+            std::string sauerType = ScriptEngineManager::getGlobal()->call("getEntitySauerType", otherClass)->getString();
+
+            ScriptValuePtr kwargs = ScriptEngineManager::createScriptObject();
+            kwargs->setProperty("_type", findtype((char*)sauerType.c_str()));
+            kwargs->setProperty("x", x);
+            kwargs->setProperty("y", y);
+            kwargs->setProperty("z", z);
+            kwargs->setProperty("attr1", attr1);
+            kwargs->setProperty("attr2", attr2);
+            kwargs->setProperty("attr3", attr3);
+            kwargs->setProperty("attr4", attr4);
+
+            ScriptEngineManager::getGlobal()->call("addEntity",
+                    ScriptValueArgs().append(otherClass).append(otherUniqueId).append(kwargs)
+            );
+
+            entity = LogicSystem::getLogicEntity(otherUniqueId);
+            assert(entity.get() != NULL);
+        } else
+            Logging::log(Logging::DEBUG, "Existing LogicEntity %d,%d,%d, no need to create\r\n", entity.get() != NULL, entity->getUniqueId(),
+                                            otherUniqueId);
+
+        // A logic entity now exists (either one did before, or we created one), we now update the stateData, if we
+        // are remotely connected (TODO: make this not segfault for localconnect)
+        Logging::log(Logging::DEBUG, "Updating stateData\r\n");
+
+        ScriptValuePtr sd = ScriptEngineManager::createScriptValue(stateData);
+        entity.get()->scriptEntity->call("_updateCompleteStateData", sd);
+
+        // Events post-reception
+        WorldSystem::triggerReceivedEntity();
+end
+
+// Client number is sent also explicitly here, so the client finds it out
+InitS2C(server->client)
+    implicit clientNumber
+    int explicitClientNumber
+    int protocolVersion
+    receive:
+        if (!is_npc)
+        {
+            Logging::log(Logging::DEBUG, "client.h: SV_INITS2C gave us cn/protocol: %d/%d\r\n", explicitClientNumber, protocolVersion);
+
+            if(protocolVersion != PROTOCOL_VERSION)
+            {
+                conoutf(CON_ERROR, "You are using a different network protocol (you: %d, server: %d)", PROTOCOL_VERSION, protocolVersion);
+                disconnect();
+                return;
+            }
+
+            fpsent *player1 = dynamic_cast<fpsent*>( FPSClientInterface::getClientPlayer() );
+
+            player1->clientnum = explicitClientNumber; // we are now fully connected
+                                                       // Kripken: Well, sauer would be, we still need more...
+            #ifdef CLIENT
+            ClientSystem::login(explicitClientNumber); // Finish the login process, send server our user/pass. NPCs need not do this.
+            #endif
+        } else {
+            // NPC
+            Logging::log(Logging::INFO, "client.h (npc): SV_INITS2C gave us cn/protocol: %d/%d\r\n", explicitClientNumber, protocolVersion);
+            assert(0); //does this ever occur?
+        }
+end
+
+// Client asks to change a map. Probably only for localconnects (login screen etc.)
+MapVote(client->server)
+    std::string name
+    receive:
+        assert(0); // DEPRECATED XXX
+end
+
+// Server changes the map. XXX Deprecate in favor of NotifyAboutCurrentMap
+MapChange(server->client)
+    implicit clientNumber
+    std::string name
+    receive:
+        // If loading the new map fails, return to login screen. TODO: Add error message in CEGUI
+        if ( !load_world(name.c_str()) )
+            ClientSystem::gotoLoginScreen();
+end
+
+// Client notifies server of a sound
+SoundToServer(client->server)
+    unreliable
+    int soundId
+    receive:
+        if (!ServerSystem::isRunningMap()) return;
+
+        if ( !server::isRunningCurrentScenario(sender) ) return; // Silently ignore info from previous scenario
+
+        dynent* otherEntity = FPSClientInterface::getPlayerByNumber(sender);
+        if (otherEntity)
+//            send_SoundToClients(-1, otherEntity->o.x, otherEntity->o.y, otherEntity->o.z, soundId, sender); TODO
+            send_SoundToClients(-1, soundId, sender);
+end
+
+// Server notifies clients of a sound
+SoundToClients(server->client)
+    unreliable
+    implicit clientNumber
+//    float x
+//    float y
+//    float z TODO
+    int soundId
+    int originalClientNumber
+    send:
+        exclude = originalClientNumber; // This is how to ensure we do not send back to the client who originally sent it
+    receive:
+        assert(ClientSystem::playerNumber != originalClientNumber);
+
+//        vec pos(x,y,z);
+//        playsound(soundId, &pos);
+
+        dynent* player = FPSClientInterface::getPlayerByNumber(originalClientNumber);
+        if (!player)
+        {
+            if (originalClientNumber == -1) // Do not play sounds from nonexisting clients - would be odd
+                playsound(soundId);
+        }
+        else
+        {
+            LogicEntityPtr entity = LogicSystem::getLogicEntity( player );
+            if (entity.get())
+            {
+                vec where = entity->getOrigin();
+                playsound(soundId, &where);
+            } // If no entity - but there should be, there is a player - do not play at all.
+        }
+end
+
+// Server notifies clients of a sound
+SoundToClientsByName(server->client)
+    unreliable
+    implicit clientNumber
+    float x
+    float y
+    float z
+    std::string soundName
+    int originalClientNumber
+    send:
+        exclude = originalClientNumber; // This is how to ensure we do not send back to the client who originally sent it
+    receive:
+        assert(ClientSystem::playerNumber != originalClientNumber);
+
+        vec pos(x,y,z);
+        if (pos.x || pos.y || pos.z)
+            playsoundname(soundName.c_str(), &pos);
+        else
+            playsoundname(soundName.c_str());
+end
+
+// Ask server to switch edit mode status
+EditModeC2S(client->server)
+    int mode
+    receive:
+        if (!ServerSystem::isRunningMap()) return;
+
+        #if 0 // The old sauer code from fpsserver.h
+            case SV_EDITMODE:
+            {
+                int val = getint(p);
+                if(!ci->local && gamemode!=1) break;
+                if(val ? ci->state.state!=CS_ALIVE && ci->state.state!=CS_DEAD : ci->state.state!=CS_EDITING) break;
+                if(smode)
+                {
+                    if(val) smode->leavegame(ci);
+                    else smode->entergame(ci);
+                }
+                if(val)
+                {
+                    ci->state.editstate = ci->state.state;
+                    ci->state.state = CS_EDITING;
+                }
+                else ci->state.state = ci->state.editstate;
+                if(val)
+                {
+                    ci->events.setsizenodelete(0);
+                    ci->state.rockets.reset();
+                    ci->state.grenades.reset();
+                }
+                QUEUE_MSG;
+                break;
+            }
+        #endif
+
+        if ( !server::isRunningCurrentScenario(sender) ) return; // Silently ignore info from previous scenario
+
+        send_EditModeS2C(-1, sender, mode); // Relay
+end
+
+// Update client on another client's edit mode.
+EditModeS2C(server->client,dummy)
+    implicit clientNumber
+    int otherClientNumber
+    int mode
+    send:
+        exclude = otherClientNumber;
+    receive:
+        dynent* d = FPSClientInterface::getPlayerByNumber(otherClientNumber);
+
+        // Code from sauer's client.h
+        if (d)
+        {
+            if (mode) 
+            {
+                d->editstate = d->state;
+                d->state     = CS_EDITING;
+            }
+            else 
+            {
+                d->state = d->editstate;
+            }
+        }
+end
+
+// Request the current map file. Like /getmap in Sauer
+RequestMap(client->server)
+    receive:
+        if (!ServerSystem::isRunningMap()) return;
+
+        REFLECT_PYTHON( send_curr_map );
+
+        send_curr_map(sender);
+end
+
+// Tells the server that a LogicEntity has been clicked
+DoClick(client->server)
+    int button
+    int down
+    float x
+    float y
+    float z
+    int uniqueId
+    receive:
+        if (!ServerSystem::isRunningMap()) return;
+
+        if ( !server::isRunningCurrentScenario(sender) ) return; // Silently ignore info from previous scenario
+
+        ScriptValuePtr position = ScriptEngineManager::runScript(
+            "new Vector3(" + 
+                Utility::toString(x) + "," + 
+                Utility::toString(y) + "," + 
+                Utility::toString(z) +
+            ")"
+        );
+
+        ScriptValueArgs args;
+        args.append(button).append(down).append(position);
+        if (uniqueId != -1)
+        {
+            LogicEntityPtr entity = LogicSystem::getLogicEntity(uniqueId);
+            if (entity.get())
+                args.append(entity->scriptEntity);
+            else
+                return; // No need to do a click that was on an entity that vanished meanwhile/does not yet exist!
+        }
+
+        ScriptEngineManager::getGlobal()->getProperty("ApplicationManager")->getProperty("instance")->call("click", args);
+end
+
+MapUpdated(server->client)
+    implicit clientNumber
+    int updatingClientNumber
+    receive:
+        updatingClientNumber = updatingClientNumber; // warning
+        assert(0);
+        #if 0
+        if (updatingClientNumber != ClientSystem::playerNumber)
+            IntensityCEGUI::showMessage("Map Updated", "Another player has updated the map on the server. To receive this update, do File->Receive map from server in edit mode.");
+        else
+            IntensityCEGUI::showMessage("Map Updated", "Your update to the map was received by the server successfully.");
+        #endif
+end
+
+// Server notifies clients of a particle effect
+ParticleSplashToClients(server->client)
+    unreliable
+    implicit clientNumber
+    int _type
+    int num
+    int fade
+    float x
+    float y
+    float z
+    receive:
+        vec pos(x,y,z);
+        particle_splash(_type, num, fade, pos);
+end
+
+// Request to enter the server into private edit mode
+RequestPrivateEditMode(client->server)
+    receive:
+        if (!ServerSystem::isRunningMap()) return;
+
+        REFLECT_PYTHON( request_private_edit );
+        request_private_edit(sender);
+end
+
+// Notify about entering private edit mode
+NotifyPrivateEditMode(server->client)
+    implicit clientNumber
+    receive:
+        IntensityGUI::showMessage("Server", "You are now in private edit mode");
+        ClientSystem::editingAlone = true;
+end
+

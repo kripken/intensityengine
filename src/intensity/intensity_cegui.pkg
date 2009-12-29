@@ -1,0 +1,118 @@
+
+/*
+ *=============================================================================
+ * Copyright (C) 2008 Alon Zakai ('Kripken') kripkensteiner@gmail.com
+ *
+ * This file is part of the Intensity Engine project,
+ *    http://www.intensityengine.com
+ *
+ * The Intensity Engine is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * The Intensity Engine is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with the Intensity Engine.  If not, see
+ *     http://www.gnu.org/licenses/
+ *     http://www.gnu.org/licenses/agpl-3.0.html
+ *=============================================================================
+ */
+
+
+// Copyright 2008 Alon Zakai
+//
+// HOWTO: Currently the SConstruct file does it all, but basically, these are the instructions:
+//      Use tolua++cegui on this (from /src):
+//           LD_LIBRARY_PATH=/usr/local/lib tolua++cegui -o questyon/sauer_cegui_tolua.cpp questyon/sauer_cegui.pkg
+//      You then need to paste this into the generated cpp file:
+//          #include "sauer_cegui.h"
+
+//
+// This is included into sauer_cegui_lua.cpp, as if it were an .h file
+//
+
+#include "CEGUI.h"
+
+
+//! Connecting between Sauer and CEGUI, specifically CEGUI's Lua system
+
+namespace IntensityCEGUI
+{
+    // Lua callbacks.
+
+    //! Lua requests to start a new map
+    void luaNewMap();
+
+    //! Lua requests to start the 'test' map
+
+    void luaStartTest();
+
+    //! Lua requests to quit. This is queued, then inside main() it is executed (can't be done while running Lua!)
+    void luaQuit();
+
+    //! Lua requests switching to character view
+    void luaCharacterView();
+
+    //! Lua requests the username, to show in the Login window
+    std::string luaGetUsername();
+
+    //! Lua requests the password, to show in the Login window
+    std::string luaGetPassword();
+
+    //! Lua requests a login, with given user/pass
+    void luaLogin(std::string username, std::string password);
+
+    void luaSetHorns(int id);
+//    void luaColor();
+    void luaSetArmor(int id);
+    void luaSetRightWeapon(int id);
+    void luaSetLeftWeapon(int id);
+    void luaSetRightWeaponSparkle(int id);
+
+    void luaToggleEdit();
+
+    //! Lua requests the entity uniqueId of the current edited entity
+    std::string luaGetEditedUniqueId();
+
+    //! Lua requests the class of the current edited entity
+    std::string luaGetEditedClass();
+
+    std::string lauGetCurrEditedEntityKey();
+    std::string lauGetCurrEditedEntityGUIName();
+
+    //! IMPORTANT: Also increments the current index.
+    std::string lauGetCurrEditedEntityValue();
+
+    void luaSetCurrEditedEntityValue(std::string key, std::string value);
+
+    //! Executes a Sauerbraten command
+    void luaExecuteSauerCommand(std::string command);
+
+    int luaGetSauerVariable(std::string variable);
+
+    void luaExecutePythonScript(std::string script);
+    int luaEvaluatePythonScriptInteger(std::string script);
+    float luaEvaluatePythonScriptFloat(std::string script);
+    std::string luaEvaluatePythonScriptString(std::string script);
+
+    std::string luaGetQueuedMessageTitle();
+    std::string luaGetQueuedMessageText();
+
+    //! Iterates the Python Classes that are registered in the system
+    std::string lauGetCurrClass();
+
+    void queueEntityCreation(std::string _class);
+
+    //! Populates the list (well, tree) of entities in the 'manage entities' window
+    void luaPopulateEntityList(CEGUI::Window* entityListWindow);
+
+    void luaFocusOnEntity(int uniqueId);
+
+    void luaPopulateSettings(CEGUI::Window* settingsWindow);
+    void luaApplySoundSettings(CEGUI::Window* settingsWindow);
+}
+

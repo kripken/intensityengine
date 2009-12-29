@@ -1,0 +1,25 @@
+1.1 - Nov. 14 2009 (rev. 1190)
+  * Allow client and server to (naively) share their home dirs, and do this by default when the server does not specify a home dir explicitly. This makes it much easier to set up a local server.
+  * Enable maps to customize move, strafe and jump
+  * ZeroG module, allowing maps to have zero gravity, custom gravity effects, etc.
+  * Vehicles module, to let entities move like simple vehicles (pitch based on floor, thrust for movement, etc.)
+  * Support for cutscenes
+  * World.getSurfaceNormal, which allows doing bouncing physics entirely in scripts, + Grenade example
+  * DeadlyArea in Health (areas that you die upon entering)
+  * WorldSequences module - lets you track players progression through areas
+  * WoW-like mouse movement in Mouselook mode - cursor at borders will rotate the view
+  * WorldSignals module - lets you emit and listen for signals that are relevant to areas in space
+  * New Steering module for bot movement control
+  * Make M by default do the same in editmode as in normal mode
+  * Add absolute x,y to clientClick, allowing maps to have menus
+  * Let scripts reload models, and an example ModelForge in-world setup for model testing that uses it
+  * Do not show overly large items in entity editing GUI
+  * Allow scripts on the server to intercept and handle text messages (e.g. can be used as a simple way to let people issue commands to the server, etc.)
+  * Parallel actions plugin and other action-related functionality
+  * Expose font height, screen width and height, and INTENSITY_VERSION to scripts
+  * Allow forced_activity_id to be a URL, and contact master to get map asset id based on activity id if necessary. Makes it much easier to tell a local server what to run
+  * Simple server setup wizard
+  * Fireworks effect
+  * More robust asset retrieval - try with and without proxies, and try a few times, to get around NAT issues.
+  * /clearallents command to clear all entities from a map
+

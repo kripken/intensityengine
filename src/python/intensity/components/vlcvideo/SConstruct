@@ -1,0 +1,88 @@
+
+#=============================================================================
+# Copyright (C) 2008 Alon Zakai ('Kripken') kripkensteiner@gmail.com
+#
+# This file is part of the Intensity Engine project,
+#    http://www.intensityengine.com
+#
+# The Intensity Engine is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, version 3.
+#
+# The Intensity Engine is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with the Intensity Engine.  If not, see
+#     http://www.gnu.org/licenses/
+#     http://www.gnu.org/licenses/agpl-3.0.html
+#=============================================================================
+
+
+import os
+import stat
+import sys
+import shutil
+import time
+
+TO_ROOT = 5
+TO_ROOT_STR = '../' * TO_ROOT
+INTENSITY_ROOT = os.sep.join(os.getcwd().split(os.sep)[:-TO_ROOT])
+sys.path += [INTENSITY_ROOT]
+
+from src.build_shared import *
+
+PYTHON_VERSION = sys.version[0:3]
+
+#
+##
+###
+#### Start
+###
+##
+#
+
+
+if LINUX:
+    cflags = " -g -Wall -Werror -O1 " # Release
+#    cflags = " -g -Wall -Werror -D_DEBUG " # Debug
+elif WINDOWS:
+    cflags = " /DWIN32 /O2 " # Release
+#    cflags = " /DWIN32 /D_DEBUG " # Debug
+
+
+# Module
+
+module_includes = TO_ROOT_STR + "src/intensity"
+module_libs = ""
+
+if LINUX:
+    boost_python = None
+    for arch in ['', '64']:
+        if os.path.exists('/usr/lib%s/libboost_python-mt.so' % arch):
+            boost_python = 'boost_python-mt'
+            break
+        elif os.path.exists('/usr/lib%s/libboost_python.so' % arch):
+            boost_python = 'boost_python'
+            break
+    if boost_python is None:
+        print 'Cannot find Boost Python'
+        exit(1)
+
+    module_libs = "vlc python%s %s" % (PYTHON_VERSION, boost_python)
+    module_includes += " /usr/include/python%s" % PYTHON_VERSION
+elif WINDOWS:
+    module_libs = "vlc python%s boost_python-vc90-mt-1_36.lib" % (PYTHON_VERSION[0] + PYTHON_VERSION[2])
+
+module_files = Split("module.cpp ")# + TO_ROOT_STR + "src/intensity/python_wrap.cpp")
+module_env = Environment(CCFLAGS = cflags, CPPPATH = Split(module_includes), LIBS = Split(module_libs))
+module_env.SharedLibrary('module', module_files)
+#module_env.Program('module', module_files) # for testing
+
+
+# Decider - for speed, as follows
+
+Decider('MD5-timestamp')
+

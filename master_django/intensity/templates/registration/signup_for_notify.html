@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{%block uppernavigation%}
+{%endblock%}
+
+{%block mainmenu%}
+  <a href="" class="active">Sign Up</a>
+{%endblock%}
+
+{% block mainmenubody %}
+
+<div class="big_para">
+
+{% if form.errors %}
+<p class="error">Please correct the error{{form.errors|pluralize}} below:</p>
+<span class="error">{{form.non_field_errors}}</span>
+{% endif %}
+
+<p>Syntensity isn't currently accepting new user registrations, but we will be soon. Sign up here to be notified when we do:</p>
+
+<form method="post" action="?next={{ next|default:"/" }}">
+<dl>
+<dt><label for="id_email">Email:</label>{% if form.email.errors %} <span class="error">{{ form.email.errors|join:", " }}</span>{% endif %}</dt>
+<dd>{{ form.email }}</dd>
+<dt><input type="submit" value="Sign up" /></dt>
+</dl>
+</form>
+
+</div>
+
+{% endblock %}
+

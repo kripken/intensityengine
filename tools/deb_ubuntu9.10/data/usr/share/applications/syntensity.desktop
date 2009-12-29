@@ -1,0 +1,19 @@
+
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Type=Application
+Terminal=false
+Exec=syntensity
+Categories=GNOME;Application;Game
+Name=Syntensity
+Comment=Create and Play Multiplayer 3D Games
+Icon=syntensity.png
+Name[en]=Syntensity
+Comment[en]=Create and Play Multiplayer 3D Games
+Icon[en]=syntensity.png
+X-AppInstall-Package=syntensity
+X-Ubuntu-Gettext-Domain=syntensity
+
+Name[en_US]=Syntensity
+

@@ -1,0 +1,8 @@
+editbind "RCTRL" [
+    (run_script "oldMovementSpeed = getPlayerEntity().movementSpeed")
+    (run_script "getPlayerEntity().movementSpeed *= 4")
+    onrelease [
+        (run_script "getPlayerEntity().movementSpeed = oldMovementSpeed")
+    ]
+]
+

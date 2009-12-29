@@ -1,0 +1,98 @@
+=======
+General
+=======
+
+To debug a problem, it is often useful to look at a detailed log. Edit
+the settings.cfg file and change the logging level to DEBUG (from
+the default of WARNING) and run the program. At INFO even more output
+is logged.
+
+
+=====
+Video
+=====
+
+1) You should install the latest video drivers for your graphics card,
+   probably from the manufacturer's website, for best results. OpenGL
+   support is often better that way on Windows. On Linux, make sure
+   that accelerated OpenGL is functional (try running glxgears, for
+   example).
+
+2) If you can't load the client, you can try setting the graphic level quality
+   lower. Consult the Sauerbraten/Cube 2 documentation,
+
+    http://sauerbraten.org/docs/config.html
+
+   You can pass config parameters to intensity_client.py just like
+   to the Sauerbraten client. For example,
+
+       python intensity_client.py -f0 local/client
+
+   will disable shaders, and use the home directory of local/client
+   for config files and so forth.
+
+3) ATI hardware may fall victim to an issue that causes *very* low
+   framerates. Cube 2 has a fix for that, which is to add
+
+        ati_texgen_bug 0
+
+   To the file
+
+        data\default_map_settings.cfg
+
+4) If you are experiencing low frame rates, you can change, in
+   ~/intensityengine_client/settings.cfg (on Windows, replace "~" with
+   your home directory, something like "C:\Documents and Settings\USERNAME"
+   on XP or or "C:\Users\USERNAME" on Vista):
+
+        [Physics]
+        frame_time = 10
+
+   to something else. 10 means a physics frame is done every 10 milliseconds
+   which translates to 1000/10=100 frames per second. You can try 20,
+   which gives 50fps, and so forth, but this might affect gameplay.
+
+
+==========
+Networking
+==========
+
+1) Make sure your firewall lets the server use the port it wants. How to do
+   this depends on what firewall you use. E.g. with the Windows XP SP2
+   firewall, you should just tell it to not block the server when the
+   firewall pops up as the server starts.
+
+   The server currently uses ports 28787-28789.
+
+
+=======
+Windows
+=======
+
+1) On Windows, if you get an error like 
+
+    "ImportError: DLL load failed: This application has failed to start because the application configuration is incorrect"
+
+   then you might need to install the Microsoft Visual C++ 2008 Redistributable Package,
+
+    http://www.microsoft.com/downloads/details.aspx?familyid=9B2DA534-3E03-4391-8A4D-074B9F2BC1BF&displaylang=en
+
+   We hope to automate this in the future.
+
+
+=====
+Linux
+=====
+
+1) On Linux, if you have missing libraries, you may need to run the following
+   command, for Ubuntu 8.10 (other distros might have slightly different names)
+
+sudo apt-get install libsdl1.2 libsdl-image1.2 libsdl-mixer1.2 libboost-python1.34.1
+
+   Basically, you need need SDL (including SDL Image and SDL Mixer), and Boost.Python2.
+
+2) If sounds appear 'delayed' or 'lagging' - for example, the jump sound doesn't
+   play immediately when you jump - then the cause might be Pulseaudio. You can try
+   to run without Pulseaudio (for example, by doing 'killall pulseaudio' on Ubuntu -
+   but be careful, as this might have effects on other applications that need sound).
+

@@ -1,0 +1,1817 @@
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<base target="_top">
+<style type="text/css">
+  
+
+/* default css */
+
+table {
+  font-size: 1em;
+  line-height: inherit;
+  border-collapse: collapse;
+}
+
+
+tr {
+  
+  text-align: left;
+  
+}
+
+
+div, address, ol, ul, li, option, select {
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+p {
+  margin: 0px;
+}
+
+
+pre {
+  font-family: Courier New;
+  white-space: pre-wrap;
+  margin:0;
+}
+
+body {
+  margin: 6px;
+  padding: 0px;
+  font-family: Verdana, sans-serif;
+  font-size: 10pt;
+  background-color: #ffffff;
+}
+
+
+img {
+  -moz-force-broken-image-icon: 1;
+}
+
+@media screen {
+  html.pageview {
+    background-color: #f3f3f3 !important;
+    overflow-x: hidden;
+    overflow-y: scroll;
+  }
+
+  
+
+  body {
+    min-height: 1100px;
+    
+    counter-reset: __goog_page__;
+  }
+  * html body {
+    height: 1100px;
+  }
+  .pageview body {
+    border-top: 1px solid #ccc;
+    border-left: 1px solid #ccc;
+    border-right: 2px solid #bbb;
+    border-bottom: 2px solid #bbb;
+    width: 648px !important;
+    margin: 15px auto 25px;
+    padding: 40px 50px;
+  }
+  /* IE6 */
+  * html {
+    overflow-y: scroll;
+  }
+  * html.pageview body {
+    overflow-x: auto;
+  }
+  /* Prevent repaint errors when scrolling in Safari. This "Star-7" css hack
+     targets Safari 3.1, but not WebKit nightlies and presumably Safari 4.
+     That's OK because this bug is fixed in WebKit nightlies/Safari 4 :-). */
+  html*#wys_frame::before {
+    content: '\A0';
+    position: fixed;
+    overflow: hidden;
+    width: 0;
+    height: 0;
+    top: 0;
+    left: 0;
+  }
+  
+  
+
+  
+    
+    .writely-callout-data {
+      display: none;
+    }
+    
+
+    .writely-footnote-marker {
+      background-image: url('MISSING');
+      background-color: transparent;
+      background-repeat: no-repeat;
+      width: 7px;
+      overflow: hidden;
+      height: 16px;
+      vertical-align: top;
+
+      
+      -moz-user-select: none;
+    }
+    .editor .writely-footnote-marker {
+      cursor: move;
+    }
+    .writely-footnote-marker-highlight {
+      background-position: -15px 0;
+      -moz-user-select: text;
+    }
+    .writely-footnote-hide-selection ::-moz-selection, .writely-footnote-hide-selection::-moz-selection {
+      background: transparent;
+    }
+    .writely-footnote-hide-selection ::selection, .writely-footnote-hide-selection::selection {
+      background: transparent;
+    }
+    .writely-footnote-hide-selection {
+      cursor: move;
+    }
+
+    /* Comments */
+    .writely-comment-yellow {
+      background-color: #ffffd7;
+    }
+    .writely-comment-orange {
+      background-color: #ffe3c0;
+    }
+    .writely-comment-pink {
+      background-color: #ffd7ff;
+    }
+    .writely-comment-green {
+      background-color: #d7ffd7;
+    }
+    .writely-comment-blue {
+      background-color: #d7ffff;
+    }
+    .writely-comment-purple {
+      background-color: #eed7ff;
+    }
+
+  
+
+
+  
+  .br_fix span+br:not(:-moz-last-node) {
+    
+    position:relative;
+    
+    left: -1ex
+    
+  }
+
+  
+  #cb-p-tgt {
+    font-size: 8pt;
+    padding: .4em;
+    background-color: #ddd;
+    color: #333;
+  }
+  #cb-p-tgt-can {
+    text-decoration: underline;
+    color: #36c;
+    font-weight: bold;
+    margin-left: 2em;
+  }
+  #cb-p-tgt .spin {
+    width: 16px;
+    height: 16px;
+    background: url(//ssl.gstatic.com/docs/clipboard/spin_16o.gif) no-repeat;
+  }
+}
+
+h6 { font-size: 8pt }
+h5 { font-size: 8pt }
+h4 { font-size: 10pt }
+h3 { font-size: 12pt }
+h2 { font-size: 14pt }
+h1 { font-size: 18pt }
+
+blockquote {padding: 10px; border: 1px #DDD dashed }
+
+.webkit-indent-blockquote { border: none; }
+
+a img {border: 0}
+
+.pb {
+  border-width: 0;
+  page-break-after: always;
+  /* We don't want this to be resizeable, so enforce a width and height
+     using !important */
+  height: 1px !important;
+  width: 100% !important;
+}
+
+.editor .pb {
+  border-top: 1px dashed #C0C0C0;
+  border-bottom: 1px dashed #C0C0C0;
+}
+
+div.google_header, div.google_footer {
+  position: relative;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+
+/* Table of contents */
+.editor div.writely-toc {
+  background-color: #f3f3f3;
+  border: 1px solid #ccc;
+}
+.writely-toc > ol {
+  padding-left: 3em;
+  font-weight: bold;
+}
+ol.writely-toc-subheading {
+  padding-left: 1em;
+  font-weight: normal;
+}
+/* IE6 only */
+* html writely-toc ol {
+  list-style-position: inside;
+}
+.writely-toc-none {
+  list-style-type: none;
+}
+.writely-toc-decimal {
+  list-style-type: decimal;
+}
+.writely-toc-upper-alpha {
+  list-style-type: upper-alpha;
+}
+.writely-toc-lower-alpha {
+  list-style-type: lower-alpha;
+}
+.writely-toc-upper-roman {
+  list-style-type: upper-roman;
+}
+.writely-toc-lower-roman {
+  list-style-type: lower-roman;
+}
+.writely-toc-disc {
+  list-style-type: disc;
+}
+
+/* Ordered lists converted to numbered lists can preserve ordered types, and
+   vice versa. This is confusing, so disallow it */
+ul[type="i"], ul[type="I"], ul[type="1"], ul[type="a"], ul[type="A"] {
+  list-style-type: disc;
+}
+
+ol[type="disc"], ol[type="circle"], ol[type="square"] {
+  list-style-type: decimal;
+}
+
+/* end default css */
+
+
+  /* default print css */
+  
+  @media print {
+    body {
+      padding: 0;
+      margin: 0;
+    }
+
+    div.google_header, div.google_footer {
+      display: block;
+      min-height: 0;
+      border: none;
+    }
+
+    div.google_header {
+      flow: static(header);
+    }
+
+    /* used to insert page numbers */
+    div.google_header::before, div.google_footer::before {
+      position: absolute;
+      top: 0;
+    }
+
+    div.google_footer {
+      flow: static(footer);
+    }
+
+    /* always consider this element at the start of the doc */
+    div#google_footer {
+      flow: static(footer, start);
+    }
+
+    span.google_pagenumber {
+      content: counter(page);
+    }
+
+    span.google_pagecount {
+      content: counter(pages);
+    }
+
+    .endnotes {
+      page: endnote;
+    }
+
+    /* MLA specifies that endnotes title should be 1" margin from the top of the page. */
+    @page endnote {
+      margin-top: 1in;
+    }
+
+    callout.google_footnote {
+      
+      display: prince-footnote;
+      footnote-style-position: inside;
+      /* These styles keep the footnote from taking on the style of the text
+         surrounding the footnote marker. They can be overridden in the
+         document CSS. */
+      color: #000;
+      font-family: Verdana;
+      font-size: 10.0pt;
+      font-weight: normal;
+    }
+
+    /* Table of contents */
+    #WritelyTableOfContents a::after {
+      content: leader('.') target-counter(attr(href), page);
+    }
+
+    #WritelyTableOfContents a {
+      text-decoration: none;
+      color: black;
+    }
+
+    /* Comments */
+    .writely-comment-yellow {
+      background-color: #ffffd7;
+    }
+    .writely-comment-orange {
+      background-color: #ffe3c0;
+    }
+    .writely-comment-pink {
+      background-color: #ffd7ff;
+    }
+    .writely-comment-green {
+      background-color: #d7ffd7;
+    }
+    .writely-comment-blue {
+      background-color: #d7ffff;
+    }
+    .writely-comment-purple {
+      background-color: #eed7ff;
+    }
+  }
+
+  @page {
+    @top {
+      content: flow(header);
+    }
+    @bottom {
+      content: flow(footer);
+    }
+    @footnotes {
+      border-top: solid black thin;
+      padding-top: 8pt;
+    }
+  }
+  /* end default print css */
+
+
+/* custom css */
+
+
+/* end custom css */
+
+/* ui edited css */
+
+body {
+  font-family: Verdana;
+  
+  font-size: 10.0pt;
+  line-height: normal;
+  background-color: #ffffff;
+}
+/* end ui edited css */
+
+
+/* editor CSS */
+.editor a:visited {color: #551A8B}
+.editor table.zeroBorder {border: 1px dotted gray}
+.editor table.zeroBorder td {border: 1px dotted gray}
+.editor table.zeroBorder th {border: 1px dotted gray}
+
+
+.editor div.google_header, .editor div.google_footer {
+  border: 2px #DDDDDD dashed;
+  position: static;
+  width: 100%;
+  min-height: 2em;
+}
+
+.editor .misspell {background-color: yellow}
+
+.editor .writely-comment {
+  font-size: 9pt;
+  line-height: 1.4;
+  padding: 1px;
+  border: 1px dashed #C0C0C0
+}
+
+
+/* end editor CSS */
+
+</style>
+
+  
+  <title>Intensity Engine Scripting</title>
+
+</head>
+
+<body 
+    
+    >
+    
+    
+    
+<div class=google_header id=google_header style=TEXT-ALIGN:right>
+  <p>
+    <font size=1>&nbsp;Intensity Engine Scripting API Documentation. (C) 2009 Alon Zakai. License: CC-BY-SA-NC.</font>
+  </p>
+</div>
+<div>
+  <p style=TEXT-ALIGN:center>
+    <a id=Intensity_Engine_Scripting name=Intensity_Engine_Scripting></a><font size=6>Intensity Engine Scripting</font>
+  </p>
+  <p style=TEXT-ALIGN:center>
+    <font size=6><br>
+    </font>
+  </p>
+  <p>
+  </p>
+  <div class=writely-toc id=WritelyTableOfContents style=TEXT-ALIGN:left toctype=decimal+disc>
+    <ol class=writely-toc-decimal>
+      <li>
+        <a href=#Introduction_17609788435643015 target=_self>Introduction</a>
+        <ol class="writely-toc-subheading writely-toc-disc" style=MARGIN-LEFT:0pt>
+          <li>
+            <a href=#Terminology_8075479379144875_48111546795583593 target=_self>Terminology</a>
+          </li>
+          <li>
+            <a href=#Types_of_Scripts_43256628550930487 target=_self>Types of Scripts</a>
+          </li>
+          <li>
+            <a href=#The_Standard_Library_827954662 target=_self>The Standard Library</a>
+          </li>
+        </ol>
+      </li>
+      <li>
+        <a href=#Tutorial_43628707942909906_158 target=_self>Tutorial</a>
+      </li>
+      <li>
+        <a href=#Main_Concepts_5121165765543143 target=_self>Main Concepts</a>
+        <ol class="writely-toc-subheading writely-toc-disc" style=MARGIN-LEFT:0pt>
+          <li>
+            <a href=#Logic_Entities_and_State_Varia target=_self>Logic Entities and State Variables</a>
+          </li>
+          <li>
+            <a href=#Main_Functions_of_Logic_Entiti target=_self>Main Functions of Logic Entities</a>
+          </li>
+          <li>
+            <a href=#Frame_Based_Coding_30445889719 target=_self>Frame-Based Coding</a>
+          </li>
+          <li>
+            <a href=#Types_of_State_Variables_83779 target=_self>Types of State Variables</a>
+          </li>
+          <li>
+            <a href=#Properties_of_State_Variables_ target=_self>Properties of State Variables</a>
+          </li>
+          <li>
+            <a href=#Main_Logic_Entity_Classes_0119 target=_self>Main Logic Entity Classes</a>
+          </li>
+          <li>
+            <a href=#The_Action_System_921582705793 target=_self>The Action System</a>
+          </li>
+          <li>
+            <a href=#Other_Useful_Things_0643467315 target=_self>Other Useful Things</a>
+          </li>
+        </ol>
+      </li>
+      <li>
+        <a href=#Plugin_Example_Stunball_Gun_40 target=_self>Plugin Example: Stunball Gun</a>
+      </li>
+      <li>
+        <a href=#Complete_Working_Activity_Sket target=_self>Complete Working Activity: Sketch World</a>
+      </li>
+      <li>
+        <a href=#Appendix_Standard_Library_Refe target=_self>Appendix: Standard Library Reference</a>
+      </li>
+    </ol>
+  </div>
+  <p>
+    <br>
+  </p>
+  <h1>
+    <a id=Introduction_17609788435643015 name=Introduction_17609788435643015></a>Introduction
+  </h1>
+  <p>
+    <font size=3>Scripts in the Intensity Engine are written in JavaScript, while using a custom Intensity Engine API. The custom API consists of</font>
+  </p>
+  <p>
+    <font size=3><br>
+    </font>
+  </p>
+  <ul>
+    <li>
+      <font size=3> A set of calls into the main C++ engine code, to affect it in various ways (e.g., to show a particle effect, or to move an object from one position to another).</font>
+    </li>
+    <li>
+      <font size=3>A framework, written in JavaScript, for writing Intensity Engine applications and entities. This includes a 'standard library' as well as a class framework.<br>
+      </font>
+    </li>
+  </ul>
+  <p>
+    <br>
+  </p>
+  <p>
+    <font size=3>In general, you should only use the latter: Calling directly into C++ should be handled for you by the JavaScript part of the API. However, we mention the former here because you may see it used in actual code, and at times it may be the best way to do something (until the JavaScript part of the API improves). In this document we will therefore talk only about the JavaScript part of the API.</font>
+  </p>
+  <p>
+    <br>
+  </p>
+  <h2>
+    <a id=Terminology_8075479379144875_48111546795583593 name=Terminology_8075479379144875_48111546795583593></a><font size=3><b>Terminology</b></font>
+  </h2>
+  <p>
+  </p>
+  <ul>
+    <li>
+      <font size=3>Activity: Typically a game. An activity is a combination of a map, scripts, models, etc. As an activity has a single map, the term activity and map can sometimes be used interchangeably.<br>
+      </font>
+    </li>
+  </ul>
+  <p>
+    <br>
+  </p>
+  <h2>
+    <a id=Types_of_Scripts_43256628550930487 name=Types_of_Scripts_43256628550930487></a><b><font size=3>Types of Scripts<br>
+    </font></b>
+  </h2>
+  <ul>
+    <li>
+      <b><font size=3>Map scripts</font></b><font size=3> are executed when a map/activity starts. They set up the entity classes and pretty much all the logic for the map/activity. This document deals almost entirely with such scripts. Map scripts are always called <b>map.js</b> and they reside in the map directory (along with the other map files like map.ogz). Map scripts can run code from other scripts, see Library.include.<br>
+      </font>
+    </li>
+    <li>
+      <font size=3><b>Model scripts</b> are executed when a model (mesh) is loaded. Such scripts usually just call the relevant cubescript commands to set up the model (through the JavaScript API, see the Map namespace mentioned below). Model scripts have the name <b>md5.js, obj.js, md3.js or md2.js</b> (for md5, obj, md3 and md2 models, respectively). The engine runs model scripts when it starts to load the model; you don't need to run them directly from your map script.<br>
+      </font>
+    </li>
+    <li>
+      <font size=3><b>Texture scripts</b> are executed in order to define textures in the game. By convention they reside in the same directory as the textures they define. Like model scripts, they usually just call the relevant cubescript commands. Unlike model scripts, they must be run from the map script.<br>
+      </font>
+    </li>
+  </ul>
+  <br>
+  <a id=The_Standard_Library name=The_Standard_Library></a>
+  <h2>
+    <a id=The_Standard_Library_827954662 name=The_Standard_Library_827954662></a><b><font size=3>The Standard Library</font></b>
+  </h2>
+  <p>
+  </p>
+  <p>
+    <font size=3>The standard library is implemented as 'namespaces', using JavaScript objects. So, for example you would write Map.someFunction() to access someFunction in the 'namespace' Map.</font>
+  </p>
+  <p>
+    <br>
+  </p>
+  <p>
+    <font size=3>The standard library has two parts: The core, and the optional.</font>
+  </p>
+  <p>
+    <font size=3><br>
+    </font>
+  </p>
+  <ul>
+    <li>
+      <font size=3> The <b>core</b> is what is present in <b><span style="FONT-FAMILY:Courier New">src/javascript/intensity</span></b>. This is code that is run by default when your map is started (but, given that this is JavaScript, you can still override and replace things - so even this is optional in a sense).</font>
+    </li>
+    <li>
+      <font size=3>The <b>optional</b> libraries appear in <b>packages/library</b>. All of the components in these libraries are optional - you load them from your maps if you want them. These extra libraries have versions, 1_1, 1_2, etc., which allows older maps to continue to work with older library versions.<br>
+      </font>
+    </li>
+  </ul>
+  <p>
+    <font size=3><br>
+    </font>
+  </p>
+  <p>
+    <font size=3>The main namespaces of the standard library are as follows. For now we just give an overview, details will appear later on. A full index of the standard library appears in the Appendix.<br>
+    </font>
+  </p>
+  <p>
+    <br>
+  </p>
+  <ul>
+    <li>
+      <font size=3><b>Map</b>: Deals with changing map definitions, like map textures, visual settings like fog, etc. Much of this is a reflection of the Cube 2 mapping commands.<br>
+      </font>
+    </li>
+    <li>
+      <font size=3><b>World</b>: Deals with physical aspects of the environment, like checking collisions, gravity, etc.</font>
+    </li>
+    <li>
+      <font size=3><b>Library</b>: Deals with loading other libraries.</font>
+    </li>
+    <li>
+      <font size=3><b>Model</b>: Deals with setting up models (meshes). Much of this is a reflection of the Cube 2 model commands.</font>
+    </li>
+    <li>
+      <font size=3><b>UserInterface</b>: Deals with showing messages, dialogs, etc.</font>
+    </li>
+    <li>
+      <font size=3><b>Global</b>: A few settings about the scripting environment in general.<br>
+      </font>
+    </li>
+  </ul>
+  <p>
+    <font size=3><br>
+    </font>
+  </p>
+  <h1>
+    <a id=Tutorial_43628707942909906_158 name=Tutorial_43628707942909906_158></a>Tutorial
+  </h1>
+  <p>
+    <font size=3>The best way to learn is to go over a working example script. Here is a 'hello world' (minimal working example)</font>:
+  </p>
+  <p>
+    <br>
+  </p>
+  <p style="FONT-FAMILY:Courier New">
+  </p>
+  <div style=MARGIN-LEFT:40px>
+    <span style="FONT-FAMILY:Courier New">// Default materials, etc.</span><br style="FONT-FAMILY:Courier New">
+    <br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">Library.include('library/MapDefaults');</span><br style="FONT-FAMILY:Courier New">
+    <br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">// Textures</span><br style="FONT-FAMILY:Courier New">
+    <br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">Library.include('yo_frankie/');</span><br style="FONT-FAMILY:Courier New">
+    <br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">// Map settings</span><br style="FONT-FAMILY:Courier New">
+    <br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">Map.fogColor(0, 0, 0);</span><br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">Map.fog(9999);</span><br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">Map.loadSky("skyboxes/philo/sky3");</span><br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">Map.skylight(100, 100, 100);</span><br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">Map.ambient(20);</span><br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">Map.shadowmapAmbient("0x505050");</span><br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">Map.shadowmapAngle(300);</span><br style="FONT-FAMILY:Courier New">
+    <br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">//// Player class</span><br style="FONT-FAMILY:Courier New">
+    <br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">registerEntityClass(Player.extend({</span><br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; _class: "GamePlayer",</span><br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">}));</span><br style="FONT-FAMILY:Courier New">
+    <br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">//// Application</span><br style="FONT-FAMILY:Courier New">
+    <br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">ApplicationManager.setApplicationClass(Application.extend({</span><br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; _class: "GameApplication",</span><br style="FONT-FAMILY:Courier New">
+    <br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; getPcClass: function() {</span><br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return "GamePlayer";</span><br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; },</span><br style="FONT-FAMILY:Courier New">
+    <br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; clientOnEntityOffMap: function(entity) {</span><br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; entity.position = [600,600,600];</span><br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; }</span><br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">}));</span><br style="FONT-FAMILY:Courier New">
+    <br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">//// Load permanent entities</span><br style="FONT-FAMILY:Courier New">
+    <br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">if (Global.SERVER) {</span><br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; var entities = CAPI.readFile("./entities.json");</span><br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; loadEntities(entities);</span><br style="FONT-FAMILY:Courier New">
+    <span style="FONT-FAMILY:Courier New">}</span><br>
+  </div>
+  <p>
+    <br>
+  </p>
+  <p>
+    <font size=3>Let us go over it piece by piece:</font>
+  </p>
+  <p>
+    <br>
+  </p>
+  <ul>
+    <li>
+      <span style="FONT-FAMILY:Courier New"><font size=3>Library.include('library/MapDefaults');<br>
+      <font face=Verdana><br>
+      This <i>includes</i> a library (Library.include is sort of like #include in C/C++ or import in Python). Includes are always relative to packages/, the directory containing content (of which there are two directories - one in the installation of the engine, and one in your home directory. The latter contains downloaded content, etc.). In this case Library.include will run a .js (JavaScript) file called packages/library/MapDefaults.js. This basic script is included in most activities, it sets up general stuff like textures for water.<br>
+      <br>
+      </font></font></span>
+    </li>
+    <li>
+      <font size=3><span style="FONT-FAMILY:Courier New">Library.include('yo_frankie/');<br>
+      </span></font><span style="FONT-FAMILY:Courier New"><font size=3><font face=Verdana><br>
+      When given a directory (as you can see by the trailing slash), Library.include will look for a Package.js file in that directory (this is a naming convention). In this case, yo_frankie/ contains some content from the open game Yo Frankie!, a nice project by the Blender Foundation. By including this file, we can use some textures from there in our map.<br>
+      <br>
+      </font></font></span>
+    </li>
+    <li>
+      <span style="FONT-FAMILY:Courier New"><font size=3>Map.fogColor(0, 0, 0);<br>
+      etc.<br>
+      <br>
+      <font face=Verdana>These commands define visual settings for the map, like the fog color and distance, shadow color and angle, and so forth.<br>
+      <br>
+      </font></font></span>
+    </li>
+    <li>
+      <font size=3><span style="FONT-FAMILY:Courier New">registerEntityClass(Player.extend({</span><br style="FONT-FAMILY:Courier New">
+      <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; _class: "GamePlayer",</span><br style="FONT-FAMILY:Courier New">
+      <span style="FONT-FAMILY:Courier New">}));</span></font><br>
+      <span style="FONT-FAMILY:Courier New"><font size=3><font face=Verdana><br>
+      This is where things start getting more involved.<br>
+      <br>
+      registerEntityClass takes a class and 'registers' it in the system. Registration allows you to find the class in the engine, using its name, which is given in _class (note the initial underscore - this is because 'class' is a reserved word in JavaScript). You need to register any class that will need to be accessed by its name. But wait, does JavaScript even have classes?<br>
+      <br>
+      In the core language it of course does not. But it is a very flexible language, and many libraries can provide class-like functionality in JavaScript. The Intensity Engine uses a simple system based on some code by John Resig (in src/javascript/SimpleInheritance.js). This allows expressions like <span style="FONT-FAMILY:Courier New">Player.extend({ _class: "GamePlayer" })</span>, which takes an existing class - Player - and extends it, basically producing a subclass. In the code above, the subclass only has one new attribute, _class, but you can add any number of attributes as well as functions (more on that later).<br>
+      <br>
+      So basically, in this bit of code we create a GamePlayer class, which is simply a subclass of Player but with a new name, and we register it in the system.<br>
+      <br>
+      </font></font></span>
+    </li>
+    <li>
+      <font size=3><span style="FONT-FAMILY:Courier New">ApplicationManager.setApplicationClass(Application.extend({</span></font><br style="FONT-FAMILY:Courier New">
+      <font size=3><span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; _class: "GameApplication",</span><br style="FONT-FAMILY:Courier New">
+      </font><br>
+      <span style="FONT-FAMILY:Courier New"><font size=3><font face=Verdana>Every activity has an 'Application', an object that handles some high-level functionality. ApplicationManager.setApplicationClass sets the class from which the Application instance will be created. In this case, again, we subclass an existing class, here 'Application', which is the base class for all applications. As a first step, we give the subclass an attribute _class, as before; this is actually not strictly necessary, but it is convenient sometimes for debugging, so we do it anyhow.<br>
+      <br>
+      </font></font></span>
+    </li>
+    <li>
+      <font size=3><span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; getPcClass: function() {</span><br style="FONT-FAMILY:Courier New">
+      <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return "GamePlayer";</span><br style="FONT-FAMILY:Courier New">
+      <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; },</span><br style="FONT-FAMILY:Courier New">
+      </font><br>
+      <span style="FONT-FAMILY:Courier New"><font size=3><font face=Verdana>Here we provide our subclass of Application with a getPcClass function. This by convention returns the name of the class from which players will be created. In other words, when someone logs into this activity, the entity representing them will be an instance of that class. Here we return "GamePlayer", the name of our class from before.<br>
+      <br>
+      </font></font></span>
+    </li>
+    <li>
+      <font size=3><span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; clientOnEntityOffMap: function(entity) {</span><br style="FONT-FAMILY:Courier New">
+      <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; entity.position = [600,600,600];</span><br style="FONT-FAMILY:Courier New">
+      <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; }</span></font><span style="FONT-FAMILY:Courier New"><font size=3><font face=Verdana><br>
+      <br>
+      clientOnEntityOffMap is called by the system when an entity falls off of the map - that is, falls so far that it is completely out of the world. The behavior we define here is pretty simple: We set the position of the entity to [600,600,600], which is somewhere in the middle of a typical map (which has coordinates in the range 0-1024,0-1024,0-1024; bigger maps can have large coordinates).<br>
+      <br>
+      Note the standard JavaScript syntax: entity.position is the position of the entity (where it is in the world), and [600,600,600] is a JavaScript array. Behind the scenes, though, a lot more has to occur for this to be useful: The engine 'catches' the assignment into the position attribute, and makes the actual change in the main engine, in C++. This happens because position is not a typical JavaScript attribute, but really a 'state variable'. We will say a lot more about state variables later, as they are fundamental to the Intensity Engine API. But the point to notice here is that, even though complex things might occur in the background, the code you write is quite clean.<br>
+      <br>
+      (Note that in most games you would generally 'kill' the entity at this point, instead of just moving it back up into the map. But of course, you can do whatever is suitable for your activity.)<br>
+      <br>
+      </font></font></span>
+    </li>
+    <li>
+      <font size=3><span style="FONT-FAMILY:Courier New">if (Global.SERVER) {</span><br style="FONT-FAMILY:Courier New">
+      <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; var entities = CAPI.readFile("./entities.json");</span><br style="FONT-FAMILY:Courier New">
+      <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; loadEntities(entities);</span><br style="FONT-FAMILY:Courier New">
+      <span style="FONT-FAMILY:Courier New">}</span></font><br>
+      <br>
+      <span style="FONT-FAMILY:Courier New"><font size=3><font face=Verdana>Here we must explain another fundamental aspect of Intensity Engine scripting: You write a <b>single</b> script that runs on both the client and the server. In general this saves a lot of work, as normally you want them both to do the same things. So, in the code we saw so far, both client and server will have a GamePlayer class, the same fog and texture settings, and so forth. But, sometimes you want to do something only on the client or only on the server. One way to do this (we will see another later) is simply to check Global.CLIENT and Global.SERVER; only one of them will be true, depending on where the script is running. In this case, we want the two lines appearing after Global.SERVER to only run on the server. The clients connected to that server will simply not run those lines.<br>
+      <br>
+      On the server, the script first loads some data from a file, using CAPI.readFile. The file is entities.json, and './' means it should be in the same directory as the current script. entities.json is a file containing some serialized entities in JSON format. loadEntities then loads those entities into the running activity.<br>
+      <br>
+      This bit of code is very standard - it simply loads the 'map entities', things like props, lights, and so forth. These are stored separately from the map geometry (the map.ogz) file. By convention they are stored in entities.json.<br>
+      <br>
+      The reason we do this only on the server is that entities are synchronized automatically. You only need to create an entity once on the server, and it will be streamed to the clients. In fact, it isn't valid for clients to create entities; they must send requests to the server to do so.<br>
+      </font></font></span>
+    </li>
+  </ul>
+  <br>
+  <font size=3><br>
+  That concludes the code for this simple script. If you run an activity with this script, it will be fairly boring, as there is nothing in the world (well, unless exciting things are in the entities.json file). But this is the general framework for a map script.<br>
+  <br>
+  Summary of main points in this Chapter:<br>
+  <br>
+  </font>
+  <ul>
+    <li>
+      <font size=3>The API uses a class-based inheritance system for convenience (which is implemented using JavaScript's prototype-based inheritance)</font>
+    </li>
+    <li>
+      <font size=3>Every activity has an Application Class, from which the ApplicationManager creates a single instance. This instance is used to manage activity-specific callbacks from the engine (like when an entity falls off the map).</font>
+    </li>
+    <li>
+      <font size=3>The API tries to use as normal-looking JavaScript code as possible, while doing all the hard work transparently behind the scenes.</font>
+    </li>
+    <li>
+      <font size=3>A <b>single</b> map script is run for each activity, on both the clients and the server (but there are ways to set it so particular pieces of code run only on one side or another).<br>
+      </font>
+    </li>
+  </ul>
+  <br>
+  <br>
+  <h1>
+    <a id=Main_Concepts_5121165765543143 name=Main_Concepts_5121165765543143></a>Main Concepts<br>
+  </h1>
+  <h2>
+    <a id=Logic_Entities_and_State_Varia name=Logic_Entities_and_State_Varia></a><font size=3><b>Logic Entities and State Variables</b></font>
+  </h2>
+  <font size=3><b>Logic entities</b>, or just 'entities', are the important things in an activity, for example, the characters, props, and so forth ('logic' refers to the terms 'game logic', 'business logic', and so forth). Each actual entity is an instance of a particular entity class. You can use inheritance to create such classes, or the component-based system described later.<br>
+  <br>
+  Logic entities are synchronized between the client and server: When you create a new entity on the server, without your needing to do anything, the engine will tell the clients to 'reflect' that entity, so they are aware of it. Furthermore, the engine will also synchronize some of the entity's attributes in a transparent manner, such attributes are called <b>state variables</b>. Attributes of an entity that are <i>not</i> state variables are not synchronized; a common mistake is to assume that they are by writing to one on the server and trying to read it on the clients. The reason that not all attributes are synchronized is that this would take a significant amount of bandwidth and CPU power, whereas sometimes you need just a 'local' attribute, on just the server or just the client; such attributes can be worked with very fast (V8, the engine running JavaScript in the Intensity Engine, optimizes such variables very significantly).<br>
+  <br>
+  Here is a simple example of a state variable in an entity class:<br>
+  <br>
+  </font>
+  <div style=MARGIN-LEFT:40px>
+    <font size=3><span style="FONT-FAMILY:Courier New">var Door = Mapmodel.extend({</span></font><br style="FONT-FAMILY:Courier New">
+    <font size=3><span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; _class: "Door",<br>
+    <br>
+    &nbsp;&nbsp;&nbsp; open: new StateBoolean(),</span></font><br style="FONT-FAMILY:Courier New">
+    <font size=3><span style="FONT-FAMILY:Courier New">});</span></font><br style="FONT-FAMILY:Courier New">
+  </div>
+  <font size=3><br>
+  </font><font size=3>(Mapmodel is a class of 'prop' entities. More on them later.) As you can see, state variables are defined as members of the entity class. In this case we define 'open' as a state boolean, which is a state variable that is a boolean, i.e., true or false. (The reason you need to declare the type of the variable - as opposed to normal JavaScript variables - is that the type affects how the variable is transmitted over the network when it is synchronized.) In this example, a door instance can be either open or closed.<br>
+  <br>
+  With this declaration, we can create an instance of the class as follows:<br>
+  </font><font size=3><br>
+  </font>
+  <div style=MARGIN-LEFT:40px>
+    <font size=3><span style="FONT-FAMILY:Courier New">registerEntityClass(Door);<br>
+    <br>
+    var someDoor = newEntity("Door");</span></font><br style="FONT-FAMILY:Courier New">
+  </div>
+  <br>
+  <font size=3>Note that we need to register the class on both the client and the server, but the creation (using newEntity) can only be done on the server. Note also that newEntity takes the name of a class, not the class itself. It looks up the class among the registered classes, which is why we needed to register our class beforehand (this is necessary because requests to create a class can arrive from the clients in string form).<br>
+  <br>
+  After calling newEntity in this way, the entity is put into play, and it will be reflected automatically on all the connected clients. You can then do <font face="Courier New">someDoor.open = True; <font face=Verdana>on the server, and that value will be synchronized between the server and all the clients. More specifically,<br>
+  </font></font></font><br>
+  <ul>
+    <li>
+      <font size=3><font face="Courier New"><font face=Verdana>If you assign to 'open' on the server, it will send notifications to all the clients. It will also update its own copy of the value immediately, so that if you were to do <font face="Courier New">var isOpen = someDoor.open; <font face=Verdana>then you will get the expected value. This happens because the server is the 'final arbiter' of the value (more on that in the next paragraph).</font></font></font></font></font>
+    </li>
+    <li>
+      <font size=3><font face="Courier New"><font face=Verdana><font face="Courier New"><font face=Verdana>If you assign to 'open' on a client, it does <b>not</b> update its own copy of the value. Instead, if will send a message to the server requesting to change it. If the server agrees (which it does by default), the server will set the value, and update all the clients, including the one that made the request.</font></font></font></font></font>
+    </li>
+  </ul>
+  <br>
+  <font size=3>The logic behind this is that the server is the 'final arbiter' of the value. There must be some arbiter, or otherwise each client (and the server) could set the value independently, and synchronizing the values might lead to unpredictable results, depending on network speeds and so forth. So, by default the server is the arbiter of state variables (but this can be changed; more on that later).<br>
+  <br>
+  In particular, this leads to the following peculiarity on the client:<br>
+  </font><font size=3><br>
+  </font>
+  <div style=MARGIN-LEFT:40px>
+    <font size=3><span style="FONT-FAMILY:Courier New">// Assume someDoor.open is equal to False beforehand<br>
+    someDoor.open = True;<br>
+    var isOpen = someDoor.open; // Still False!</span></font>
+  </div>
+  <br>
+  <font size=3>The reason is that it takes time for the request to be sent to the server, and for the server to respond. Until that time, the client still shows the old value. This can be confusing, but really there is no way to get around this aspect of writing distributed applications - it is confusing sometimes.<br>
+  <br>
+  Let us now add some functionality to our class. To do so in a convenient matter, we will use the <b>component-based</b> entity system, which is generally more convenient than using class inheritance. Instead of inheriting classes, we will build classes out of 'building blocks', or components, also known as 'plugins'. Here is an example of such code:<br>
+  </font><font size=3><br>
+  </font>
+  <div style=MARGIN-LEFT:40px>
+    <font size=3><span style="FONT-FAMILY:Courier New">Library.include('library/Plugins');</span><br style="FONT-FAMILY:Courier New">
+    <br>
+    </font><font size=3><span style="FONT-FAMILY:Courier New">var Door = bakePlugins(<br>
+    &nbsp;&nbsp; &nbsp;Mapmodel,<br>
+    &nbsp;&nbsp; &nbsp;[<br>
+    &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; {<br>
+    </span></font><font size=3><span style="FONT-FAMILY:Courier New">&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; _class: "Door",<br>
+    <br>
+    &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; open: new StateBoolean(),<br>
+    <br>
+    &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; activate: function() {<br>
+    &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; this.open = false;<br>
+    &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; this.locked = true;<br>
+    <br>
+    &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; this.connect(<br>
+    &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;'onModify_open',<br>
+    &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;this.checkLock<br>
+    &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;);<br>
+    &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;},<br>
+    <br>
+    &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; checkLock: function(value) {<br>
+    &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; if (value === true &amp;&amp; this.locked) {<br>
+    &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; throw "CancelStateDataUpdate";<br>
+    &nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; }<br>
+    </span></font><font size=3><span style="FONT-FAMILY:Courier New">&nbsp;&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; },<br>
+    &nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp; }<br>
+    &nbsp;&nbsp;&nbsp; ]<br>
+    );</span></font><font size=3><span style="FONT-FAMILY:Courier New"><br>
+    </span></font>
+  </div>
+  <font size=3><br>
+  bakePlugins takes two parameters: A base class, and an array of 'plugins'/'components'. It returns a new class which is a subclass of the base and has the functionality of all the components. In this example, we provided a single plugin, which as before gives the class a name of "Door" and has a single state variable, "open". There are then two new pieces of code here, the activate and checkLock functions, which we will now describe:<br>
+  <br>
+  </font>
+  <ul>
+    <li>
+      <font size=3><b>activate</b> is a function present in all entity classes; by writing code in an activate function in a plugin, we are defining code to be called when activate is called, which is when an instance of that class is 'activated'. 'Activated' means set into action. It is called when creating a new entity, or when deserializing an old one. It occurs only on the server.<br>
+      <br>
+      In this example, we set open to be 'false'. This means that all instances of the class Door will start out closed.<br>
+      <br>
+      We then set 'locked' to true. Note that locked is <i>not</i> a state variable! It is a normal JavaScript variable. There is no reason to make it a state variable because we don't want to synchronize it with the clients - in this example, they don't need to know if the door is locked or not, as we will see when we explain 'checkLock', below. So 'locked' will only exist on the server.<br>
+      <br>
+      Finally, the last line of activate connects a <i>signal<b>. </b></i>The signal is onModify_open, which means the signal that is emitted when the state variable 'open' is modified on the server. Whenever that happens, the callback that we connect to the signal will be called with that value. Here we connect this.checkLock, which we will now explain.<br>
+      <br>
+      </font>
+    </li>
+    <li>
+      <font size=3><b>checkLock</b> is a normal JavaScript function. When defined in a plugin in this manner, it will simply become a function of the new class returned by bakePlugins.<br>
+      <br>
+      As just explained, checkLock will be called when the 'open' state variable is modified on the server. The parameter passed to it contains the new value attempting to be set. In the code above, we check whether it is in fact valid to make the modification: If an attempt is made to open the door (value === true), but the door is locked (this.locked), then we don't allow that - locked doors can't be opened. So we throw the "CancelStateDataUpdate" exception, which will prevent the update from going through - the old value will remain. (Note about terminology: "State data" is a name for all of the state variables of an entity.)</font>
+    </li>
+  </ul>
+  <br>
+  <font size=3><br>
+  In summary, this example shows how we can use state variables to maintain important information about an entity. Let's think for a minute about how this would work in the bigger picture, and why it makes sense to do it as we did. Assume that 'locked' <b>was</b> in fact a state variable, and therefore accessible on the client, and that when a player clicks to open a door, then that would run a piece of code that look this:<br>
+  <br>
+  </font>
+  <div style=MARGIN-LEFT:40px>
+    <font size=3><font face="Courier New">if (!this.locked) this.open = True;<br>
+    <br>
+    </font></font>
+  </div>
+  <font size=3>That is, if the door isn't locked, open it (otherwise, perhaps play a sound, or show a message "the door is locked", etc.). This seems like it would work, and that we don't need to check validity on the server at all - the client will only notify the server to open the door if it's unlocked. But the issue is that, with distributed applications, all sorts of things might happen. For example, the door might get locked between the time the player clicks on the door and before that request arrives at the server. In that case, our code above on the server would handle the situation correctly - keep the door closed. (Note that the failure here is silent - the player will simply see the door not open, but not get any other feedback. Typically you would handle this so that the player gets the same feedback they would get for a normal locked door that they try to open.) Similar problems can occur, for example, in capture-the-flag type games, if two players try to grab the flag at almost the same instant - both will send requests to the server to pick up the flag, but it should only let one of them (the first) do so.<br>
+  <br>
+  <br>
+  </font>
+  <h2>
+    <a id=Main_Functions_of_Logic_Entiti name=Main_Functions_of_Logic_Entiti></a><font size=3><b>Main Functions of Logic Entities</b></font>
+  </h2>
+  <font size=3>Aside from activate, which we saw above, there are several other important functions that you can use in plugins:<br>
+  </font><br>
+  <ul>
+    <li>
+      <font size=3><b>init</b>: Called once on the server, when an entity instance is first created. This is <i>not</i> called if you later serialize and deserialize it.<br>
+      <br>
+      </font>
+    </li>
+    <li>
+      <font size=3><b>activate</b>: As described above, this is called whenever the entity is 'put into play', either when first created, or when deserialized. This runs only on the server.<br>
+      <br>
+      </font>
+    </li>
+    <li>
+      <font size=3><b>clientActivate</b>: This is called on the client when the entity is activated. This follows a standard convention of X being the server-side version (the default, most-used one), and clientX being the client-side version. Note that clientActivate is called on <i>each</i> client connected to the server, unlike activate which is called just once (as there is a single server).<br>
+      <br>
+      </font>
+    </li>
+    <li>
+      <font size=3><b>act</b>: This is called once each frame on the server, and receives a single parameter, which is the amount of seconds that the frame lasts. You can write code here to control the entity's behavior, with the amount of seconds telling you how much time it has to do so.<br>
+      <br>
+      </font>
+    </li>
+    <li>
+      <font size=3><b>clientAct</b>: This is called once each frame on each of the clients, and like act it receives the amount of seconds that the frame lasts as a parameter. Note that while on the server frame rates are usually 1/30 of a second, and generally consistent, on the client the frame rate depends on the power of the CPU, GPU, and so forth, so different clients may see very different values here.</font>
+    </li>
+  </ul>
+  <br>
+  <font size=3>As we saw earlier, you can also define new functions in a plugin, and those will become functions of the class they are baked into.<br>
+  <br>
+  <br>
+  </font>
+  <h2>
+    <a id=Frame_Based_Coding_30445889719 name=Frame_Based_Coding_30445889719></a><font size=3><b>Frame-Based Coding</b></font>
+  </h2>
+  <font size=3>As just mentioned, act() and clientAct() are called on each frame. This is different from some scripting APIs that simply let you write long scripts that run continuously (in most such cases, each in a separate thread, or queued after each other), or APIs that let you write event handlers (although, you can see act and clientAct as event handlers, in a way). The main difference is responsiveness vs. throughput.<br>
+  <br>
+  If each script runs in its own thread, or multiple threads handle events in parallel, that can definitely help throughput, if multiple CPU cores are available. (It can also lead to simpler code in some cases, but not others.) But the price is less predictability and responsiveness, in the sense that we can't time script code to occur exactly in sync with our frames (unless we handle events that occur once per frame - which is exactly what act and clientAct do). In fast-paced games, we <b>do</b> need such predictability and responsiveness: If a player clicks, the effects of that click should occur in the very next frame; likewise, if some event is occurring (say, the player is under a spell), we may want to be able to have a visual effect signal the end of the event on the exact same frame that happens. In both cases, frame-based coding can work, but a complicated multithreaded system that schedules scripts might not.<br>
+  <br>
+  One consequence of frame-based coding is that we need to be careful what we run in each frame - if we spend too much time in act or clientAct for a particular entity, the entire frame will take too long, which may be noticeable to the player. One way to be careful about this is to schedule code to only occur every so often, for example, a bot might look for new targets only once per second. This can be done in a simple way using a RepeatingTimer, which we will see examples of below.</font><br>
+  <font size=3>&nbsp;</font><br>
+  <br>
+  <h2>
+    <a id=Types_of_State_Variables_83779 name=Types_of_State_Variables_83779></a><font size=3><b>Types of State Variables</b></font>
+  </h2>
+  <font size=3>We already saw boolean state variables mentioned. Here is a list of all the important kinds (note that you can also define your own, see src/javascript/intensity/Variables.js):<br>
+  <br>
+  </font>
+  <ul>
+    <li>
+      <font size=3><b>StateString</b>: A single string value, of arbitrary length.<br>
+      </font>
+    </li>
+    <li>
+      <font size=3><b>StateInteger</b>: A single integer value.</font>
+    </li>
+    <li>
+      <font size=3><b>StateBoolean</b>: A single boolean value.<br>
+      </font>
+    </li>
+    <li>
+      <font size=3><b>StateFloat</b>: A single float value (actually a double, since all JavaScript floating-point values are doubles).</font>
+    </li>
+    <li>
+      <font size=3><b>StateArray</b>: An array of string values. Note that when you access such a property (by something like <span style="FONT-FAMILY:Courier New">var x = this.myStateArray;</span>), you do <i>not</i> get a normal JavaScript array. Instead, you get an object with get(index) and set(index, value) functions, allowing you to change the individual values. It also has an asArray() function that returns a normal JavaScript array, but note that it is a copy, so if you modify it the actual value will not change (whereas changes due to set() do take hold). Note that you can set the entire variable normally, for example, with <span style="FONT-FAMILY:Courier New">this.myStateArray = ["some", "data"];</span>(Note: StateArray should be renamed to StateArrayString, but is kept as it is for backwards compatibility. However, in your own code you can easily alias it, by </font><font size=3><span style="FONT-FAMILY:Courier New">StateArrayString = StateArray;</span></font><font size=3>)<br>
+      </font>
+    </li>
+    <li>
+      <font size=3><b>StateArrayFloat</b>: An array of floating point values. Behaves similarly to StateArray otherwise.</font>
+    </li>
+    <li>
+      <font size=3><b>StateJSON</b>: Meant for synchronization of large amounts of data. When you read this you get the normal JavaScript value (i.e., already unserialized from JSON), and you can write normal JavaScript data to it. It is transmitted over the network using JSON. Note that when you read it you receive what is effectively a copy, so modifying it will not change the actual value. To do so, read it, modify what you want, and write the entire thing back.<br>
+      </font>
+    </li>
+  </ul>
+  <font size=3><br>
+  <br>
+  </font>
+  <h2>
+    <a id=Properties_of_State_Variables_ name=Properties_of_State_Variables_></a><font size=3><b>Properties of State Variables</b></font>
+  </h2>
+  <font size=3>When you define a state variable, you can define some properties for it, using syntax of the following form:<br>
+  <br>
+  </font>
+  <div style=MARGIN-LEFT:40px>
+    <font face="Courier New"><font size=3>door: new StateBoolean({ clientWrite: false });<br>
+    </font><br>
+    </font>
+  </div>
+  <font size=3><font face=Verdana>(Note the curly brackets - an object is used here.) In the example here we set the property 'clientWrite' to false. This property, and the other important ones, are explained below:<br>
+  <br>
+  </font></font>
+  <ul>
+    <li>
+      <font size=3><font face=Verdana><b>clientSet</b> (default: false): If true, this means that the <i>clients</i> are the 'final arbiters' of this value. That means that if a client (any client) sets the value, it will be applied immediately on that client, and an update sent to the server, which will update the value and notify all the other clients (but not the originator, which already set the value). This is a very important property, that allows nicely responsive activites to be written, as the client will receive immediate feedback without needing to wait for the server to respond. For example, if a game has a health value that has clientSet: true, then if you run code on the client that lowers the health (say, because the player stepped in acid), and you show some visual effect or play a sound when health is lowered, then the feedback to the player will be immediate, as if the entire game was being played locally. (Note that this assumes the health is lowered on the client. If a server event lowers the health, there will still be a delay as the update reaches the client over the network.)</font></font>
+    </li>
+    <li>
+      <font size=3><font face=Verdana><b>clientWrite</b> (default: true): Whether clients are allowed to set this value. If false, then they can only read it. Useful for data you want to synchronize with the clients, but never want them to send requests to change.</font></font>
+    </li>
+    <li>
+      <font size=3><font face=Verdana><b>reliable</b> (default: true): By default, state variables are reliable - when they change, synchronization of that change must succeed, so that (after network delays, if any) everyone will see the same value. But some types of data can be sent in <i>un</i>reliable mode, which means that if the update is dropped by the network, or arrives much too late, it will simply be ignored. This makes sense if you send a lot of updates for a variable, and don't care too much about each particular one. For example, this would be useful if you update the orientation of an object 10 times per second; if one update is lost, the next one will be good enough. The reason that reliable updates would be a problem here is that all updates - reliable and unreliable - arrive in the right order. If a reliable update is late, all other updates will wait for it. So if you send 10 updates a second, it is likely this will lead to lag at some point. On the other hand, unreliable updates can never lead to such lag, as if they arrive late, or never arrive at all, that doesn't matter as other updates are processed normally.</font></font>
+    </li>
+    <li>
+      <font size=3><font face=Verdana><b>hasHistory</b> (default: true): By default, state variables care about their history, in the sense that when serialized the value is saved, and if a value changes, and much later a new player logs in, that player will receive the current value of that variable. However, if you set hasHistory to false, then history is ignored, and changes to the state variable are in effect 'events' - they matter when they occur, but not afterwards. For example, you can have a state variable indicate that a shot is being fired right now, so that each time the value changes you show a shot being fired. With history, if a client logs in, they will see a shot fired, even if it actually occurred far in the past. On the other hand, if you set hasHistory to false, this will work as desired.</font></font>
+    </li>
+    <li>
+      <font size=3><font face=Verdana><b>clientPrivate</b> (default: false): By default state variables are sychronized between all clients - changes to data are reflected everywhere. However, some information should only be sent to some clients, like say the inventory in an RPG game. A clientPrivate state variable can achieve that, since it is only sent to the client whose avatar that is. In other words, clientPrivate variables on a player entity are only updated to that player - other clients will not see a value for that variable on that entity. (Note that clientPrivate has no effect on non-player entities.)<br>
+      </font></font>
+    </li>
+    <li>
+      <font size=3><font face=Verdana><b>guiName</b>: If defined, this name will be shown in the in-game editor when editing the entity's state data (i.e., the state variables), which is done by rightclicking on an entity in edit mode.</font></font>
+    </li>
+    <li>
+      <font size=3><font face=Verdana><b>customSynch</b> (default: false): If true, then synchronization for this variable is done using some non-standard way, like a special protocol, and the normal synchronization will not do anything regarding sending and updating values. You probably won't need to use this unless you write some C++ code to handle the custom protocol (which you really should not need to do).</font></font>
+    </li>
+  </ul>
+  <font size=3><font face=Verdana><br>
+  </font></font><font size=3><br>
+  </font>
+  <h2>
+    <a id=Main_Logic_Entity_Classes_0119 name=Main_Logic_Entity_Classes_0119></a><font size=3><b>Main Logic Entity Classes</b></font>
+  </h2>
+  <font size=3>The following are the main entity classes in the API:<br>
+  </font><br>
+</div>
+<div>
+  <ul>
+    <li>
+      <font size=3><b>AnimatableLogicEntity</b>: An internal class with a 3D animatable model, attachments, etc. You should <b>not</b> subclass this yourself.</font>
+    </li>
+    <li>
+      <font size=3><b>StaticEntity</b>: The basis for all 'static' entities, which are entities that do not move, or hardly move - like static props, lights, particle effects, etc. </font><font size=3>You should <b>not</b> subclass this yourself.</font>
+    </li>
+    <li>
+      <font size=3><b>Light</b>: A static light, which affects lightmaps.</font>
+    </li>
+    <li>
+      <font size=3><b>ParticleEffect</b>: A particle effect. See the Cube 2 documentation for details.</font>
+    </li>
+    <li>
+      <font size=3><b>Mapmodel</b>: A static prop, that is, a mesh that is placed in a particular position in the map.</font>
+    </li>
+    <li>
+      <font size=3><b>AreaTrigger</b>: A space which can let you know when (dynamic) entities (like players) enter it (via onCollision, clientOnCollision).</font>
+    </li>
+    <li>
+      <font size=3><b>ResettableAreaTrigger</b>: An AreaTrigger that 'fires' once when entered, and will not signal additional collisions until it is 'reset'.</font>
+    </li>
+    <li>
+      <font size=3><b>WorldMarker</b>: A marker of a position in the map. The typical use is to give it some tag, then find it using that tag in a script, and use its position to do something (like place respawning characters there, etc.).</font>
+    </li>
+    <li>
+      <font size=3><b>Character</b>: The basis for all dynamic (fast-moving) entities. Subclass this for NPC classes (bots).<br>
+      </font>
+    </li>
+    <li>
+      <font size=3><b>Player</b>: A Character representing a player.<br>
+      </font>
+    </li>
+  </ul>
+  <font size=3><br>
+  <br>
+  </font>
+  <h2>
+    <a id=The_Action_System_921582705793 name=The_Action_System_921582705793></a><font size=3><b>The Action System</b></font>
+  </h2>
+  <font size=3>Every entity has an <i>action queue</i>. You can add actions to the action queue, and they will be performed in order. This is useful for controlling the 'state' of an entity, for example, if a game has a 'death state', we can implement that as follows:<br>
+  <br>
+  </font>
+  <div style="MARGIN-LEFT:40px; FONT-FAMILY:Courier New">
+    <font size=3>DeathAction = Action.extend({<br>
+    &nbsp;&nbsp;&nbsp; _name: 'DeathAction',<br>
+    &nbsp;&nbsp;&nbsp; canMultiplyQueue: false,<br>
+    &nbsp;&nbsp;&nbsp; canBeCancelled: false,<br>
+    &nbsp;&nbsp;&nbsp; secondsLeft: 5.5,<br>
+    <br>
+    &nbsp;&nbsp;&nbsp; doStart: function() {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.actor.emit('fragged');<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.actor.canMove = false;<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.actor.animation = ANIM_DYING|ANIM_RAGDOLL;<br>
+    &nbsp;&nbsp;&nbsp; },<br>
+    <br>
+    &nbsp;&nbsp;&nbsp; doFinish: function() {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.actor.respawn();<br>
+    &nbsp;&nbsp;&nbsp; }<br>
+    });<br>
+    <br>
+    </font>
+  </div>
+  <font size=3>(This is taken from packages/library/Health.js.)<br>
+  <br>
+  As you can see, action classes are subclasses of Action. Here we give the action a _name, and set some properties:<br>
+  <br>
+  </font>
+  <ul>
+    <li>
+      <font size=3><b>canMultiplyQueue</b> (default: true): When set to false, only one action of this type can be queued (the 'type' is defined as having the same _name). This makes sense for a death action, as you can't kill someone that is already dead.</font>
+    </li>
+    <li>
+      <font size=3><b>canBeCancelled</b> (default: true): When set to false, the player that the entity represents can't easily cancel the action. When set to true, moving the character or pressing the escape key will cancel all current actions. For example, if the player is performing a 'cast spell' action, it makes sense for escape to cancel it, but for our death action here it doesn't.</font>
+    </li>
+    <li>
+      <font size=3><b>secondsLeft</b>: How long the action will last. In this example we set it so players will stay dead for 5.5 seconds.</font>
+    </li>
+  </ul>
+  <br>
+  <font size=3>Aside from the properties mentioned above (canMultiplyQueue, canBeCancelled, secondsLeft), subclasses of Action can have a few other properties,<br>
+  <br>
+  </font>
+  <ul>
+    <li>
+      <font size=3><b>animation</b>: If defined, while the action runs the value given here will be used for the animation of the entity performing the action.</font>
+    </li>
+    <li>
+      <font size=3><b>parallelTo</b>: If defined, this should be an action instance. This action will then finish exactly when that action does.<br>
+      </font>
+    </li>
+  </ul>
+  <font size=3><br>
+  </font><font size=3>In the example above we then overload two functions:<br>
+  <br>
+  </font>
+  <ul>
+    <li>
+      <font size=3><b>doStart</b>: Called when the action is first started (not queued - but when it actually begins to run). In this example, we emit a signal, 'fragged', which other components can connect to if they want (for example, in a capture the flag game, you might connect to this so that players drop flags they hold when they die). Note that we access the player through this.actor - this is the action, and this.actor is the entity that is performing the action. We then set canMove to false, so the player can't move (canMove is a state variable, so it is automatically synchronized between the server and clients; when equal to false, the player cannot move). Finally, we set an animation, a combination of a dying animation and a ragdoll animation (which means that a ragdoll death sequence will be shown if available, or if not, a dying animation; animation is a state variable, so like canMove it is automatically synchronized between the server and clients - everyone will see the same animation for a character).<br>
+      </font>
+    </li>
+    <li>
+      <font size=3><b>doFinish</b>: Called when the action finishes (or is cancelled). We call respawn() on the character, which should implement something appropriate. In particular it should set canMove to true, change the animation, and probably move the character to a start position (we could do the first two here, which would let us clean up nicely after doStart, but often respawn procedures need more control over things (for example, first making the player vanish, then moving them, then making them appear - perhaps using some visual effect - and only then letting them move).</font>
+    </li>
+  </ul>
+  <br>
+  <font size=3>Another useful function</font><font size=3> to override</font><font size=3> (which we didn't need in the example above) is the following:<br>
+  <br>
+  </font>
+  <ul>
+    <li>
+      <font size=3><b>doExecute</b>: This is called each frame while the action is running, with the number of seconds the current frame lasts as a parameter. In that respect doExecute is very much like act() and clientAct() (note that whether it occurs on the client or the server depends on where you queued the action - actions are <i>not</i> synchronized).<br>
+      </font>
+    </li>
+  </ul>
+  <font size=3><br>
+  After defining the DeathAction class from before, we can use it as follows:<br>
+  </font><font size=3><br>
+  </font>
+  <div style="MARGIN-LEFT:40px; FONT-FAMILY:Courier New">
+    <font size=3>player.queueAction(new DeathAction()); </font>
+  </div>
+  <br>
+  <font size=3>This will queue a new death action on player. Note that in this example, we would probably do <span style="FONT-FAMILY:Courier New">player.clearActions();</span> before it, to cancel any current actions and make the death action start immediately.<br>
+  <br>
+  In summary, note that you don't need to use actions - you can accomplish the same results by coding behavior into the act() and clientAct() functions. But you'd probably end up with a lot of conditions and 'spaghetti code'. The action system can make writing clear, extensible code easier.<br>
+  </font><font size=3><br>
+  <b><br>
+  </b></font>
+  <h2>
+    <a id=Other_Useful_Things_0643467315 name=Other_Useful_Things_0643467315></a><font size=3><b>Other Useful Things</b></font>
+  </h2>
+  <ul>
+    <li>
+      <font size=3>src/javascript/<b>Utilities.js</b> contains some useful classes, like Vector3, RepeatingTimer, and functions like normalizeAngle, yawTo, etc.</font>
+    </li>
+    <li>
+      <font size=3>src/javascript/<b>Effect.js</b> contains access to the engine's particle effect system and other visual effects.</font>
+    </li>
+    <li>
+      <font size=3>src/javascript/<b>MessageSystem.js</b> contains access to the engine's network protocol system (which you probably won't need to use directly - except perhaps for showClientMessage).</font>
+    </li>
+    <li>
+      <font size=3>src/javascript/<b>Sound.js</b> contains access to the engine's sound and music system.</font>
+    </li>
+    <li>
+      <font size=3><b> packages/</b><b>library</b> contains several useful components, like Health, GameManager, Projectiles, etc. </font><br>
+    </li>
+  </ul>
+  <br>
+  <h1>
+    <a id=Plugin_Example_Stunball_Gun_40 name=Plugin_Example_Stunball_Gun_40></a>Plugin Example: Stunball Gun
+  </h1>
+  <font size=3>In this chapter we will look over an example of plugin, specifically a 'stunball gun' - a weapon that shoots projectiles that explode and stun their targets, making them move more slowly for a short time. Here is the code, taken from packages/library/guns/Stunball.js:<br>
+  <br>
+  <br>
+  </font><span style="FONT-FAMILY:Courier New">Library.include('library/Firing');</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">Library.include('library/Projectiles');</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">Stunball = Projectiles.Projectile.extend({</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; radius: 4,</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; color: 0xABCDFF,</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; explosionPower: 50.0,</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; speed: 90.0,</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; timeLeft: 1.0,</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; customDamageFunc: function(entity, damage) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (damage &gt; 25) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; entity.sufferStun(damage);</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; },</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">});</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">StunballGun = Gun.extend({</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; delay: 0.5,</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; repeating: false,</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; originTag: '',</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; handleClientEffect: function(shooter, originPosition, targetPosition, targetEntity) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; shooter.projectileManager.add( new Stunball(</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; originPosition,</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; targetPosition.subNew(originPosition).normalize(),</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; shooter</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ));</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Sound.play("olpc/AdamKeshen/CAN_1.L.wav", originPosition);</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; },</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">});</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New"><br>
+  StunballVictimPlugin = {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; sufferingStun: new StateBoolean({ clientSet: true }),</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; activate: function() {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.sufferingStun = false;</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; },</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; sufferStun: function(stun) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (!this.sufferingStun) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.oldMovementSpeed = this.movementSpeed;</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.movementSpeed /= 4;</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.sufferingStun = true;</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.sufferingStunLeft = stun/10; // seconds</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; },</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; clientAct: function(seconds) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this.sufferingStun) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; var ox = (Math.random() - 0.5)*2*2;</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; var oy = (Math.random() - 0.5)*2*2;</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; var oz = (Math.random() - 0.5)*2;</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; var speed = 150;</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; var density = 2;</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Effect.flame(PARTICLE.SMOKE, this.getCenter().add(new Vector3(ox,oy,oz)), 0.5, 1.5, 0x000000, density, 2.0, speed, 0.6, -15);</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this === getPlayerEntity()) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.sufferingStunLeft -= seconds;</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this.sufferingStunLeft &lt;= 0) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.movementSpeed = this.oldMovementSpeed;</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.sufferingStun = false;</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; },</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">};</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">Map.preloadSound('olpc/AdamKeshen/CAN_1.L.wav');</span><br style="FONT-FAMILY:Courier New">
+  <br>
+  <font size=3><br>
+  </font><font size=3>Comments and points of interest:<br>
+  <br>
+  </font>
+  <ul>
+    <li>
+      <font size=3>We rely on two other components, Firing and Projectiles. Firing handles guns, shooting, etc., and Projectiles handles moving projectiles. Note that Library.include is smart enough not to include something twice, so if you include something already imported, no problem will occur.</font>
+    </li>
+    <li>
+      <font size=3><b>Stunball</b> is a subclass of Projectiles.Projectile.</font>
+    </li>
+    <ul>
+      <li>
+        <font size=3>We define some attributes for it:</font>
+      </li>
+      <ul>
+        <li>
+          <font size=3><b>radius</b>: The size of the projectile (in 'cube coordinates' - a player is about 15 units)<br>
+          </font>
+        </li>
+        <li>
+          <font size=3><b>color</b>: The color of the projectile (note that we specify the color in 0xRRGGBB format)<br>
+          </font>
+        </li>
+        <li>
+          <font size=3><b>explosionPower</b>: How much damage it will cause when it explodes (see below)<br>
+          </font>
+        </li>
+        <li>
+          <font size=3><b>speed</b>: How fast it moves, in cube coordinates/second<br>
+          </font>
+        </li>
+        <li>
+          <font size=3><b>timeLeft</b>: How long it will last, if it doesn't hit something beforehand, in seconds<br>
+          </font>
+        </li>
+      </ul>
+      <li>
+        <font size=3>We implement <b>customDamageFunc</b>(), because we want our stunballs to do something other than just reduce health: We want them to stun their targets. In the code for that function, we call sufferStun if the damage is high enough (that is, we want to stun only on direct hits or close to direct hits - as the explosionPower is 50, damage of 25 or more means a very close hit). Note that customDamageFunc, and damage in general, is by default done on each client <i>only for that client's entity</i>. That is, each player manages their own damage, not anybody else's. This is important for a responsive game. Therefore, when inside customDamageFunc, you know that entity is the player entity for this client (again, unless you changed the default behavior).<br>
+        </font>
+      </li>
+    </ul>
+    <li>
+      <font size=3><b>StunballGun</b> is a subclass of Gun, the base class for all weapons.</font>
+    </li>
+    <ul>
+      <li>
+        <font size=3>We define some attributes for it:</font>
+      </li>
+      <ul>
+        <li>
+          <font size=3><b>delay</b>: How long the gun will be inactive after each shot, in seconds<br>
+          </font>
+        </li>
+        <li>
+          <font size=3><b>repeating</b>: If the gun allows keeping the trigger button down for repeated firing<br>
+          </font>
+        </li>
+        <li>
+          <font size=3><b>originTag</b>: The tag of the attachment from where the shot will appear. In this example we don't specify one, subclasses of SunballGun would do so (or originTag could be set manually for an instance of StunballGun)<br>
+          </font>
+        </li>
+      </ul>
+      <li>
+        <font size=3>We implement <b>handleClientEffect</b>(), which is called on each client when a shot is fired. Typically the visual effect of the shot is done here. Here we create a new projectile and set it in motion:</font>
+      </li>
+      <ul>
+        <li>
+          <font size=3>projectileManager will exist in the shooting entity if they have the Projectile plugin baked in with bakePlugins. This manages projectiles for that entity.</font>
+        </li>
+        <li>
+          <font size=3>We create a new Stunball instance, passing it where it starts, its direction (note how we calculate the direction, and normalize the vector), and who fired it).<br>
+          </font>
+        </li>
+        <li>
+          <font size=3>We play a sound, whose location is where the shot originates (so people far away won't hear it).</font>
+        </li>
+      </ul>
+    </ul>
+    <li>
+      <b><font size=3>StunballVictimPlugin </font></b><font size=3>is a plugin for characters that manages their suffering the stun effect. This component should be added to the character class using bakePlugins.</font>
+    </li>
+    <ul>
+      <li>
+        <font size=3><b>sufferingStun</b>, a state variable, says whether this character is currently suffering the stun effect. We need this to be a state variable so that it will be synchronized between the clients: Every client needs to know who is currently stunned in order to show an appropriate visual effect for that entity, as we will see below. Note that sufferingStun has clientSet: true, which means that when a client-side script sets stun, the value is set immediately, without waiting for a server response. This is important because we simulate projectiles on the clients, and when a client gets hit by one, we want them to immediately see that they are stunned. Waiting for a server response would make the game feel 'laggy'.</font>
+      </li>
+      <li>
+        <font size=3><b>activate</b> sets the initial value for sufferingStun, which is of course false.</font>
+      </li>
+      <li>
+        <font size=3><b>sufferStun</b>, which we saw called earlier from Stunball, starts the stun effect:</font>
+      </li>
+      <ul>
+        <li>
+          <font size=3>If this entity is not already stunned, save its original speed (in a normal JavaScript variable), and slow it down by a factor of 4. Note that movementSpeed is a state variable, specifying how fast the entity can move, jump, etc.</font>
+        </li>
+        <li>
+          <font size=3>Set sufferingStun to true.</font>
+        </li>
+        <li>
+          <font size=3>Set sufferingStunLeft (a normal JavaScript variable, not a state variable) to the seconds remaining for the stun effect. As stun is a value in the range 25-50, as we saw earlier, this means somewhere between 2.5 and 5 seconds.</font>
+        </li>
+      </ul>
+      <li>
+        <font size=3><b>clientAct</b> is called for each entity on each frame; here we render a visual effect for being stunned.</font>
+      </li>
+      <ul>
+        <li>
+          <font size=3>First we check that the entity is indeed stunned. Note that while sufferingStun was only set to true on the client to whom the player belongs, we can read that value on any of the other clients, because it is a state variable.</font>
+        </li>
+        <li>
+          <font size=3>We show a flame-type effect, specifically smoke, at a random location around the center of the entity. Stunned entities will appear to give off smoke, like a faulty robot.<br>
+          </font>
+        </li>
+        <li>
+          <font size=3>If this entity is in fact the player entity - that is, represents the player on this machine, not some other player - then we also manage the stun effect, deducing time from the time the stun effect has left. In other words, each player manages their own stun state. After deducting the time, if no time is left we restore the original movement speed and reset sufferingStun - the stun effect is over.</font>
+        </li>
+      </ul>
+    </ul>
+    <li>
+      <font size=3>The final line of the script preloads a sound, the same sound used when firing the gun. Preloading is useful as otherwise the sound will be loaded only when first played, which will cause a small (but perhaps noticeable) delay on that first fire.<br>
+      </font>
+    </li>
+  </ul>
+  <font size=3><br>
+  </font>
+  <h1>
+    <a id=Complete_Working_Activity_Sket name=Complete_Working_Activity_Sket></a>Complete Working Activity: Sketch World<br>
+  </h1>
+  <font size=3>In this chapter we will look over a complete working example activity: Sketch World. If you haven't seen it in action, it can be summarized as an activity where every player can 'write' on the scenery, in a different color, in streaks of light (but you should really see it in action before reading this!). Here is the code:<br>
+  <br>
+  </font><span style="FONT-FAMILY:Courier New">Library.include('library/Plugins');</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">Library.include('library/PlayerList');</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">Library.include('library/MapDefaults');</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">Library.include('yo_frankie/');</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">Map.fogColor(0, 0, 0);</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">Map.fog(9999);</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">Map.loadSky("skyboxes/philo/sky3");</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">Map.skylight(100, 100, 100);</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">Map.ambient(20);</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">Map.shadowmapAmbient("0x101010");</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">Map.shadowmapAngle(300);</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">//// Player class</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">registerEntityClass(</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp; bakePlugins(</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; Player,</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; [</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; PlayerList.plugin,</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; _class: "GamePlayer",</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; markColor: new StateInteger({ clientSet: true }),</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; newMark: new StateArrayFloat({ clientSet: true, hasHistory: false }), //, reliable: false }),</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; clearMarks: new StateBoolean({ clientSet: true, hasHistory: false }),</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; init: function() {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.modelName = 'frankie';</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; },</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; activate: function() {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.movementSpeed = 75;</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.clearMarks = true;</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; },</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; clientActivate: function() {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.marks = [];</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.connect('client_onModify_newMark', this.onNewMark);</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.connect('client_onModify_clearMarks', this.resetMarks);</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; },</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; resetMarks: function() {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.marks = [];</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this === getPlayerEntity()) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; function randomChannel() { return integer(Math.random()*256); }</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.markColor = randomChannel() + (randomChannel() &lt;&lt; 8) + (randomChannel() &lt;&lt; 16);</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Effect.splash(PARTICLE.SPARK, 15, 1.0, this.position.addNew(new Vector3(0,0,20)), this.markColor, 1.0, 70, 1);</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; },</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; clientAct: function(seconds) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Show marks</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; var color = this.markColor;</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; var last;</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; forEach(this.marks, function(mark) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (last &amp;&amp; mark) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Effect.flare(PARTICLE.STREAK, last, mark, 0, color, 1.0);</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Effect.flare(PARTICLE.STREAK, mark, last, 0, color, 1.0);</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; last = mark;</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; });</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Create new mark, possibly</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this === getPlayerEntity()) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; var newBatch = this.marks.length === 0 || !this.marks[this.marks.length-1];</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; var continuingBatch = this.marks.length &gt; 0 &amp;&amp; this.marks[this.marks.length-1];</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (continuingBatch) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Effect.splash(PARTICLE.SPARK, 10, 0.15, this.marks[this.marks.length-1], color, 1.0, 25, 1);</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (this.pressing) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; var newPosition = CAPI.getTargetPosition();</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; var toPlayer = this.position.subNew(newPosition);</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; newPosition.add(toPlayer.normalize().mul(1.0)); // Bring a little out of the scenery</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Add if a new batch, or otherwise only if not too close</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (newBatch || !this.marks[this.marks.length-1].isCloseTo(newPosition, 5.0)) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.newMark = newPosition.asArray();</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; },</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; onNewMark: function(mark) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (mark.length === 3) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mark = new Vector3(mark);</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; } else {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mark = null;</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; this.marks.push(mark);</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // TODO: Expire old marks beyond a certain number of total marks</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; },</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; ]</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp; )</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">);</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">//// Application</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">ApplicationManager.setApplicationClass(Application.extend({</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp; _class: "SketchWorldApp",</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp; getPcClass: function() {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; return "GamePlayer";</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp; },</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp; getScoreboardText: PlayerList.getScoreboardText,</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp; clientOnEntityOffMap: function(entity) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; entity.position = [600,600,600];</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp; },</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp; clientClick: function(button, down, position, entity) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; var player = getPlayerEntity();</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; if (!entity) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (button === 1) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; player.pressing = down;</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; } else if (button === 2 &amp;&amp; down) {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; player.newMark = []; // Separator</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; } else {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // There are much better ways to code this sort of thing, but as a hack it will work</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (down &amp;&amp; entity._class === 'Mapmodel') {</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; player.clearMarks = true;</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; }</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; return true; // Handled</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp; },</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">}));</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">//// Load permanent entities</span><br style="FONT-FAMILY:Courier New">
+  <br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">if (Global.SERVER) { // Run this only on the server - not the clients</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp; var entities = CAPI.readFile("./entities.json");</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">&nbsp; loadEntities(entities);</span><br style="FONT-FAMILY:Courier New">
+  <span style="FONT-FAMILY:Courier New">}</span><br style="FONT-FAMILY:Courier New">
+  <br>
+  <br>
+  <font size=3>Comments and points of interest:<br>
+  <br>
+  </font>
+  <ul>
+    <li>
+      <font size=3>PlayerList is a small but useful plugin that shows a list of players when the player presses TAB. Games would typically extend it to also show separate teams, scores, etc.</font>
+    </li>
+    <li>
+      <font size=3>Aside from PlayerList, we bake in one plugin to handle the sketch world functionality, with the following properties:<br>
+      </font>
+    </li>
+    <ul>
+      <li>
+        <font size=3><b>markColor</b> is the color the player uses to draw with. Notice that it is clientSet: true, so that when the player changes his or her color, the change is effective for them immediately.</font>
+      </li>
+      <li>
+        <font size=3><b>newMark</b> and <b>clearMarks</b> are 'events', so they have hasHistory: false. We send them only to signal that a new mark is added, or all marks should be cleared, for a particular entity.<br>
+        </font>
+      </li>
+      <li>
+        <font size=3><b>this.marks</b>, which is stored only clientside, is a normal JavaScript variable. We send the marks in the state variable newMark as they appear, and store them here, as Vector3 instances.<br>
+        </font>
+      </li>
+      <li>
+        <font size=3><b>clientAct</b>: Here we show the player's marks. This works because each client has an entity for each player, not just themselves. Each frame, clientAct is called for every entity, so in this way we let every entity draw its own marks.</font>
+      </li>
+      <ul>
+        <li>
+          <font size=3>In a related matter, getPlayerEntity() returns the entity representing the player (whose machine the script is running on). This is used in clientAct to make sure each player only adds marks for themselves, as clientAct is called on each client for <i>all</i> the players, as just mentioned.<br>
+          </font>
+        </li>
+        <li>
+          <font size=3>The actual drawing is done using Effect.flare.</font>
+        </li>
+        <li>
+          <font size=3>A simple 'batch' system is used for the marks: if an element of this.marks is equal to null, it separates batches. Within a batch, we connect each mark to the previous, creating a single connected chain. Rightclicking adds a separator, while normal clicks add new marks within the same batch.</font>
+        </li>
+        <li>
+          <font size=3>Clicking and dragging adds new marks, but not if they are too close to the previous (so we don't end up with ridiculous amounts). For this we use some vector math with the Vector3 instances: add, sub, etc. (note that addNew and subNew add and subtract, respectively, while returning a new Vector3, as opposed to add and sub which alter the existing one).</font>
+        </li>
+        <li>
+          <font size=3>CAPI.getTargetPosition()</font><font size=3> returns a Vector3 of the current mouse target position.<br>
+          </font>
+        </li>
+      </ul>
+    </ul>
+    <li>
+      <font size=3>We also modify the Application class as follows:</font>
+    </li>
+    <ul>
+      <li>
+        <font size=3><b>clientClick</b>: We implememt this to capture mouse clicks. We decide what to do with them depending on the mouse button, and whether the click is a downclick or an upclick (i.e., the button was pressed or released).</font>
+      </li>
+      <ul>
+        <li>
+          <font size=3>If the player clicks on a Mapmodel then we clear their marks (which also picks a new color for them). In the map, a Mapmodel exists with a mesh of a tree, so clicking the tree clears the player's marks. Note that checking if the click is on a Mapmodel in the way it is done here (reading the _class) is quite hackish. Usually you would tag the entity and check that.<br>
+          </font>
+        </li>
+      </ul>
+    </ul>
+  </ul>
+  <font size=3><br>
+  </font>
+  <h1>
+    <a id=Appendix_Standard_Library_Refe name=Appendix_Standard_Library_Refe></a><font size=3>Appendix: Standard Library Reference</font>
+  </h1>
+  <font size=3>Comments appear inside the source code files. For now, they are the best documentation of individual classes, functions, parameters, etc. This section gives an overview of the files, so you know where to look for things.<br>
+  <br>
+  The core standard library (src/javascript/intensity) includes:<br>
+  <br>
+  </font>
+  <ul>
+    <li>
+      <font size=3><b>Actions</b>: Things that entities can do, last for certain amounts of time, can be queued, etc.</font>
+    </li>
+    <li>
+      <font size=3><b>Animatable</b>: The core entity class, which is 'visual': can be animated, has attachments, etc.</font>
+    </li>
+    <li>
+      <font size=3><b>Application</b>: The interface to handling basic features of your activity.<br>
+      </font>
+    </li>
+    <li>
+      <font size=3><b>Character</b>: The classes for players and bots.</font>
+    </li>
+    <li>
+      <font size=3><b>Effects</b>: Visual effects.</font>
+    </li>
+    <li>
+      <font size=3><b>LogicEntity</b>: The core entity class, the basis for everything else.</font>
+    </li>
+    <li>
+      <font size=3><b>LogicEntityClasses</b>: Management of entity classes - their registration, etc.</font>
+    </li>
+    <li>
+      <font size=3><b>LogicEntityStore</b>: Handles the active entites in memory, serializing them, filtering them, etc.</font>
+    </li>
+    <li>
+      <font size=3><b>MessageSystem</b>: Sending network messages.</font>
+    </li>
+    <li>
+      <font size=3><b>ModelAttachments</b>: Attachments for models.</font>
+    </li>
+    <li>
+      <font size=3><b>Platform</b>: Basic settings are stored in the Global object, including whether this is the client or the server, etc.</font>
+    </li>
+    <li>
+      <font size=3><b>Projectiles</b>: Moving objects (not entities) that are typically transient.</font>
+    </li>
+    <li>
+      <font size=3><b>Sound</b>: Playing sounds and music.</font>
+    </li>
+    <li>
+      <font size=3><b>StaticEntity</b>: The main 'static' entity classes - entities that do not move a lot, and persist with the map, like Lights, Mapmodels, WorldMarkers, AreaTriggers, etc.</font>
+    </li>
+    <li>
+      <font size=3><b>Steering</b>: Movement planning and control for bots.</font>
+    </li>
+    <li>
+      <font size=3><b>Utilities</b>: Various useful classes, like Vector3</font>
+    </li>
+    <li>
+      <font size=3><b>Variables</b>: State Variables of all kinds</font>
+    </li>
+  </ul>
+  <font size=3><br>
+  The optional standard library (packages/library) includes (as of version 1.2 of the extra standard library):<br>
+  <br>
+  </font>
+  <ul>
+    <li>
+      <font size=3><b>AutoTargeting</b>: Lets entities target other entities, for example, automatic cannons that shoot at players.</font>
+    </li>
+    <li>
+      <font size=3><b>Chat</b>: Additional chat functionality beyond the basics already present in the engine.</font>
+    </li>
+    <li>
+      <font size=3><b>CustomEffect</b>: More complex, composite effects than those in Effects in the core standard library, for example, fireworks. These are built using those simpler core ones.</font>
+    </li>
+    <li>
+      <font size=3><b>CutScenes</b>: Allows the camera to be controlled, letting you create cutscenes.</font>
+    </li>
+    <li>
+      <font size=3><b>EntityQueries</b>: Improved querying of active entities, over that already existing in LogicEntityStore in the core library.</font>
+    </li>
+    <li>
+      <font size=3><b>Events</b>: More complex actions and action systems, including parallel actions, adding action systems to arbitrary objects (not just entities), etc.</font>
+    </li>
+    <li>
+      <font size=3><b>Firing</b>: Generic system for guns - registering them, using them to fire shots, etc.</font>
+    </li>
+    <li>
+      <font size=3><b>GameManager</b>: A singleton entity that handles the current game. Has optional plugins for game modes and things like intermissions, team balancing, etc.</font>
+    </li>
+    <li>
+      <font size=3><b>Health</b>: Defines health for entities, spawning based on that health, and so forth.</font>
+    </li>
+    <li>
+      <font size=3><b>MapDefaults</b>: The latest version of the 'standard' setup for maps (materials and textures, etc.).</font>
+    </li>
+    <li>
+      <font size=3><b>MultipartRendering</b>: Makes it easier to render multiple models for a single entity (e.g., used for cannons which have a base and a barrel).</font>
+    </li>
+    <li>
+      <font size=3><b>Platforms</b>: Moving platforms that players can jump on and be carried by.</font>
+    </li>
+    <li>
+      <font size=3><b>PlayerList</b>: Manages a list of players for the builtin scoreboard (shown when tab is pressed).</font>
+    </li>
+    <li>
+      <font size=3><b>Plugins</b>: The basis for many of the extra libraries - a system for building new entity classes using plugins, in a flexible way.</font>
+    </li>
+    <li>
+      <font size=3><b>Projectiles</b>: A better version of the Projectiles in the core library (replaces it entirely).</font>
+    </li>
+    <li>
+      <font size=3><b>Roles</b>: A system for 'classes' in a game, like tank, defensive, sniper, etc. (called 'roles' in the code, so as not to confuse with the term 'classes').</font>
+    </li>
+    <li>
+      <font size=3><b>Vehicles</b>: Lets entities move like vehicles instead of like walking characters (the default).</font>
+    </li>
+    <li>
+      <font size=3><b>World</b>: Querying information about the world (like normal vectors), and physics related to that (like reflecting vectors, bouncing physics, etc.)</font>
+    </li>
+    <li>
+      <font size=3><b>WorldSignals</b>: A signal system that lets you connect to and emit signals that are relevant to certain areas in the 3D space.</font>
+    </li>
+    <li>
+      <font size=3><b>ZeroG</b>: Lets you create games without gravity, or control gravity entirely in scripts in a custom manner.</font>
+    </li>
+    <li>
+      <font size=3><b>ai/Steering</b>: A better version of Steering from the core library.</font>
+    </li>
+    <li>
+      <font size=3><b>guns/*</b>: Various example guns, for use with Firing.</font>
+    </li>
+    <li>
+      <font size=3><b>mapelements/Cannons</b>: Static cannons that shoot at players.</font><br>
+    </li>
+    <li>
+      <font size=3><b>mapelements/JumpPads</b>: Send players in the air when stepped on.</font><br>
+    </li>
+    <li>
+      <font size=3><b>mapelements/Portals</b>: Show a scene in another world, and teleport players to other game servers.</font><br>
+    </li>
+    <li>
+      <font size=3><b>mapelements/Teleporters</b>: Teleport within the same world.</font><br>
+    </li>
+    <li>
+      <font size=3><b>mapelements/WorldAreas</b>: Let you define custom behavior in particular areas of the world, like mouse clicks behaving differently, etc.</font><br>
+    </li>
+    <li>
+      <font size=3><b>mapelements/WorldNotices</b>: Show some text when players are in some area.</font><br>
+    </li>
+    <li>
+      <font size=3><b>mapelements/WorldSequences</b>: Let you define sequences that track the player's progress, if the player goes through the areas in the right order</font>
+    </li>
+    <li>
+      <font size=3><b>mapelements/specific/ModelForge</b>: Helps with creating models by letting you test a model easily, as you modify it in an external tool.</font>
+    </li>
+    <li>
+      <font size=3><b>modes/CTF</b>: Capture-the-flag game mode.</font>
+    </li>
+    <li>
+      <font size=3><b>modes/Time</b>: Lets a team get points for time passing.</font>
+    </li>
+  </ul>
+</div>
+<br></body>
+</html>

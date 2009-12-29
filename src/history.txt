@@ -1,0 +1,6 @@
+Current upstream version of /enet, /engine and /shared: Sauerbraten Trooper Edition, svn r 1722, May 4th 2009
+Some small patches of later appear in individual files, see comments in the files:
+    - skelmodel.h
+    - command.h
+    - octarender.cpp
+

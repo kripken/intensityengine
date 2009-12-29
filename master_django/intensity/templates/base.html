@@ -1,0 +1,85 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Syntensity</title>
+  <link rel="shortcut icon" href="/favicon.ico">
+  <link type="text/css" rel="stylesheet" href="/static/styles_3.css" />
+{%block jquery%}
+  <script type="text/javascript" src="/static/jquery_1_3_2b.js"></script>
+  <script type="text/javascript" src="/static/jquery_plus.js"></script>
+{%endblock%}
+</head>
+<body>
+
+{%if debug%}
+<div class="message">
+<center>Warning: Master server running in DEBUG mode</center>
+</div>
+{%endif%}
+
+<div id="header">
+  <div class="relative">
+    <a href="{{toplevel_root}}/" id="logo"></a>
+
+    <div id="menuTop">
+        <ul>
+            <li><a href="{{toplevel_root}}/" id="nav_toplevel">Main Page</a></li>
+            <li><a href="{{tracker_root}}/tracker/overview/" id="nav_tracker">Tracker</a></li>
+            <li><a href="http://wiki.syntensity.com/">Wiki</a></li>
+        </ul>
+    </div>
+
+  
+    <div id="loggedAs">
+    {%if user.is_authenticated%}
+        Logged in as <a href="{{tracker_root}}/tracker/account"><b>{{user.username}}</b></a>
+         (<a href="{{tracker_root}}/accounts/logout">Log out</a>)
+    {%else%}
+        <a href="{{tracker_root}}/tracker/account"><b>Log in</b></a>
+    {%endif%}
+    </div>
+
+    {%block mainmenu%}
+    {%endblock%}
+  </div>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $(":text:visible:enabled:first").focus();
+});
+</script>
+
+<div id="content">
+  <div class="wrap">
+{%block popup%}
+{% if message %}
+<div class="message" id="messageArea">
+<table width="100%"><tr><td>{{ message }}</td><td align="right"><input type="button" id="hideMessage" value="hide"></td></tr></table>
+</div>
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $('#hideMessage').click(function() {
+        $('#messageArea').fadeOut('slow');
+    });
+});
+</script>
+
+{% endif %}
+{%endblock%}
+{%block mainmenubody%}
+{%endblock%}
+  </div>
+</div>
+
+        <div id="footer">© 2009 Syntensity</div>
+
+{%if not debug%}
+  {%include "analytics.html"%}
+{%endif%}
+
+</body>
+</html>
+

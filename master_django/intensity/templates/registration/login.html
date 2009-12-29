@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{%block uppernavigation%}
+{%endblock%}
+
+{% block mainmenubody %}
+
+<form method="post" action="?next={{ next|default:"/" }}">
+<div class="text_center">
+<div class="boxLogin">
+  <div class="top"></div>
+  <div class="middle">
+    <h3>Login</h3>
+
+    {% if form.errors %}
+    <div class="message">Please correct the error{{form.errors|pluralize}} below:</div>
+    <span class="error">{{form.non_field_errors}}</span>
+    {% endif %}
+
+    <dl>
+    <dt><label for="id_username">Username:</label></dt>
+    <dd>{{ form.username }}</dd>
+    <dt class="fullline">{% if form.username.errors %} <span class="error">{{ form.username.errors|join:", " }}</span>{% endif %}</dt>
+    <dt><label for="id_password">Password:</label></dt>
+    <dd>{{ form.password }}</dd>
+    <dt class="fullline">{% if form.password.errors %} <span class="error">{{ form.password.errors|join:", " }}</span>{% endif %}</dt>
+    <dt class="fullline"><input type="submit" value="Log in" /></dt>
+    </dl>
+    <div class="clear"></div>
+  </div>
+  <div class="bottom"></div>
+</div>
+</div>
+</form>
+
+<br>
+<h1>Other options</h1>
+<p><form method="GET" action="/accounts/register/">
+Don't have an account? <input type="submit" value="Sign up">
+</form></p>
+
+<p><form method="GET" action="/accounts/resetpassword/">
+Forgot your password? <input type="submit" value="Reset password">
+</form></p>
+{% endblock %}
+

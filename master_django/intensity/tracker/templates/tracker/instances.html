@@ -1,0 +1,53 @@
+{%extends "tracker/base.html"%}
+
+{%load intensity_tags %}
+
+{%block mainmenubody%}
+<script type="text/javascript">
+    $('#tracker_instances').addClass('current');
+</script>
+
+<table class="default" cellpadding="0" cellspacing="0" border="0">
+    <thead>
+        <tr>
+            <td>URL</td>
+            <td>Status</td>
+            <td>Current Activity</td>
+            <td>Players</td>
+            <td>Last Update</td>
+            <td>Mode</td>
+            <td>Requisitioner</td>
+            <td>Log</td>
+        </tr>
+    </thead>
+ <tfoot>
+    <tr>
+        <td colspan="8">&nbsp;</td>
+    </tr>
+ </tfoot>
+ <tbody>
+{% for instance in instances %}
+  <tr>
+    <td>{{instance.user_interface}}</td>
+    <td>{{instance.status|instance_status}}</td>
+    <td>{{instance.activity|hl_activity}}</td>
+    <td>{{instance.players|default:"0"}} / {{instance.max_players|default:"?"}}</td>
+    <td>{{instance.last_update|timesince}} ago</td>
+    <td>{{instance.mode|instance_mode}}</td>
+    <td>{{instance.requisitioner|hl_account:my_account}}</td>
+    <td>{%if instance.error_log%}exists{%else%}-{%endif%}</td>
+    {{instance.component_data}}
+  </tr>
+{% endfor %}
+ </tbody>
+</table>
+
+<br>
+
+Sort by:
+{%for key, value in sortables.items%}
+<a href="#" class="button" onclick="window.location.href = 'http://' + window.location.host + window.location.pathname + '?sorts={{key}}'"><span>{{value}}</span></a>
+{%endfor%}
+
+{%endblock%}
+

@@ -1,0 +1,302 @@
+#!/usr/bin/python
+# -*- coding: cp1252 -*-
+
+
+# TODO: Build TM and copy libmozjs.so into ./build
+
+#=============================================================================
+# Copyright (C) 2008 Alon Zakai ('Kripken') kripkensteiner@gmail.com
+#
+# This file is part of the Intensity Engine project,
+#    http://www.intensityengine.com
+#
+# The Intensity Engine is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, version 3.
+#
+# The Intensity Engine is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with the Intensity Engine.  If not, see
+#     http://www.gnu.org/licenses/
+#     http://www.gnu.org/licenses/agpl-3.0.html
+#=============================================================================
+
+
+import os
+import stat
+import sys
+import shutil
+import time
+
+from src.build_shared import *
+
+sys.path += [os.path.join(os.getcwd(), 'src', 'python') ] # Let us import our own modules
+
+PYTHON_VERSION = sys.version[0:3]
+
+if WINDOWS:
+    WINDOWS_PLATFORM_SDK = GetOption('windowsSDKs').split(',')[0]
+    print "USing Windows Platform SDK at:", WINDOWS_PLATFORM_SDK
+
+COPYRIGHT_AND_LICENSE = """
+/*
+ *=============================================================================
+ * Copyright (C) 2008 Alon Zakai ('Kripken') kripkensteiner@gmail.com
+ *
+ * This file is part of the Intensity Engine project,
+ *    http://www.intensityengine.com
+ *
+ * The Intensity Engine is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, version 3.
+ *
+ * The Intensity Engine is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with the Intensity Engine.  If not, see
+ *     http://www.gnu.org/licenses/
+ *     http://www.gnu.org/licenses/agpl-3.0.html
+ *=============================================================================
+ */
+
+"""
+
+
+# General
+
+def config(configger, option, pkgs=None):
+    if pkgs is None:
+        return os.popen('%s %s' % (configger, option)).read().strip()
+    else:
+
+        ret = ""
+        for pkg in pkgs:
+            temp = os.popen('%s %s %s' % (configger, option, pkg)).read().strip()
+            # If pkg-config succeeded, add the output. Else, ignore it. This lets us add
+            # several packages in hopes that one will work, e.g. ["lua50", "lua"]
+            if len(temp) >= 2 and temp[0:2] in ['-I', '-l']: # Either a cflag, or a lib (NOT a lib directory, -L)
+                ret = ret + temp + " "
+        return ret
+
+#
+##
+###
+#### Start
+###
+##
+#
+
+base_directory = os.path.dirname(os.getcwd()) # Do not need final part of this path, as it is 'build'
+
+
+# Pre-generate message code from templates
+
+execfile( os.path.join(base_directory, "src", "generate_messages.py") ) # If template is newer, then we must re-create the messages
+
+if LINUX:
+    cflags = " -g -Wall -Werror -O1 " # Release
+#    cflags = " -g -Wall -Werror -D_DEBUG " # Debug
+elif WINDOWS:
+    cflags = " /DWIN32 /O2 " # Release
+#    cflags = " /DWIN32 /D_DEBUG " # Debug
+
+# ENet
+
+if LINUX:
+    enet_cflags   = " -DHAS_SOCKLEN_T=1 -Wno-error "
+elif WINDOWS:
+    enet_cflags   = " -DHAS_SOCKLEN_T=1 "
+
+
+enet_files    = Split("enet/win32.c enet/callbacks.c enet/packet.c enet/list.c enet/peer.c enet/unix.c enet/protocol.c enet/host.c")
+enet_includes = Split("./enet/include")
+
+if WINDOWS:
+    enet_includes += [WINDOWS_PLATFORM_SDK+"Include"]
+
+enet_env = Environment(CCFLAGS = cflags + enet_cflags, CPPPATH = enet_includes)
+
+if LINUX:
+    enet_env.SharedLibrary('enet', enet_files)
+else:
+    enet_env.Library('enet', enet_files) ## XXX: Not sure why Linux needs it shared; consider making these the same
+
+
+# Client&Server stuff
+
+shared_includes = Split("./shared ./engine ./fpsgame ./enet/include ./intensity /usr/include/python%s ./thirdparty/v8/include ./thirdparty/openjpeg" % (PYTHON_VERSION))#./thirdparty/tracemonkey")
+shared_linkflags = ''
+
+if LINUX:
+    boost_python = None
+    for arch in ['', '64']:
+        if os.path.exists('/usr/lib%s/libboost_python-mt.so' % arch):
+            boost_python = 'boost_python-mt'
+            break
+        elif os.path.exists('/usr/lib%s/libboost_python.so' % arch):
+            boost_python = 'boost_python'
+            break
+    if boost_python is None:
+        print 'Cannot find Boost Python'
+        exit(1)
+
+    shared_libs = "z enet python%s %s v8 openjpeg" % (PYTHON_VERSION, boost_python) # v8_g, for debug # mozjs, for TraceMonkey # profiler, for google perftools
+elif WINDOWS:
+    shared_includes += [WINDOWS_PLATFORM_SDK+"Include"]
+    shared_libs = "zdll enet python%s boost_python-vc90-mt-1_36.lib v8 openjpeg.lib" % (PYTHON_VERSION[0] + PYTHON_VERSION[2]) # XXX Do we want this?
+#    shared_libs = "zdll enet python25 boost_python-vc90-mt-1_36.lib v8" #
+    shared_linkflags = ' /SUBSYSTEM:WINDOWS '
+shared_libpaths = ". ./thirdparty/v8 ../build/openjpeg"
+
+# Client
+
+client_cflags = ""
+client_includes = ""
+client_libs = ""
+
+if LINUX:
+    shared_libpaths += " /usr/lib build "
+
+    client_cflags = " -DCLIENT -fsigned-char " + config("sdl-config", "--cflags") + " " + config("pkg-config", "--cflags") + " "
+    print "cflags:", client_cflags
+    client_includes = shared_includes + ["/usr/X11R6/include"]
+    client_libs = Split(shared_libs + " SDL_image SDL_mixer GL GLU rt " + (" " + config("pkg-config", "--libs")).replace(" -l", " ") )
+    print "libs:", client_libs
+
+    client_libpaths = Split(shared_libpaths)
+        
+elif WINDOWS:
+    shared_libpaths += " ./windows_dev/lib ./windows_dev/zlib/lib ./windows_dev/SDL/lib ./windows_dev/SDL_image/lib ./windows_dev/SDL_mixer/lib ./windows_dev/boost/lib " + sys.prefix + "\\libs "
+
+    client_cflags = " /DCLIENT /D_DLL /EHsc "
+    # NOTE: if shared includes appears at the START of the next line, we have problems, oddly enough
+    client_includes = Split(" ./windows_dev/include ./windows_dev/SDL/include ./windows_dev/SDL_image/include ./windows_dev/SDL_mixer/include ./windows_dev/boost " + sys.prefix + "\\include") + shared_includes
+
+    client_libs = Split(shared_libs + " SDL SDLmain SDL_image SDL_mixer opengl32 glu32 ws2_32 winmm msvcrt user32 imagehlp")
+
+    client_libpaths = Split(shared_libpaths) + [WINDOWS_PLATFORM_SDK+"Lib"]
+
+# Client env    
+client_env = Environment(CCFLAGS = cflags + client_cflags, CPPPATH = client_includes, LIBPATH = client_libpaths, LINKFLAGS = shared_linkflags)
+
+# Check that we have what we need
+
+print "\nChecking dependencies:\n"
+
+conf = Configure(client_env)
+
+def require_lib(name, print_name=None):
+    if print_name is None:
+        print_name = name
+    if not conf.CheckLib(name):
+        print 'Could not find library', print_name
+        Exit(1)
+
+def require_header(name, print_name=None):
+    if print_name is None:
+        print_name = name
+    if not conf.CheckCXXHeader(name) and not conf.CheckCHeader(name):
+        print 'Could not find', print_name, 'development headers'
+        Exit(1)
+
+def require_python_module(name, print_name=None):
+    print "Checking for Python module Storm... ",
+    if print_name is None:
+        print_name = name
+    try:
+        exec("import " + name)
+        print "yes"
+    except ImportError:
+        print "no"
+        print 'Could not find', print_name, 'Python module'
+        Exit(1)
+
+#print client_libpaths
+#require_lib("SDL")
+require_header("SDL.h", "SDL")
+require_header("SDL_image.h", "SDL Image")
+require_header("zlib.h", "zlib")
+#require_header("Python.h", "Python")
+require_header(os.path.join("boost", "shared_ptr.hpp"), "Boost")
+#require_header(os.path.join("boost", "python.hpp"), "Boost.Python")
+require_header("v8.h", "Google V8")
+
+client_env = conf.Finish()
+
+print "\nDependencies satisfied\n"
+
+client_files = [ client_env.Object(target='client/'+name, source=name+'.cpp') for name in "engine/3dgui engine/blob engine/blend engine/menus engine/serverbrowser intensity/editing_system intensity/messages intensity/logging intensity/message_system intensity/system_manager intensity/python_wrap intensity/utility intensity/client_system intensity/client_engine_additions intensity/character_render fpsgame/fps fpsgame/server fpsgame/client fpsgame/entities fpsgame/render fpsgame/weapon shared/tools shared/geom engine/rendertext engine/material engine/octaedit engine/grass engine/physics engine/rendergl engine/worldio engine/texture engine/console engine/world engine/glare engine/renderva engine/normal engine/rendermodel engine/shadowmap engine/main engine/bih engine/octa engine/lightmap engine/water engine/shader engine/rendersky engine/cubeloader engine/renderparticles engine/octarender engine/server engine/client engine/dynlight engine/decal engine/sound engine/pvs engine/command intensity/engine_additions intensity/world_system intensity/targeting intensity/steering intensity/network_system intensity/script_engine_manager intensity/script_engine intensity/script_engine_v8 intensity/fpsclient_interface intensity/fpsserver_interface intensity/master intensity/intensity_gui shared/stream shared/zip engine/movie intensity/shared_module_members_boost fpsgame/scoreboard".split(" ") ] # intensity/script_engine_tracemonkey
+
+client_env.Program('Intensity_CClient', client_files, LIBS = client_libs)
+
+
+# Server
+
+# TODO: Our server is NOT 'standalone'!
+#server_cflags = " -DSERVER -DSTANDALONE -Wall -Werror -fsigned-char "
+
+if LINUX:
+    server_cflags = " -DSERVER -fsigned-char " + config("sdl-config", "--cflags") + " " + config("pkg-config", "--cflags") + " "
+else:
+    server_cflags = " /DSERVER /D_DLL /EHsc "
+
+server_includes = client_includes
+
+server_libpaths = Split(shared_libpaths)
+if WINDOWS:
+    server_libpaths += [WINDOWS_PLATFORM_SDK+"Lib"]
+
+if LINUX:
+    server_libs = Split(shared_libs + " SDL SDLmain") ## XXX: SDL on the server is only for threading of createMap[...]. Remove otherwise.
+elif WINDOWS:
+    server_libs = Split(shared_libs + " SDL SDLmain ws2_32 winmm msvcrt opengl32") # FIXME: Remove opengl32, see server_system.cpp
+
+
+server_env = Environment(CCFLAGS = cflags + server_cflags, CPPPATH = server_includes, LIBPATH = server_libpaths, LINKFLAGS = shared_linkflags)
+
+server_files = [ server_env.Object(target='server/'+name, source=name+'.cpp') for name in "intensity/editing_system shared/tools engine/server engine/serverbrowser fpsgame/fps fpsgame/server fpsgame/client fpsgame/entities intensity/python_wrap intensity/system_manager intensity/message_system intensity/server_system intensity/logging intensity/messages intensity/utility engine/world engine/worldio intensity/engine_additions engine/command engine/octa engine/physics engine/rendermodel engine/normal engine/bih shared/geom engine/client intensity/world_system engine/octaedit intensity/steering intensity/targeting intensity/network_system intensity/script_engine_manager intensity/script_engine intensity/script_engine_v8 intensity/fpsserver_interface intensity/fpsclient_interface engine/octarender fpsgame/weapon intensity/master shared/stream engine/pvs engine/blend shared/zip intensity/shared_module_members_boost intensity/NPC".split(" ") ] #intensity/script_engine_tracemonkey
+
+server_env.Program('Intensity_CServer', server_files, LIBS = server_libs)
+
+# Tests
+
+#if LINUX:
+#    tests_files = server_files + [ server_env.SharedObject(target='server/'+name, source=name+'.cpp') for name in "intensity/network_system__unittest".split(" ") ]
+#    server_env.Program("intensity_tests", tests_files, LIBS = server_libs)
+
+# Additional platform-dependent processing
+
+if WINDOWS:
+    def manifest_baker(target, source, env):
+        assert(len(target) == len(source) == 1)
+        target=str(target[0])
+        source=str(source[0])
+        
+        print "\n   Baking manifests into .pyd:", target, source
+        
+        # Rename to .pyd - needed by Python 2.5+, it appears
+        shutil.move(source, target)
+        # Bake in the manifest file, otherwise we get error R6034
+        output = os.popen("mt.exe -manifest %s.manifest -outputresource:%s;2" % (source, target))
+        print output.read()
+        
+        return None
+
+    baker = Builder(action = manifest_baker,
+                    suffix = '.pyd',
+                    src_suffix = '.dll')
+    baker_env = Environment(BUILDERS = {'Baker' : baker})
+#    baker_env.Baker('Intensity_CClient')
+#    baker_env.Baker('Intensity_CServer')
+
+# Decider - for speed, as follows
+
+Decider('MD5-timestamp')
+

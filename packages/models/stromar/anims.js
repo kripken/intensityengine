@@ -1,0 +1,45 @@
+Model.md5Anim("forward", "s_forward.md5anim", 100, 1);
+Model.md5Anim("idle", "s_idle.md5anim", 40, 1);
+Model.md5Anim("attack2", "s_chain_shoot.md5anim", 90, -1);
+Model.md5Anim("attack1", "s_rocket_shoot.md5anim", 100, -1);
+Model.md5Anim("attack3", "s_melee_attack.md5anim", 30, -1);
+Model.md5Anim("right", "s_right.md5anim", 100, 1);
+Model.md5Anim("left", "s_left.md5anim", 100, 1);
+Model.md5Anim("lose", "s_idle.md5anim", 17.5);
+Model.md5Anim("edit", "s_idle.md5anim");
+Model.md5Anim("jump", "s_jump.md5anim", 0, 1);
+Model.md5Anim("lag", "s_idle.md5anim");
+Model.md5Anim("backward", "s_backward.md5anim", 100, 1);
+Model.md5Anim("dying", "s_idle.md5anim");
+Model.md5Anim("swim", "s_swim.md5anim", 0, 1);
+Model.md5Anim("pain", "pain.md5anim", 66, -1);
+//////////md5anim("sink", "s_sink.md5anim", 0, 1);
+
+
+Model.md5Animpart("Spine");
+Model.md5Pitch("Spine", "0.75", 0, -45, 40);
+Model.md5Pitch("Neck", "0.5", 0, -10, 10);
+Model.md5Anim("forward", "s_forward.md5anim", 70, -1);
+Model.md5Anim("idle", "s_idle.md5anim", 40, -1);
+//md5anim("shoot", "shoot.md5anim");
+//md5anim("win", "win.md5anim", 17.5);
+//////////md5anim("sink", "sink.md5anim", -1);
+Model.md5Anim("left", "s_left.md5anim", 70, -1);
+Model.md5Anim("right", "s_right.md5anim", 70, -1);
+Model.md5Anim("lose", "s_idle.md5anim", 17.5);
+Model.md5Anim("edit", "s_idle.md5anim");
+Model.md5Anim("jump", "s_jump.md5anim", 20, -1);
+Model.md5Anim("lag", "s_idle.md5anim");
+Model.md5Anim("backward", "s_backward.md5anim", 70, -1);
+//md5anim("dying", "dying.md5anim", 26);
+//md5anim("dying", "dying2.md5anim", 29);
+//md5anim("dead", "dead.md5anim");
+//md5anim("dead", "dead2.md5anim");
+Model.md5Anim("pain", "pain.md5anim", 66, 1);
+//md5anim("pain", "pain2.md5anim", 66);
+Model.md5Anim("swim", "s_swim.md5anim", -1);
+Model.md5Anim("taunt", "s_taunt.md5anim", 40);
+Model.md5Anim("attack2", "s_chain_shoot.md5anim", 90, 1);
+Model.md5Anim("attack1", "s_rocket_shoot.md5anim", 100, 1);
+Model.md5Anim("attack3", "s_melee_attack.md5anim", 30, 1);
+

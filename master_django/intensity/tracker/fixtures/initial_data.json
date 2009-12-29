@@ -1,0 +1,78 @@
+[
+  {
+    "pk": 1,
+    "model": "auth.user",
+    "fields": {
+        "username": "__initial_data_creator__",
+        "first_name": "",
+        "last_name": "",
+        "is_active": false,
+        "is_superuser": false,
+        "is_staff": false,
+        "last_login": "2009-08-01 12:18:24",
+        "groups": [],
+        "user_permissions": [],
+        "password": "sha1$cf24b$8276ec13e6c61e3a64e0066181d5290a6ec8bf5e",
+        "email": "initial.data.creator@syntensity.com",
+        "date_joined": "2009-08-01 12:18:24"
+     }
+  }, 
+  {
+    "pk": 1, 
+    "model": "intensity.intensityuuidmodel", 
+    "fields": {
+      "uuid": "ec678b68_ba27_4dce_b0c2_9143d10cca80"
+    }
+  }, 
+  {
+    "pk": 2, 
+    "model": "intensity.intensityuuidmodel", 
+    "fields": {
+      "uuid": "748fe15c_c1c6_477f_8084_bfd169d1c1fd"
+    }
+  }, 
+  {
+    "pk": 3, 
+    "model": "intensity.intensityuuidmodel", 
+    "fields": {
+      "uuid": "ee476698_cfd6_4a4d_bddf_670ea317ee5e"
+    }
+  }, 
+  {
+    "pk": 1, 
+    "model": "intensity.useraccount", 
+    "fields": {
+      "kb_storage_left": 0, 
+      "nickname": "__initial_data_creator__", 
+      "user": 1, 
+      "seconds_left": 0
+    }
+  }, 
+  {
+    "pk": 2, 
+    "model": "intensity.assetinfo", 
+    "fields": {
+      "comment": "An empty map", 
+      "owners": [1], 
+      "dependencies": "", 
+      "location": "base/emptymap.tar.gz", 
+      "type_x": "b", 
+      "hash_value": "?", 
+      "kb_size": 0
+    }
+  },
+  {
+    "pk": 3, 
+    "model": "intensity.assetinfo", 
+    "fields": {
+      "comment": "Storming example map", 
+      "owners": [1], 
+      "dependencies": "", 
+      "location": "base/storming.tar.gz", 
+      "type_x": "b", 
+      "hash_value": "?", 
+      "kb_size": 0
+    }
+  }
+]
+

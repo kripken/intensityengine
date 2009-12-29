@@ -1,0 +1,2 @@
+This is python-irclib 0.4.8, licensed under the LGPL. Complete source is provided here (no changes have been made).
+

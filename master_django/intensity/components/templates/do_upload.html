@@ -1,0 +1,46 @@
+{%extends "tracker/base.html"%}
+
+{%load intensity_tags %}
+
+{%block mainmenubody%}
+<script type="text/javascript">
+    $('#tracker_assets').addClass('active');
+</script>
+<FORM method=POST ENCTYPE="multipart/form-data" onSubmit="return validateForm(this);">
+<input type=hidden name="asset_id" value="{{asset_id}}">
+<input type=hidden name="user_id" value="{{user_id}}">
+<input type=hidden name="return_to" value="{{return_to}}">
+<input type=hidden name="get_from" value="{{get_from}}">
+
+<div class="text_center">
+<div class="boxLogin">
+  <div class="top"></div>
+  <div class="middle">
+    <h3>Upload asset content for '{{asset.location}}'</h3>
+    <dl>
+      <dt class="fullline">File to upload: <INPUT TYPE=FILE NAME="file"></dt>
+      <dt class="fullline"><input type="checkbox" name="terms">I agree to the <a href="#tos">Terms of Service</a> appearing below</dt>
+    <dt class="fullline"><input type="submit" value="Continue"></dt>
+    </dl>
+    <div class="clear"></div>
+  </div>
+  <div class="bottom"></div>
+</div>
+</div>
+</FORM>
+
+<br>
+<hr>
+<a name="tos"></a>
+{%include "terms_and_conditions.html"%}
+<hr>
+<script type="text/javascript">
+    function validateForm(theForm) {
+        if (!theForm.terms.checked) {
+            alert("Please accept the terms and conditions");
+            return false;
+        }
+    }
+</script>
+{% endblock %}
+

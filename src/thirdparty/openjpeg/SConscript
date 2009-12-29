@@ -1,0 +1,68 @@
+#!/usr/bin/python
+# -*- coding: cp1252 -*-
+
+
+#=============================================================================
+# Copyright (C) 2008 Alon Zakai ('Kripken') kripkensteiner@gmail.com
+#
+# This file is part of the Intensity Engine project,
+#    http://www.intensityengine.com
+#
+# The Intensity Engine is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, version 3.
+#
+# The Intensity Engine is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with the Intensity Engine.  If not, see
+#     http://www.gnu.org/licenses/
+#     http://www.gnu.org/licenses/agpl-3.0.html
+#=============================================================================
+
+
+import sys
+
+from src.build_shared import *
+
+PYTHON_VERSION = sys.version[0:3]
+
+
+if WINDOWS:
+    WINDOWS_PLATFORM_SDK = GetOption('windowsSDKs').split(',')[0]
+    print "USing Windows Platform SDK at:", WINDOWS_PLATFORM_SDK
+
+if LINUX:
+    cflags = " -O3 -Wall -Werror "
+elif WINDOWS:
+    cflags = " /DWIN32 "
+
+# openjpeg
+
+if LINUX:
+    openjpeg_cflags   = " -Wno-error "
+    libpaths = []
+elif WINDOWS:
+    openjpeg_cflags   = " /D_OPJ_STATIC /EHsc "
+    libpaths = [WINDOWS_PLATFORM_SDK+"Lib"]
+
+
+openjpeg_files = Split("bio.c cio.c dwt.c event.c image.c j2k.c j2k_lib.c jp2.c jpt.c mct.c mqc.c openjpeg.c pi.c raw.c t1.c t1_generate_luts.c t2.c tcd.c tgt.c")
+openjpeg_includes = Split("./thirdparty/openjpeg")
+
+if WINDOWS:
+    openjpeg_includes += [WINDOWS_PLATFORM_SDK+"Include"]
+
+print "OJI", openjpeg_includes
+
+openjpeg_env = Environment(CCFLAGS = cflags + openjpeg_cflags, CPPPATH = openjpeg_includes, LIBPATH = libpaths)
+
+openjpeg_env.SharedLibrary('openjpeg', openjpeg_files)
+
+# Decider - for speed, as follows
+
+Decider('MD5-timestamp')
+

@@ -1,0 +1,256 @@
+=======
+COMPILE
+=======
+
+
+General
+=======
+
+The Intensity Engine should work on Windows and Linux (and perhaps other
+platforms as well by the time you read this). Compilation instructions for
+the two platforms have some shared aspects and some non-shared aspects.
+The following are the shared aspects.
+
+1. In both cases you should get the source code, either a zip file/tarball
+   with a release, or straight from the source code repository, in which
+   case you can simply do
+
+        bzr branch lp:intensityengine
+
+   You need the Bazaar version control system installed,
+
+        http://bazaar-vcs.org/
+
+    See www.intensityengine.com for more details.
+
+2. Building was previously done using SCons, a next-generation build tool. SCons
+   requires Python, which you will need anyhow for the Intensity Engine.
+   See the old versions of this document for building with SCons.
+
+   Building is now done using CMake, another next-generation build tool.
+   The CMake build system has some limitations at the moment:
+
+        * You need to compile V8 yourself (it uses SCons)
+        * You need to run generate_messages.py yourself, if you modify
+            the messages.template file
+
+3. After compiling, see the README.txt file for instructions on running
+   the Intensity Engine.
+
+4. 64-bit systems should be able to natively compile the current version of
+   Google V8 in the Intensity Engine, which recently gained x86_64
+   support. Older versions would only work on 32-bit systems (and ARM),
+   leading to errors like
+
+       ld: skipping incompatible src/thirdparty/v8/libv8.a when searching for -lv8
+
+   For solutions for those older versions, see
+
+       http://code.google.com/p/v8/issues/detail?id=29
+
+   (but again, the current version should work fine on 64-bit systems).
+
+   Another possible reason for a 'skipping incompatible' error as
+   mentioned above is if V8 builds itself in 32-bit mode on a 64-bit
+   system. This shouldn't happen but seems to occur on some systems.
+   To fix it, compile V8 yourself by doing
+
+       scons arch=x64
+
+   in the directory src/thirdparty/v8.
+
+
+
+Specific Platforms
+==================
+
+Linux
+=====
+
+The following explains how to install on Ubuntu (9.04 and 9.10). We welcome
+feedback about your experience in other distros, so we can add it to this file.
+In general, in other distros (or versions of Ubuntu) there might be minor changes
+to the package names and so forth, but overall, things should be similar.
+
+First, install Bazaar, CMake, SCons and other important stuff:
+
+  Ubuntu 9.04:
+    sudo apt-get install bzr cmake scons build-essential libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev python-dev libboost-python1.35-dev zlib1g-dev   
+
+  Ubuntu 9.10:
+    sudo apt-get install bzr cmake scons g++ libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev libboost-python1.38-dev
+
+Check out the source code:
+
+    bzr branch lp:intensityengine
+
+Go to the V8 directory, ./src/thirdparty/v8, and run
+
+    scons
+
+there. Then go back down to the base dir, and to ./cbuild, and run
+
+    cmake ..
+
+this should configure things correctly. Then run
+
+    make
+
+Some specific comments:
+
+  * To get around an issue with V8 on newer gcc versions,
+    http://code.google.com/p/v8/issues/detail?id=463 ,
+    you should enter src/thirdparty/v8 and run
+
+        GCC_VERSION="44" scons
+
+    This is necessary on Ubuntu 9.10 (but not 9.04).
+
+  * If you get a link error about not finding v8, then v8 may not have compiled
+    correctly. Run 'scons' in src/thirdparty/v8 to see the errors. One existing issue
+    is that on GCC 4.4+, you need to disable some warnings,
+
+        http://code.google.com/p/v8/issues/detail?id=413
+
+    Following the fixes there can solve the problem (requires editing the SConstruct
+    file in the v8 directory).
+
+  * If you get
+
+        gnu/stubs-32.h: No such file or directory
+
+    when compiling V8, then installing ia32-libs may fix it, see
+
+        http://code.google.com/p/chromium/issues/detail?id=289
+
+
+
+Windows
+=======
+
+Acquiring all the various libraries needed to compile the project is
+somewhat of a hassle. The main website should have a download
+that can help, check at
+
+    https://launchpad.net/intensityengine/trunk/0.1
+
+The windows_dev.zip file is what you need for compilation. Place the
+contents under /src/windows_dev. (The windows_runtime.zip contains
+the runtime dlls, which should be placed under /windows/dll in the
+install directory).
+
+If instead you want/need to get the development headers and libraries
+yourself, then you should do the following: Get the following
+items, and place them under /src/windows_dev (if you place them
+elsewhere, you will need to edit the SConstruct file so it can find them):
+
+   1. Get Bazaar from bazaar-vcs.org, if you want to get the source code
+      from the repo.
+   2. Get SCons from www.scons.org.
+   3. Get SDL from www.libsdl.org, (something like) SDL-devel-1.2.13-VC8.zip,
+      as well as SDL-image and SDL-mixer
+        - Note that SDL-image should come with libpng (if this is missing,
+          you will get 'failure to load core textures'), as well as jpeg.dll
+        - Note that SDL-mixer should come with libogg-0.dll, libvorbis-0,
+          libvorbisfile-3
+   4. Boost: Use the installer, http://www.boostpro.com/products/free. Get
+      the "Multithread, DLL" version. We basically need the headers
+      for shared_ptr, and boost_python binary (so you can just
+      install those).????????
+   5. ?? TODO: OpenGL headers ??
+   6. Get zlib from www.zlib.net
+   7. Get CMake
+
+
+In the directory where the source code was placed (usually 'intensityengine'),
+run (in a DOS shell, that is, inside cmd.exe) the following commands.
+
+First, build V8 by going to src\thirdparty\V8 and running
+
+    scons mode=release env="INCLUDE:C:\Program Files\Microsoft SDKs\Windows\v6.0A\Include;C:\Program Files\Microsoft Visual Studio 9.0\VC\Include;,LIB:C:\Program Files\Microsoft SDKs\Windows\v6.0A\Lib;C:\Program Files\Microsoft Visual Studio 9.0\VC\Lib;"
+
+(change the path to point to where you have the Windows platform SDKs).
+
+Then, go back up and do \cbuild, and there run
+
+    SET INTENSITY_DEP_PATH = ..\src\windows_dev
+    cmake ..
+
+this should create a project file for VC++, which you can then build.
+
+Some things to be aware of:
+
+    * If you get pre-compiled libraries, they must be of a sort appropriate for
+      your compiler. Some projects are nice and provide various versions for
+      you, so pick wisely.
+    * Pre-compiled Boost binaries, in particular those in windows_dev.zip, are
+      linked against Python 2.5.x. Using another version of Python in addition to
+      that may cause errors (see 'version mismatch?' below). The simplest solution
+      is to use Python 2.5.x. Or, build Boost from scratch so there is no dependency
+      on Python 2.5.
+    * Related to the last point, if you get
+
+        "Fatal Python Error: Interpreter not initialized (version mismatch?)"
+
+      then that might be caused by linking against one version of Python but running
+      against another. To check, look for files of the type python*.dll (python24.dll,
+      python25.dll, python26.dll, etc.) Remove all but the right python*.dll file from
+      your path. (In particular, it seems Bazaar places python25.dll in the path.)
+      NOTE: In some cases the error Windows provides for this problem may be less clear,
+      such as "exception 0xc0000005", which is a general fault due to reading from
+      an invalid location. Note that such an error may also indicate a completely
+      different problem.
+    * Need to rename the C Modules from .dll to .pyd, Python 2.5+ wants that.
+      This is done by the SCons files, in a slightly hackish manner however.
+    * When testing with MSVC++ 2008, the following were needed: msvcr90.dll,
+      msvcp90.dll. Present in Microsoft Visual C++ 2008 Redistributable Package,
+      http://www.microsoft.com/downloads/details.aspx?familyid=9B2DA534-3E03-4391-8A4D-074B9F2BC1BF&displaylang=en
+      Sometimes just copying these files isn't enough (although they appear in
+      the binary releases that way). The solution is to install the complete
+      Microsoft Visual C++ 2008 Redistributable Package, see e.g. the FAQ at
+            http://www.ogre3d.org/wiki/index.php/CommonMistakes#Exceptions_and_Asserts
+      (item 6), leading to
+            http://msdn.microsoft.com/en-us/library/ms235299(VS.80).aspx
+    * If you get error R6034, then that is because you need to have .manifests
+      *inside* your files, see http://msdn.microsoft.com/en-us/library/ms235560(VS.80).aspx
+      The SCons files do this, in a slightly hackish manner however. Basically, the solution is
+          mt.exe –manifest Intensity_CServer.dll.manifest -outputresource:Intensity_CServer.pyd;2
+          mt.exe –manifest Intensity_CClient.dll.manifest -outputresource:Intensity_CClient.pyd;2
+      where mt.exe is from the Microsoft Platform SDK. In other words, the
+      manifests have been prepared, and are in 'build', but they haven't been baked into the dlls.
+    * You need the already mentioned Microsoft Platform SDK.
+    * You should place development files in src/windows_dev, according to the file structure
+      laid out there. Otherwise, you will need to edit the SConstruct file to change paths.
+    * If you need to change paths (which you might, if you install e.g. the Platform SDK
+      somewhere else than what the SConstruct file assumes), this can be changed in the SConstruct
+      file. Note that the SConstruct file is written in Python, so its syntax is hopefully
+      familiar. The relevant things to change would be variables like shared_includes,
+      client_libs, etc.
+    * If you get "ImportError: DLL load failed: The specified module could not be found", then
+      look at the line above it for what import failed. You can use Microsoft's
+      Process Monitor/File Monitor tools to help debug things.
+    * "Error R6034: An application has made an attempt to load the C runtime library incorrectly"
+      This might be caused by not having manifests, see above. Or, it might be related to incorrect
+      linking with the C runtime. It seems to occur on Windows 2003 and Vista, due to their different
+      method of handling C runtimes - work is in progress to fix this. See
+
+            http://sourceforge.net/tracker/index.php?func=detail&aid=2609380&group_id=78018&atid=551954
+
+      for some info.
+    * "LNK4098: defaultlib `LIBCMT` conflicts with use of other libs." This can be ignored for now
+      (but it should be fixed).
+    * "Cannot open include file: 'pymacconfig.h': No such file or directory"
+      Stems from using Python 2.6 include file in windows_dev\python, which an old version of
+      windows_dev.zip had. If you are using that version, simply copy from Python25\Include
+      the Python.h file to src\windows_dev\include.
+    * Make sure to use the same windows platform sdk for both V8 and tIE (not v6.0A one place v6.1 elsewhere).
+    * For running, you should place the relevant DLL files (for SDL, etc.) in windows\dll under
+      the install directory. This is placed into the path automatically by the Intensity Engine
+      startup scripts, so the DLLs can be found. These files should already be there if you
+      download a binary version of the Intensity Engine. You should also be able to download
+      them from
+
+          https://launchpad.net/intensityengine/trunk/0.1
+
+      The relevant file is windows_runtime.zip.
+

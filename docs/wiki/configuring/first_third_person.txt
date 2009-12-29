@@ -1,0 +1,10 @@
+bind E [
+    edittoggle
+    thirdperson 0
+]
+
+editbind E [
+    edittoggle
+    thirdperson 1
+]
+

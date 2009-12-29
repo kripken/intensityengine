@@ -1,0 +1,4 @@
+#!/bin/sh
+LD_LIBRARY_PATH="./build;./build/openjpeg" valgrind --leak-check=full --show-reachable=yes --suppressions=suppressions.valgrind build/Intensity_CServer local/syntensity_server
+#LD_LIBRARY_PATH="./build;./build/openjpeg" valgrind -v --gen-suppressions=yes --suppressions=suppressions.valgrind ./intensity_server.sh local/syntensity_server
+

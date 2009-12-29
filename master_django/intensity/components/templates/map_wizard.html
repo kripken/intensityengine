@@ -1,0 +1,39 @@
+{%extends "tracker/base.html"%}
+
+{%load intensity_tags %}
+
+{%block mainmenubody%}
+
+{% if form.errors %}
+<p class="error">Please correct the error{{form.errors|pluralize}} below:</p>
+<span class="error">{{form.non_field_errors}}</span>
+{% endif %}
+
+<p>
+  This tool will create a new map, and prepare everything you need to start working on it immediately.
+</p>
+
+
+<form action="" method="POST">
+<div class="text_center">
+<div class="boxLogin">
+  <div class="top"></div>
+  <div class="middle">
+    <h3>Map Creation Wizard</h3>
+    <dl>
+  <dt><label for="id_location">Location:</label>{% if form.location.errors %} <span class="error">{{ form.location.errors|join:", " }}</span>{% endif %}</dt>
+<dd>{{ form.location }}</dd>
+  <dt><label for="id_original">Original map asset:</label>{% if form.original.errors %} <span class="error">{{ form.original.errors|join:", " }}</span>{% endif %}</dt>
+<dd>{{ form.original }}</dd>
+    <dt class="fullline"> (Your new map will start as a copy of this one. Recommended: 'emptymap'.)</dt>
+  <dt class="fullline">{{form.requisition}}Requisition and select a server (so you can start working on your map immediately)</label></dt>
+    <dt class="fullline"><input type="submit" value="Submit"></dt>
+    <div class="clear"></div>
+  </div>
+  <div class="bottom"></div>
+</div>
+</div>
+
+</form>
+{% endblock %}
+

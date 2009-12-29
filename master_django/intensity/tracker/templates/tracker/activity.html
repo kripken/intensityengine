@@ -1,0 +1,70 @@
+{%extends "tracker/base.html"%}
+
+{%load intensity_tags %}
+
+{%block mainmenubody%}
+<script type="text/javascript">
+    $('#tracker_activities').addClass('current');
+</script>
+
+<p>
+{%if is_mine%}
+<form method="POST" action="">
+  <input type="hidden" name="pk" value="{{asset.uuid}}">
+{%endif%}
+<div class="text_center">
+<div class="boxLogin">
+  <div class="top"></div>
+  <div class="middle">
+    <h3>Activity Details</h3>
+    <dl>
+      <dt>Name:</dt><dd>{%if is_mine%}{{form.name}}{%else%}{{activity.name}}{%endif%}</dd>
+      <dt>Map asset:</dt><dd>{{activity.asset|hl_asset}}</dd>
+      <dt>Owner:</dt><dd>{{activity.owner|hl_account:my_account}}</dd>
+      <dt>Current players:</dt><dd>{{total_players}}</dd>
+      <dt>Current server instances:</dt><dd>{{instances|length}}</dd>
+{%if is_mine%}
+    <dt class="fullline"><input type="submit" value="Update"></dt>
+{%endif%}
+    </dl>
+    <div class="clear"></div>
+  </div>
+  <div class="bottom"></div>
+</div>
+</div>
+{%if is_mine%}
+</form>
+{%endif%}
+</p>
+
+{%if is_mine or user.is_authenticated%}
+<br>
+
+<h1>Operations</h1>
+{%endif%}
+
+{%if is_mine%}
+<p>
+<form method="POST" action="/tracker/activity/delete/{{activity.uuid}}/">
+    <input type="submit" value="Delete"> (Note: Does not delete the asset(s) used in the activity)
+</form>
+</p>
+{%endif%}
+
+{%if user.is_authenticated%}
+<p>
+<form method="POST" action="/tracker/activity/requisition/{{activity.uuid}}/">
+    <input type="submit" value="Requisition a server instance to run this activity">
+
+<br>
+<br>
+
+<ul><li><b>Note</b>: If requisitioning reports success, but you don't see the server in the list of server instances, then there might have been a problem (like an error in the map script or with one of the assets). To see the server log, go to your account page ('Accounts' tab) and click on "<b>View last error log from requisitioned server</b>."</li></ul>
+</form>
+</p>
+{%endif%}
+
+{%include "comments.html"%}
+
+{%endblock%}
+

@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+
+import subprocess
+
+def run_command(command, comment):
+    try:
+        print comment
+        subprocess.Popen([command], shell=True).communicate()
+    except Exception, e:
+        print 'An error occurred: ' + str(e)
+
+run_command('update-desktop-database', 'Updating the .desktop database...')
+
+run_command('chmod +x /usr/bin/syntensity', 'Making the /bin client launcher executable...')
+run_command('chmod +x /usr/share/games/syntensity/intensity_client.sh', 'Making the normal client launcher executable...')
+run_command('chmod +x /usr/share/games/syntensity/build/Intensity_CClient', 'Making the client executable...')
+
+run_command('chmod +x /usr/bin/syntensity_server', 'Making the /bin server launcher executable...')
+run_command('chmod +x /usr/share/games/syntensity/intensity_server.sh', 'Making the normal server launcher executable...')
+run_command('chmod +x /usr/share/games/syntensity/build/Intensity_CServer', 'Making the server executable...')
+
+run_command('chmod +x /usr/share/games/syntensity/build/libenet.so', 'Making enet executable...')
+run_command('chmod +x /usr/share/games/syntensity/build/openjpeg/libopenjpeg.so', 'Making openjpeg executable...')
+

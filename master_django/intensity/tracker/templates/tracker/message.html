@@ -1,0 +1,16 @@
+{%extends "tracker/base.html"%}
+
+{%block mainmenubody%}
+<script type="text/javascript">
+    $('#tracker_{{active_tab}}').addClass('current');
+</script>
+
+<div class="big_para">
+<p>
+{{content}}
+</p>
+</div>
+
+
+{%endblock%}
+

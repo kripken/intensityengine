@@ -1,0 +1,103 @@
+{%extends "base.html"%}
+
+{%block mainmenubody%}
+
+<script type="text/javascript">
+function validateForm(theForm)
+{
+return true; // XXX FIXME TODO
+    if (!theForm.username.value) {
+        alert("Please enter a username");
+        return false;
+    }
+
+    if (!theForm.password1.value) {
+        alert("Please enter a password");
+        return false;
+    }
+
+    if (theForm.password1.value != theForm.password2.value) {
+        alert("Passwords do not match");
+        return false;
+    }
+
+    if (!theForm.email.value) {
+        alert("Please enter an email");
+        return false;
+    }
+
+    if (!theForm.terms.checked) {
+        alert("Please accept the terms and conditions");
+        return false;
+    }
+
+    return true;
+}
+</script>
+
+{% if form.errors %}
+<p class="error">Please correct the error{{form.errors|pluralize}} below:</p>
+<span class="error">{{form.non_field_errors}}</span>
+{% endif %}
+
+<p>
+<form action="" method="POST" onSubmit="return validateForm(this);" >
+
+<div class="text_center">
+<div class="boxLogin">
+  <div class="top"></div>
+  <div class="middle">
+    <h3>Register an Account</h3>
+    <dl>
+
+<dt><label for="id_username">Username:</label>{% if form.username.errors %} <span class="error">{{ form.username.errors|join:", " }}</span>{% endif %}</dt>
+<dd>{{ form.username }}</dd>
+
+  <dt class="fullline">
+    <hr>
+    <b>Note: passwords are currently sent without encryption. For the time being, use something non-sensitive!</b>
+  </dt>
+
+<dt><label for="id_password1">Password:</label>{% if form.password1.errors %} <span class="error">{{ form.password1.errors|join:", " }}</span>{% endif %}</dt>
+<dd>{{ form.password1 }}</dd>
+
+<dt><label for="id_password2">Retype password:</label>{% if form.password2.errors %} <span class="error">{{ form.password2.errors|join:", " }}</span>{% endif %}</dt>
+<dd>{{ form.password2 }}</dd>
+
+  <dt class="fullline">
+    <hr>
+  </dt>
+
+<dt><label for="id_email">Email:</label>{% if form.email.errors %} <span class="error">{{ form.email.errors|join:", " }}</span>{% endif %}</dt>
+<dd>{{ form.email }}</dd>
+
+<dt class="fullline"><input type="checkbox" name="terms"><label for="id_password2">I agree to the <a href="#tos">Terms of Service</a> appearing below</label>{% if form.terms.errors %} <span class="error">{{ form.terms.errors|join:", " }}</span>{% endif %}</dt>
+
+  <dt class="fullline">{{form.security_checks}}</dt>
+
+  <dt class="fullline"><input type="submit" value="Submit"></dt>
+
+    </dl>
+    <div class="clear"></div>
+  </div>
+  <div class="bottom"></div>
+</div>
+</div>
+
+<br>
+
+
+<br><br>
+<hr>
+<a name="tos"></a>
+{%include "terms_and_conditions.html"%}
+<hr>
+
+</form>
+</p>
+
+{%endblock%}
+
+{%block body%}
+{%endblock%}
+

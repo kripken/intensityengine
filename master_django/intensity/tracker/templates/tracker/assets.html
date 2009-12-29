@@ -1,0 +1,48 @@
+{%extends "tracker/base.html"%}
+
+{%load intensity_tags %}
+
+{%block mainmenubody%}
+<script type="text/javascript">
+    $('#tracker_assets').addClass('current');
+</script>
+
+{%if user.is_authenticated%}
+{{filtration|filtrationer:"<code>base/*.tar.gz</code>"}}
+<br>
+{%endif%}
+
+<table class="default" cellpadding="0" cellspacing="0" border="0">
+    <thead>
+        <tr>
+            <td style="width: 25%;">Location</td>
+            <td style="width: 75%;">Owners</td>
+        </tr>
+    </thead>
+ <tfoot>
+    <tr>
+        <td colspan="8">&nbsp;</td>
+    </tr>
+ </tfoot>
+ <tbody>
+{% for asset in assets %}
+  <tr>
+    <td>{{asset|hl_asset}}</td>
+    <td>{{asset.owners.all|hl_account_list:my_account}}</td>
+  </tr>
+{% endfor %}
+ </tbody>
+</table>
+
+{%if user.is_authenticated%}
+<p>
+<form method="POST" action="/tracker/asset/new/">
+    <input type="submit" value="Create new asset">
+</form>
+</p>
+{%endif%}
+
+</p>
+
+{%endblock%}
+

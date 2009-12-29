@@ -1,0 +1,102 @@
+{%extends "tracker/base.html"%}
+
+{%load intensity_tags %}
+
+{%block mainmenubody%}
+<script type="text/javascript">
+    $('#tracker_assets').addClass('current');
+</script>
+
+{% if form.errors %}
+<p class="error">Please correct the error{{form.errors|pluralize}} below:</p>
+<span class="error">{{form.non_field_errors}}</span>
+{% endif %}
+
+<p>
+{%if is_mine%}
+<form method="POST" action="">
+  <input type="hidden" name="pk" value="{{asset.uuid}}">
+{%endif%}
+    <h1>Asset Details</h1>
+    <dl>
+    <dt>Location:</dt>
+        <dd>{%if is_mine%}{{form.location}}{%else%}{{asset.location}}{%endif%}</dd>
+    <dt>Owners:</dt>
+      <dd>{%for owner in asset.owners.all%}{{owner|hl_account:my_account}}{%if not forloop.last%}, {%endif%}{%endfor%}
+      {%if is_mine%}
+        <dt></dt><dd>{{form.owners}}</dd>
+        <dt>Add an owner:</dt><dd>{{form.add_owner}}</dd>
+        {%if form.owners.errors%}<dt class="fullline"><span class="error">{{ form.owners.errors|join:", " }}</span></dt>{%endif%}
+      {%endif%}
+    <dt>Type:</dt><dd>{%if is_mine%}{{form.type_x}}{%else%}{{asset.type_x}}{%endif%}</dd>
+    <dt>Hash:</dt><dd>{{asset.hash_value}}</dd>
+
+    <dt>Dependencies:</dt>
+    <dd>{%for dep in asset.dependencies.all%}{{dep|hl_asset}}{%if not forloop.last%}, {%endif%}{%endfor%}</dd>
+
+     {%if is_mine%}
+      <dt> </dt><dd>{{form.dependencies}}</dd>
+      <dt>Add a dep.:</dt><dd>{{form.add_dependency}}</dd>
+      {%if form.dependencies.errors%}<dt class="fullline"><span class="error">{{ form.dependencies.errors|join:", " }}</span></dt>{%endif%}
+     {%endif%}
+
+  <dt>Size:</dt><dd>{{asset.kb_size|mul_1000|filesizeformat}}</dd>
+  <dt>Comment:</dt><dd>{%if is_mine%}{{form.comment}}{%else%}{{asset.comment}}{%endif%}</dd>
+  <!--dt>Activities:</dt><dd>TODO</dd-->
+{%if is_mine%}
+<br>
+    <dt class="fullline"><input type="submit" value="Update"></dt>
+{%endif%}
+    </dl>
+{%if is_mine%}
+</form>
+{%endif%}
+</p>
+
+{%if user.is_authenticated%}
+
+<br>
+
+<p>
+<h1>Operations</h1>
+
+<p>
+<form method="POST" action="/tracker/activity/new/">
+    <input type="hidden" name="asset_id" value="{{asset.uuid}}">
+    <input type="submit" value="Create an activity based on this asset">
+</form>
+</p>
+
+<p>
+<form method="POST" action="/tracker/asset/clone/{{asset.uuid}}/">
+    <input type="submit" value="Clone">
+</form>
+</p>
+
+<p>
+<form method="GET" action="/tracker/asset/download/{{asset.uuid}}/">
+    <input type="submit" value="Download content">
+</form>
+</p>
+
+{%if is_mine%}
+<p>
+<form method="POST" action="/tracker/asset/upload/{{asset.uuid}}/">
+    <input type="submit" value="Upload content">
+</form>
+</p>
+
+<p>
+<form method="POST" action="/tracker/asset/delete/{{asset.uuid}}/">
+    <input type="submit" value="Delete">
+</form>
+</p>
+{%endif%}
+</p>
+
+{%endif%}
+
+{%include "comments.html"%}
+
+{%endblock%}
+

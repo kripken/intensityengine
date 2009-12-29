@@ -1,0 +1,15 @@
+Package: syntensity
+Version: 1.1.2
+Maintainer: kripken@syntensity.com
+Installed-Size: 102400
+Priority: extra
+Section: games
+Essential: NO
+Architecture: i386
+Depends: libsdl1.2debian, libsdl-image1.2, libsdl-mixer1.2, libboost-python1.38.0, python, zlib1g
+Description: Syntensity is an open source platform for 3D games and virtual worlds.
+ 
+ http://www.syntensity.com/
+ 
+ Have fun!
+
