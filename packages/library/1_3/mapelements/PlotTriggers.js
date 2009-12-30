@@ -169,28 +169,56 @@ PlotTriggerItem = registerEntityClass(bakePlugins(PlotTrigger, [{
 
     act: function() {
         // Handle moving item
-        if (this.state === 'moving' && this.carryingPlayer >= 0) {
-            var player = getEntity(this.carryingPlayer);
-            if (!Health.isActiveEntity(player)) {
-                // Dropped because player is not active, or left game
-                this.carryingPlayer = -1;
-                if (player && !player.deactivated) {
-                    this.droppedPosition = player.position.asArray();
+        if (this.state === 'moving') {
+            var carrier = getEntity(this.carryingPlayer);
+
+            if (this.carryingPlayer >= 0) {
+                if (!Health.isActiveEntity(carrier)) {
+                    // Dropped because player is not active, or left game
+                    this.carryingPlayer = -1;
+                    if (carrier && !carrier.deactivated) {
+                        this.droppedPosition = carrier.position.asArray();
+                    } else {
+                        this.droppedPosition = [0,0,0];
+                        this.setState('closed');
+                    }
                 } else {
-                    this.droppedPosition = [0,0,0];
-                    this.setState('closed');
+                    // Check if player arrives at target
+                    var barrier = getEntity(this.parentEntity);
+                    if (barrier) {
+                        // Check for arrival
+                        if (World.isPlayerCollidingEntity(carrier, barrier)) {
+                            this.setState('open');
+                            this.carryingPlayer = -1;
+                            this.droppedPosition = [0,0,0];
+                            barrier.refreshBarrier();
+                        }
+                    }
                 }
             } else {
-                // Check if player arrives at target
-                var barrier = getEntity(this.parentEntity);
-                if (barrier) {
-                    // Check for arrival
-                    if (World.isPlayerCollidingEntity(player, barrier)) {
-                        this.setState('open');
-                        this.carryingPlayer = -1;
-                        this.droppedPosition = [0,0,0];
-                        barrier.refreshBarrier();
-                    }
+                // Check pickup by other players
+                if (!this.pickupEvent) {
+                    this.pickupEvent = GameManager.getSingleton().eventManager.add({
+                        secondsBefore: 0,
+                        secondsBetween: 1/5,
+                        func: bind(function() {
+                            var players = getEntitiesByClass('Player');
+                            for (var i = 0; i < players.length; i++) {
+                                var player = players[i];
+                                if (!Health.isActiveEntity(player)) continue;
+                                if (World.isPlayerCollidingEntity(player, {
+                                    position: this.droppedPosition,
+                                    collisionRadiusWidth: this.collisionRadiusWidth,
+                                    collisionRadiusHeight: this.collisionRadiusHeight,
+                                })) {
+                                    this.carryingPlayer = player.uniqueId;
+                                    this.pickupEvent = null;
+                                    return false;
+                                }
+                            }
+                        }, this),
+                        entity: this,
+                    });
                 }
             }
         }
@@ -224,23 +252,11 @@ PlotTriggerItem = registerEntityClass(bakePlugins(PlotTrigger, [{
             // HUD
             if (carrier === getPlayerEntity()) {
                 var factors = Global.gameHUD.calcFactors();
-                CAPI.showHUDImage(this.HUDIcon, this.HUDPosition.get(0), this.HUDPosition.get(1), factors.x*32/Global.screenWidth, factors.y*32/Global.screenHeight);
+                CAPI.showHUDImage(this.HUDIcon, factors.x*this.HUDPosition.get(0), factors.y*this.HUDPosition.get(1), factors.x*32/Global.screenWidth, factors.y*32/Global.screenHeight);
             } else {
                 // Radar
                 if (carrier !== getPlayerEntity) {
                     GameManager.getSingleton().drawRadarElement(position, this.HUDIcon);
-                }
-            }
-
-            // Check pickup
-            var player = getPlayerEntity();
-            if (!carrier && player && Health.isActiveEntity(player)) {
-                if (World.isPlayerCollidingEntity(player, {
-                    position: this.droppedPosition,
-                    collisionRadiusWidth: this.collisionRadiusWidth,
-                    collisionRadiusHeight: this.collisionRadiusHeight,
-                })) {
-                    this.carryingPlayer = player.uniqueId;
                 }
             }
         }

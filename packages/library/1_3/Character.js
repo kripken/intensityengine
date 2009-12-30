@@ -455,6 +455,7 @@ Character.plugins = {
 
         clientAct: function(seconds) {
             if (!this.move && !this.strafe) return;
+            if (isPlayerEditing(this)) return;
 
             var baseHeight = this.position.z;
             for (var i = 0; i < this.footsteps.tags.length; i++) {

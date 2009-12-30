@@ -101,7 +101,7 @@ CutScenes = {
         end: 0,
         text: '',
         x: 0.5,
-        y: 0.88,
+        y: 0.92,
         size: 0.5,
         color: 0xffffff,
     }),
