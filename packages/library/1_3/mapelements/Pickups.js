@@ -69,6 +69,7 @@ Pickups = {
                         pickup.render();
                     }
                     if (World.isPlayerCollidingEntity(player, pickup)) {
+                        Sound.play('0ad/fs_sand7.ogg', player.position.copy());
                         pickup.doPickup(player);
                         return false;
                     }

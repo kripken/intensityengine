@@ -3,4 +3,5 @@ debugit*
 cbuild/*
 out
 src/thirdparty/v8/*
+*~
 

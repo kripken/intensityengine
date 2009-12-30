@@ -417,10 +417,12 @@ SwarmPickups['rp'] = merge(SwarmPickups['r'], {
 });
 
 CutSceneWithBackgroundText = CutScenes.BaseAction.extend({
+/*
     showSubtitleBackground: function() {
         var factors = Global.gameHUD.calcFactors();
         this.oldShowHUDImage('packages/gamehud/gk/swarm/textbox.png', 0.5, 0.9, factors.x*800/Global.screenWidth, factors.y*128/Global.screenHeight);
     },
+*/
 });
 
 GameManager.setup([
