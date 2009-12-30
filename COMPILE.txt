@@ -15,11 +15,11 @@ The following are the shared aspects.
    with a release, or straight from the source code repository, in which
    case you can simply do
 
-        bzr branch lp:intensityengine
+        git clone git://github.com/kripken/intensityengine.git
 
-   You need the Bazaar version control system installed,
+   You need the Git version control system installed,
 
-        http://bazaar-vcs.org/
+        http://git-scm.com/
 
     See www.intensityengine.com for more details.
 
@@ -72,17 +72,17 @@ feedback about your experience in other distros, so we can add it to this file.
 In general, in other distros (or versions of Ubuntu) there might be minor changes
 to the package names and so forth, but overall, things should be similar.
 
-First, install Bazaar, CMake, SCons and other important stuff:
+First, install Git, CMake, SCons and other important stuff:
 
   Ubuntu 9.04:
-    sudo apt-get install bzr cmake scons build-essential libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev python-dev libboost-python1.35-dev zlib1g-dev   
+    sudo apt-get install git-core cmake scons build-essential libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev python-dev libboost-python1.35-dev zlib1g-dev   
 
   Ubuntu 9.10:
-    sudo apt-get install bzr cmake scons g++ libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev libboost-python1.38-dev
+    sudo apt-get install git-core cmake scons g++ libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev libboost-python1.38-dev
 
 Check out the source code:
 
-    bzr branch lp:intensityengine
+    git clone git://github.com/kripken/intensityengine.git
 
 Go to the V8 directory, ./src/thirdparty/v8, and run
 
@@ -102,7 +102,7 @@ Some specific comments:
     http://code.google.com/p/v8/issues/detail?id=463 ,
     you should enter src/thirdparty/v8 and run
 
-        GCC_VERSION="44" scons
+         GCC_VERSION="44" scons
 
     This is necessary on Ubuntu 9.10 (but not 9.04).
 
@@ -144,7 +144,7 @@ yourself, then you should do the following: Get the following
 items, and place them under /src/windows_dev (if you place them
 elsewhere, you will need to edit the SConstruct file so it can find them):
 
-   1. Get Bazaar from bazaar-vcs.org, if you want to get the source code
+   1. Get Git from http://git-scm.com/ , if you want to get the source code
       from the repo.
    2. Get SCons from www.scons.org.
    3. Get SDL from www.libsdl.org, (something like) SDL-devel-1.2.13-VC8.zip,
@@ -195,7 +195,7 @@ Some things to be aware of:
       then that might be caused by linking against one version of Python but running
       against another. To check, look for files of the type python*.dll (python24.dll,
       python25.dll, python26.dll, etc.) Remove all but the right python*.dll file from
-      your path. (In particular, it seems Bazaar places python25.dll in the path.)
+      your path. (In particular, perhaps SCons places python25.dll in the path.)
       NOTE: In some cases the error Windows provides for this problem may be less clear,
       such as "exception 0xc0000005", which is a general fault due to reading from
       an invalid location. Note that such an error may also indicate a completely
