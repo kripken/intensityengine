@@ -132,7 +132,7 @@ Acquiring all the various libraries needed to compile the project is
 somewhat of a hassle. The main website should have a download
 that can help, check at
 
-    https://launchpad.net/intensityengine/trunk/0.1
+    http://github.com/kripken/intensityengine/downloads
 
 The windows_dev.zip file is what you need for compilation. Place the
 contents under /src/windows_dev. (The windows_runtime.zip contains
@@ -250,7 +250,7 @@ Some things to be aware of:
       download a binary version of the Intensity Engine. You should also be able to download
       them from
 
-          https://launchpad.net/intensityengine/trunk/0.1
+          http://github.com/kripken/intensityengine/downloads
 
       The relevant file is windows_runtime.zip.
 
