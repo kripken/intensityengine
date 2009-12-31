@@ -21,6 +21,7 @@
 //=============================================================================
 
 
+
 //! An action that can queue more actions on itself, which run on its actor.
 //! Finishes when both this action itself is over, and when all subactions are done.
 ContainerAction = Action.extend({
@@ -33,6 +34,8 @@ ContainerAction = Action.extend({
     },
 
     doStart: function() {
+        this._super.apply(this, arguments);
+
         this.actionSystem = new ActionSystem(this.actor); // actor is now known
 
         forEach(this.otherActions, function(otherAction) {
@@ -49,6 +52,8 @@ ContainerAction = Action.extend({
         if (!this.actionSystem.isEmpty() && this.actionSystem.actionList[0].begun) {
             this.actionSystem.actionList[0].finish();
         };
+
+        this._super.apply(this, arguments);
     },
 
     abort: function() { // TODO: Move to actionSystem itself TODO: similar for ParallelAction
@@ -74,6 +79,8 @@ ParallelAction = Action.extend({
     },
 
     doStart: function() {
+        this._super.apply(this, arguments);
+
         forEach(this.otherActions, this.addAction, this);
     },
 
@@ -89,6 +96,8 @@ ParallelAction = Action.extend({
         forEach(this.actionSystems, function(actionSystem) {
             actionSystem.clear();
         });
+
+        this._super.apply(this, arguments);
     },
 
     addAction: function(otherAction) {
@@ -136,14 +145,14 @@ RenderingCaptureActionPlugin = {
     },
 
     doFinish: function() {
-        this._super.apply(this, arguments);
-
         if (this.renderDynamic) {
             renderDynamic = this.renderDynamicOld;
         }
         if (this.renderHUDModels) {
             renderHUDModels = this.renderHUDModelsOld;
         }
+
+        this._super.apply(this, arguments);
     },
 };
 
@@ -162,14 +171,14 @@ InputCaptureActionPlugin = {
     },
 
     doFinish: function() {
-        this._super.apply(this, arguments);
-
         if (this.clientClick) {
             ApplicationManager.instance.clientClick = this.oldClientClick;
         }
         if (this.actionKey) {
             ApplicationManager.instance.actionKey = this.oldActionKey;
         }
+
+        this._super.apply(this, arguments);
     },
 };
 

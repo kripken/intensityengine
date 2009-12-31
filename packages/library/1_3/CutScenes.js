@@ -26,7 +26,7 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/Events.js');
 CutScenes = {
     //! Basic cutscene action: Keeps the player entirely still (ignore mouse movements, even, and hide crosshair).
     //! Queue this action on the player entity.
-    BaseAction: ContainerAction.extend({
+    BaseAction: ContainerAction.extend(InputCaptureActionPlugin).extend({
         canBeCancelled: false,
 
         /* Extend this with something like
@@ -38,6 +38,11 @@ CutScenes = {
             ]);
         },
         */
+
+        clientClick: function() {
+            this.canBeCancelled = true;
+            this.cancel();
+        },
 
         doStart: function() {
             this.actor.canMove = false;
