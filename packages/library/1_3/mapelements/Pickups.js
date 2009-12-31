@@ -64,6 +64,7 @@ Pickups = {
         clientAct: function(seconds) {
             if (this.pickupsTimer.tick(seconds)) {
                 var player = getPlayerEntity();
+                if (!Health.isActiveEntity(player)) return;
                 this.pickups = filter(function(pickup) {
                     if (pickup.render) {
                         pickup.render();
@@ -100,6 +101,11 @@ Pickups = {
         addPickup: function(pickup) {
             pickup.id = this.pickupsCounter;
             this.pickupsCounter = this.pickupsCounter === 120 ? 0 : this.pickupsCounter + 1;
+
+            if (!pickup.floating) {
+                pickup.position.z -= floorDistance(pickup.position, 256) - 1;
+            }
+
             this.newPickup = merge(pickup, { position: pickup.position.asArray() });
             this.pickups.push(merge(pickup, this.pickupTypes[pickup.type]));
         },
@@ -129,7 +135,7 @@ Pickups = {
 
         fill: function() {
             GameManager.getSingleton().addPickup({
-                position: this.position,
+                position: this.position.copy(),
                 type: this.pickupType,
             });
         },

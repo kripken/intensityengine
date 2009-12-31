@@ -562,7 +562,7 @@ GameManager = {
                         if (toReplace) {
                             toReplace.abort = true;
                         }
-                        kwargs.secondsBefore = defaultValue(kwargs.secondsBefore, 0); // Not repeating, no time between
+                        kwargs.secondsBefore = defaultValue(kwargs.secondsBefore, 0);
                         kwargs.secondsBetween = defaultValue(kwargs.secondsBetween, -1); // Not repeating, no time between
                         kwargs.abort = false;
                         this.list.push(kwargs);
