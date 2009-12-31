@@ -71,6 +71,7 @@ Pickups = {
                     }
                     if (World.isPlayerCollidingEntity(player, pickup)) {
                         Sound.play('0ad/fs_sand7.ogg', player.position.copy());
+                        GameManager.getSingleton().removePickup = pickup.id;
                         pickup.doPickup(player);
                         return false;
                     }

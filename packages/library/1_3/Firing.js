@@ -222,6 +222,8 @@ Gun = Class.extend({
     },
 
     doRecoil: function(shooter, magnitude) {
+        if (Global.CLIENT && shooter !== getPlayerEntity()) return;
+
         if (shooter.canMove) {
             var dir = (new Vector3()).fromYawPitch(shooter.yaw, shooter.pitch).normalize(1).mul(-magnitude);
             shooter.velocity.add(dir);
