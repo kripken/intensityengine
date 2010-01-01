@@ -129,22 +129,19 @@ isPlayerEditing = function(player) {
 getCloseEntities = function(origin, maxDistance, _class, withTag, unsorted) {
     var ret = [];
 
-    forEach(values(__entitiesStore), function(otherEntity) {
-        if ( _class && !(otherEntity instanceof _class) ) {
-            return;
-        }
-        if ( withTag && !entity.hasTag(withTag) ) {
-            return;
-        }
+    var entities = _class ? getEntitiesByClass(_class) : values(__entitiesStore);
+    for (var i = 0; i < entities.length; i++) {
+        var otherEntity = entities[i];
 
-        if (!otherEntity.position) return;
+        if ( withTag && !entity.hasTag(withTag) ) continue;
+        if (!otherEntity.position) continue;
 
         var distance = origin.subNew(otherEntity.position).magnitude();
 
         if (distance <= maxDistance) {
             ret.push( [otherEntity, distance] );
         }
-    });
+    }
 
     // Sort results by distance
     if (!unsorted) {
