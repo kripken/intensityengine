@@ -51,6 +51,32 @@ AutoTargetingPlugin = {
 
         this.autoTargetEntity = null;
         this.autoTargetDirection = new Vector3(0,0,0);
+
+        this.targetingSuspended = false;
+
+        this.connect('suspendTargeting', function() {
+            GameManager.getSingleton().eventManager.suspend(this.autoTargetInterpolateEvent);
+            GameManager.getSingleton().eventManager.suspend(this.autoTargetSyncEvent);
+        });
+
+        this.connect('awakenTargeting', function() {
+            GameManager.getSingleton().eventManager.awaken(this.autoTargetInterpolateEvent);
+            GameManager.getSingleton().eventManager.awaken(this.autoTargetSyncEvent);
+        });
+    },
+
+    suspendTargeting: function() {
+        if (!this.targetingSuspended) {
+            this.emit('suspendTargeting');
+            this.targetingSuspended = true;
+        }
+    },
+
+    awakenTargeting: function() {
+        if (this.targetingSuspended) {
+            this.emit('awakenTargeting');
+            this.targetingSuspended = false;
+        }
     },
 
     getTargetingOrigin: function() {
@@ -123,6 +149,7 @@ AutoTargetingPlugin = {
                         if (this.autoTargetUniqueId !== -1) {
                             this.autoTargetUniqueId = -1;
                         }
+                        this.suspendTargeting();
                         return;
                     }
 
@@ -151,6 +178,12 @@ AutoTargetingPlugin = {
                         }
                     }
 
+                    if (newUniqueId >= 0) {
+                        this.awakenTargeting();
+                    } else {
+                        this.suspendTargeting();
+                    }
+
                     // Send only if different
                     if (newUniqueId !== this.autoTargetUniqueId) {
                         this.autoTargetUniqueId = newUniqueId;
@@ -170,6 +203,7 @@ AutoTargetingPlugin = {
                 secondsBefore: 0,
                 secondsBetween: params.fullSyncRate,
                 func: bind(function() {
+//log(ERROR, this.autoTargetSyncEvent.sleeping);
                     this.autoTargetYaw = normalizeAngle(this.autoTargetYaw, 0);
                     this.autoTargetPitch = normalizeAngle(this.autoTargetPitch, 0);
 
@@ -291,7 +325,15 @@ BotFiringPlugin = {
 
         this.triggerFingerDelay = 0;
 
-        GameManager.getSingleton().eventManager.add({
+        this.connect('suspendTargeting',  function() {
+            GameManager.getSingleton().eventManager.suspend(this.botFiringEvent);
+        });
+
+        this.connect('awakenTargeting', function() {
+            GameManager.getSingleton().eventManager.awaken(this.botFiringEvent, this.botFiringParams.firingDelay);
+        });
+
+        this.botFiringEvent = GameManager.getSingleton().eventManager.add({
             secondsBefore: 0,
             secondsBetween: 0, // We add delay ourselves, flexibly
             func: bind(function() {
@@ -319,7 +361,7 @@ BotFiringPlugin = {
                 }
             }, this),
             entity: this,
-        });
+        }, this.botFiringEvent);
     },
 
     isValidTarget: function(target) {

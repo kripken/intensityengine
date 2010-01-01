@@ -554,8 +554,11 @@ GameManager = {
                     // or a number, which is added to the secondsBefore for the next round (i.e., an extra delay)
                     list: [],
 
+                    needSort: false,
+
                     sortList: function() {
                         this.list.sort(function(a, b) { return a.deadline - b.deadline; })
+                        this.needSort = false;
                     },
 
                     add: function(kwargs, toReplace) {
@@ -566,9 +569,26 @@ GameManager = {
                         kwargs.secondsBetween = defaultValue(kwargs.secondsBetween, -1); // Not repeating, no time between
                         kwargs.deadline = Global.time + kwargs.secondsBefore;
                         kwargs.abort = false;
+                        kwargs.sleeping = false;
                         this.list.push(kwargs);
-                        this.sortList();
+                        this.needSort = true;
                         return kwargs;
+                    },
+
+                    suspend: function(item) {
+                        if (!item.sleeping) {
+                            item.sleeping = true;
+                            item.deadline = Global.time + 60*60*24;
+                            this.needSort = true;
+                        }
+                    },
+
+                    awaken: function(item, delay) {
+                        if (item.sleeping) {
+                            item.sleeping = false;
+                            item.deadline = Global.time + (delay ? delay : 0);
+                            this.needSort = true;
+                        }
                     },
                 };
             },
@@ -578,6 +598,10 @@ GameManager = {
             },
 
             act: function(seconds) {
+                if (this.eventManager.needSort) {
+                    this.eventManager.sortList();
+                }
+
                 var time;
 
                 var events = this.eventManager.list;
@@ -591,6 +615,12 @@ GameManager = {
 
                     if (item.abort || (item.entity && item.entity.deactivated)) {
                         events.shift();
+                        continue;
+                    }
+
+                    if (item.sleeping) {
+                        item.deadline = Global.time + 60*60*24;
+                        currIndex += 1;
                         continue;
                     }
 
@@ -617,7 +647,7 @@ GameManager = {
                 }
 
                 if (currIndex > 0) {
-                    this.eventManager.sortList();
+                    this.eventManager.needSort = true;
                 }
             },
 
