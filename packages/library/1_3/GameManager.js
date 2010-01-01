@@ -578,17 +578,26 @@ GameManager = {
             },
 
             act: function(seconds) {
+                var time;
+
                 var events = this.eventManager.list;
                 var numEvents = events.length;
                 var currIndex = 0;
                 for (var i = 0; i < numEvents; i++) {
                     var item = events[currIndex];
                     if (Global.time < item.deadline) break;
+
                     // The item's time is now
+
                     if (item.abort || (item.entity && item.entity.deactivated)) {
                         events.shift();
                         continue;
                     }
+
+                    if (Global.profiling && Global.profiling.data) {
+                        time = CAPI.currTime();
+                    }
+
                     var more = item.func();
                     if (item.secondsBetween >= 0 && more !== false) {
                         if (more < 0) more *= -(Math.random()+0.5); // negative more means 'add some jitter'
@@ -596,6 +605,14 @@ GameManager = {
                         currIndex += 1;
                     } else {
                         events.shift();
+                    }
+
+                    if (Global.profiling && Global.profiling.data) {
+                        var _class = item.func.im_func ? item.func.im_func : item.func;
+                        _class = 'eventManager::' + _class.toString().replace(/\n/g, ' ').substring(0, 70);
+                        time = CAPI.currTime() - time;
+                        if (Global.profiling.data[_class] === undefined) Global.profiling.data[_class] = 0;
+                        Global.profiling.data[_class] += time;
                     }
                 }
 

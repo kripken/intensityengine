@@ -67,7 +67,7 @@ AutoTargetingPlugin = {
         if (this.autoTargetEntity === null || !this.isValidTarget(this.autoTargetEntity)) {
             this.autoTargetEntity = null;
             this.autoTargetingError = 180.0; // Not aiming at anything
-            return; // No autoTarget
+            return -seconds*4; // No autoTarget, sleep
         }
 
         this.autoTargetPosition = this.autoTargetEntity.getCenter();
@@ -231,6 +231,7 @@ AutoTargetingPlugin = {
                         this.autoTargetInterpolate();
                     }
                     this.preventClientAutoTargetStutter(oldYaw, oldPitch);
+                    if (!this.autoTargetEntity) return this.autoTargetParams.interpolateRate*4; // sleep
                 }, this),
                 entity: this,
             }, this.autoTargetParamsEvent);
