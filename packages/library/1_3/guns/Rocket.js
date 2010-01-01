@@ -35,10 +35,23 @@ Rocket = Projectiles.Projectile.extend({
     explosionPower: 100.0,
     speed: 160.0,
     timeLeft: 5.0,
-    gravityFactor: 0.075,
+    gravityFactor: 0.0,
+
+    create: function() {
+        this._super.apply(this, arguments);
+
+/*
+        var finalDestination = World.getRayCollisionWorld(this.position, this.velocity.copy().normalize(), 2048);
+        this.collideFunc = function(position, radius, ignore) {
+            return position.isCloseTo(finalDestination, radius);
+        };
+*/
+    },
 
     tick: function(seconds) {
-        this.velocity.z -= this.gravityFactor*World.gravity*seconds; // minor gravity effect
+        if (this.gravityFactor) {
+            this.velocity.z -= this.gravityFactor*World.gravity*seconds;
+        }
         return this._super(seconds);
     },
 
@@ -115,10 +128,12 @@ RocketGun = Projectiles.Gun.extend({
         ]));
     },
 
+/* // Only clients do this
     handleServerLogic: function(shooter, originPosition, targetPosition, targetEntity) {
 // delay as well TODO
         this.shootProjectile(shooter, originPosition, targetPosition, targetEntity, this.projectileClass);
     },
+*/
 });
 
 

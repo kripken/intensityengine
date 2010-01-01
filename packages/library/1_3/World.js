@@ -150,6 +150,7 @@ World = merge(World, {
     },
 
     //! Given an origin and a direction, finds the collision point with the world
+    //! @param direction Assumed normalized
     getRayCollisionWorld: function(origin, direction, maxDist) {
         maxDist = defaultValue(maxDist, 2048);
         var dist = rayCollisionDistance(origin, direction.mulNew(maxDist));
@@ -192,6 +193,21 @@ World = merge(World, {
         return best;
     },
 
+    isCollidingEntities: function(position, radius, ignore) {
+        var entities = World.getCollidableEntities();
+
+        for (var i = 0; i < entities.length; i++) {
+            var entity = entities[i];
+
+            if (entity === ignore || entity.deactivated) continue;
+
+            var entityRadius = entity.radius ? entity.radius : Math.max(entity.collisionRadiusWidth, entity.collisionRadiusHeight);
+            if (position.isCloseTo(entity.position, radius + entityRadius)) return true;
+        }
+
+        return false;
+    },
+
     //! By default, we return characters. Static entities have their collisions as part of the world anyhow.
     //! Override this to add any other entities, like swarms etc.
     //! All the entities returned must have a center and a radius.
@@ -223,18 +239,7 @@ World.isColliding = function(position, radius, ignore) {
         return true;
     }
 
-    var entities = World.getCollidableEntities();
-
-    for (var i = 0; i < entities.length; i++) {
-        var entity = entities[i];
-
-        if (entity === ignore) continue;
-
-        var entityRadius = entity.radius ? entity.radius : Math.max(entity.collisionRadiusWidth, entity.collisionRadiusHeight);
-        if (position.isCloseTo(entity.position, radius + entityRadius)) return true;
-    }
-
-    return false;
+    return World.isCollidingEntities(position, radius, ignore);
 }
 
 // Should reflect iengine.h

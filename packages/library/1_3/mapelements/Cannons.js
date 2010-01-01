@@ -85,10 +85,25 @@ CannonHealthPlugin = {
     maxHealth: 30,
     health: 30,
 
+    activate: function() {
+        this.connect('onModify_canAutoTarget', function(value) {
+            if (value === false) {
+                this.disabledEvent = GameManager.getSingleton().eventManager.add({
+                    secondsBefore: 6,
+                    func: bind(function() {
+                        this.health = this.maxHealth;
+                        this.canAutoTarget = true;
+                    }, this),
+                    entity: this,
+                }, this.disabledEvent);
+            }
+        });
+    },
+
     clientActivate: function() {
         this.connect('client_onModify_canAutoTarget', function(value) {
             if (value === false) {
-                this.disabledEvent = GameManager.getSingleton().eventManager.add({
+                this.disabledVisualEvent = GameManager.getSingleton().eventManager.add({
                     secondsBefore: 0,
                     secondsBetween: 0,
                     func: bind(function() {
@@ -98,7 +113,9 @@ CannonHealthPlugin = {
                         Effect.flame(PARTICLE.SMOKE, this.getCenter(), 3.5, 1.5, 0x000000, 1, 7.0, 100, Math.max(Global.currTimeDelta*50, 0.5), -15);
                     }, this),
                     entity: this,
-                }, this.disabledEvent);
+                }, this.disabledVisualEvent);
+            } else {
+                this.health = this.maxHealth;
             }
         });
     },
@@ -110,15 +127,6 @@ CannonHealthPlugin = {
             if (this.canAutoTarget) {
                 this.canAutoTarget = false;
             }
-
-            this.disabledEvent = GameManager.getSingleton().eventManager.add({
-                secondsBefore: 6,
-                func: bind(function() {
-                    this.health = this.maxHealth;
-                    this.canAutoTarget = true;
-                }, this),
-                entity: this,
-            }, this.disabledEvent);
         }
     },
 };

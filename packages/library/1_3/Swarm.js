@@ -318,23 +318,25 @@ SwarmBugs = {
 
             var that = this;
 
-            // Weapons and blast waves - TODO
+            // Weapons and blast waves
 
-            var oldDoBlastWave = Projectiles.doBlastWave;
-            Projectiles.doBlastWave = function(position, power, velocity, customDamageFunc) {
-                oldDoBlastWave.apply(Projectiles, arguments);
+            if (Global.CLIENT) {
+                var oldDoBlastWave = Projectiles.doBlastWave;
+                Projectiles.doBlastWave = function(position, power, velocity, customDamageFunc) {
+                    oldDoBlastWave.apply(Projectiles, arguments);
 
-                var expo = 1.333;
-                var maxDist = Math.pow(power-1, 1/expo);
+                    var expo = 1.333;
+                    var maxDist = Math.pow(power-1, 1/expo);
 
-                if (!customDamageFunc) {
-                    forEach(that.swarmManager.subEntities, function (subEntity) {
-                        var distance = subEntity.position.subNew(position).magnitude();
-                        distance = Math.max(1, distance);
-                        var bump = Math.max(0, power-Math.pow(distance, expo));
+                    if (!customDamageFunc) {
+                        forEach(that.swarmManager.subEntities, function (subEntity) {
+                            var distance = subEntity.position.subNew(position).magnitude();
+                            distance = Math.max(1, distance);
+                            var bump = Math.max(0, power-Math.pow(distance, expo));
 
-                        subEntity.sufferDamage({ damage: bump*10, origin: position, nonControllerDamage: 0 });
-                    });
+                            subEntity.sufferDamage({ damage: bump*10, origin: position, nonControllerDamage: 0 });
+                        });
+                    }
                 }
             }
 
@@ -773,6 +775,7 @@ SwarmBugs = {
 
             // Expire
             this.active = false;
+            this.deactivated = true;
 
             if (Global.CLIENT) {
                 this.playPainSound();

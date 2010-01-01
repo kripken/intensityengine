@@ -72,9 +72,9 @@ SwarmRocketCannonPlugin = {
     },
 };
 
-makeCannon('RocketCannon', RocketGun.extend({ projectileClass: SeekingRocket.extend({ explosionPower: 25, speed: 150, accuracy: 0.5 }) }), [Projectiles.plugin, SwarmRocketCannonPlugin]);
+makeCannon('RocketCannon', RocketGun.extend({ projectileClass: Rocket.extend({ explosionPower: 25, speed: 150, accuracy: 0.5, timeLeft: 8.0, gravityFactor: 0 }) }), [Projectiles.plugin, SwarmRocketCannonPlugin]);
 
-makeCannon('UpsidedownRocketCannon', RocketGun.extend({ projectileClass: SeekingRocket.extend({ explosionPower: 25, speed: 150, accuracy: 0.5 }) }), [Projectiles.plugin, UpsidedownCannonPlugin, SwarmRocketCannonPlugin]);
+makeCannon('UpsidedownRocketCannon', RocketGun.extend({ projectileClass: Rocket.extend({ explosionPower: 25, speed: 150, accuracy: 0.5, timeLeft: 8.0, gravityFactor: 0 }) }), [Projectiles.plugin, UpsidedownCannonPlugin, SwarmRocketCannonPlugin]);
 
 SwarmInstaCannonPlugin = {
     init: function() {
@@ -424,6 +424,8 @@ CutSceneWithBackgroundText = CutScenes.BaseAction.extend({
     },
 */
 });
+
+Projectiles.serverside = false;
 
 GameManager.setup([
     GameManager.managerPlugins.messages,

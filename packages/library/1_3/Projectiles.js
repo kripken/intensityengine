@@ -26,6 +26,8 @@
 Library.include('library/' + Global.LIBRARY_VERSION + '/Firing.js');
 
 Projectiles = {
+    serverside: true,
+
     //! Each client does itself. Server does everything else.
     //! Entities that receive damage should have a sufferDamage() function.
     //! @param velocity The velocity of the projectile. This is useful because, if the
@@ -34,17 +36,28 @@ Projectiles = {
     //!                 may lead to being thrown in the opposite direction of the
     //!                 projectile, which would look odd. So, we bias in the direction of
     //!                 the velocity.
-    doBlastWave: function(position, power, velocity, customDamageFunc) {
+    doBlastWave: function(position, power, velocity, customDamageFunc, owner) {
         // Simple Power-Distance^exp physics
         var expo = 1.333;
         var maxDist = Math.pow(power-1, 1/expo);
+
         var entities;
-        if (Global.CLIENT) {
-            entities = [getPlayerEntity()];
+        if (Projectiles.serverside) {
+            if (Global.CLIENT) {
+                entities = [getPlayerEntity()];
+            } else {
+                entities = getCloseEntities(position, maxDist);
+                entities = map(function(pair) { return pair[0]; }, entities);
+                entities = filter(function(entity) { return !(entity instanceof Player); }, entities);
+            }
         } else {
-            entities = getCloseEntities(position, maxDist);
-            entities = map(function(pair) { return pair[0]; }, entities);
-            entities = filter(function(entity) { return !(entity instanceof Player); }, entities);
+            entities = [];
+            if (owner === getPlayerEntity()) { // The owner does most everything
+                entities = getCloseEntities(position, maxDist);
+                entities = map(function(pair) { return pair[0]; }, entities);
+                entities = filter(function(entity) { return !(entity instanceof Player); }, entities);
+            }
+            entities.push(getPlayerEntity()); // Every player does themselves
         }
 
         forEach(entities, function(entity) {
@@ -89,6 +102,8 @@ Projectiles = {
                 this.yaw = owner.yaw;
                 this.pitch = owner.pitch;
             }
+
+            this.collideFunc = World.isColliding;
         },
 
         tick: function(seconds) {
@@ -114,7 +129,7 @@ Projectiles = {
                     this.position.add( this.velocity.mulNew(this.physicsFrameSize) );
                 }
 
-                if ( World.isColliding(this.position, this.radius, this.owner) )
+                if ( this.collideFunc(this.position, this.radius, this.owner) )
                 {
                     // Do some fine-tuning of the explosion position - small steps. Not doing this all the time
                     // saves CPU, and would only lead to bugs if there are really really thin obstacles.
@@ -123,7 +138,7 @@ Projectiles = {
                     for (var i = 0; i < NUM_STEPS; i++) {
                         lastPosition.add(step);
                         // Don't do last step - we already know the answer
-                        if ( (i == NUM_STEPS-1) || World.isColliding(lastPosition, this.radius, this.owner) ) {
+                        if ( (i == NUM_STEPS-1) || this.collideFunc(lastPosition, this.radius, this.owner) ) {
                             break;
                         }
                     }
@@ -148,7 +163,7 @@ Projectiles = {
                 Effect.addDynamicLight(this.position, radius*14, this.color, 0.2666, 0.0333, 0, radius*9);
             }
 
-            Projectiles.doBlastWave(this.position, this.explosionPower, this.velocity, this.customDamageFunc);
+            Projectiles.doBlastWave(this.position, this.explosionPower, this.velocity, this.customDamageFunc, this.owner);
 
             return false; // The projectile ends its life
         }
@@ -186,7 +201,19 @@ Projectiles = {
         act: function(seconds) {
             if (this.projectileManager.projectiles.length === 0) return;
 
+            var time;
+            if (Global.profiling && Global.profiling.data) {
+                time = CAPI.currTime();
+            }
+
             this.projectileManager.tick(seconds);
+
+            if (Global.profiling && Global.profiling.data) {
+                var _class = 'projectileManager::' + this.uniqueId;
+                time = CAPI.currTime() - time;
+                if (Global.profiling.data[_class] === undefined) Global.profiling.data[_class] = 0;
+                Global.profiling.data[_class] += time;
+            }
         },
         clientAct: function(seconds) {
             if (this.projectileManager.projectiles.length === 0) return;
