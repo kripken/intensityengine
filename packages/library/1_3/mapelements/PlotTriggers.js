@@ -134,7 +134,7 @@ PlotTrigger = registerEntityClass(bakePlugins(ResettableAreaTrigger, [ChildEntit
     createStateDataDict: function() {
         var ret = this._super.apply(this, arguments);
 
-        // On the client, we are saving entities... for that, save the ORIGINAL door position!
+        // On the client, we are saving entities...
         if (Global.CLIENT) {
             ret['state'] = 'closed';
         }
@@ -297,13 +297,13 @@ PlotBarrierPlugin = {
 
     activate: function() {
         this.resetBarrier();
-        this.refreshTimer = new RepeatingTimer(5+Math.random());
-    },
 
-    act: function(seconds) {
-        if (this.refreshTimer.tick(seconds)) {
-            this.refreshBarrier();
-        }
+        this.refreshEvent = GameManager.getSingleton().eventManager.add({
+            secondsBefore: 0,
+            secondsBetween: 5,
+            func: bind(this.refreshBarrier, this),
+            entity: this,
+        }, this.refreshEvent);
     },
 
     resetBarrier: function() {
@@ -319,7 +319,7 @@ PlotBarrierPlugin = {
     refreshBarrier: function() {
         if (this.state === 'open' && getClientEntities().length === 0) {
             this.resetBarrier();
-            return;
+            return -1;
         }
 
         var triggers = filter(
@@ -337,6 +337,8 @@ PlotBarrierPlugin = {
         } else if (!shouldOpen && this.state !== 'closed') {
             this.resetBarrier();
         }
+
+        return -1;
     },
 };
 
