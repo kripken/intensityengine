@@ -295,7 +295,7 @@ BotFiringPlugin = {
             secondsBetween: 0, // We add delay ourselves, flexibly
             func: bind(function() {
                 if (!this.canAutoTarget) {
-                    return this.botFiringParams.firingDelay; // Sleep
+                    return -this.botFiringParams.firingDelay; // Sleep
                 }
                 if (this.autoTargetingError <= 5) {
                     this.triggerFingerDelay -= Global.currTimeDelta;
@@ -305,11 +305,16 @@ BotFiringPlugin = {
                         } else {
                             this.gun.doShot(this, this.autoTargetPosition.addNew(Random.normalizedVector3().mul(Math.random()*5)));
                         }
-                        this.triggerFingerDelay = this.botFiringParams.triggerFingerDelay;
-                        return this.botFiringParams.firingDelay*(1+0.5*(Math.random()-0.5)); // Add +-% variation to firing times
+                        this.triggerFingerDelay = this.botFiringParams.triggerFingerDelay/2;
+                        return -this.botFiringParams.firingDelay;
                     }
                 } else {
-                    this.triggerFingerDelay = this.botFiringParams.triggerFingerDelay;
+                    this.triggerFingerDelay = this.botFiringParams.triggerFingerDelay/2;
+                    if (this.autoTargetEntity) {
+                        return this.botFiringParams.triggerFingerDelay/2;
+                    } else {
+                        return -this.botFiringParams.firingDelay; // Sleep
+                    }
                 }
             }, this),
             entity: this,

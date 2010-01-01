@@ -555,7 +555,7 @@ GameManager = {
                     list: [],
 
                     sortList: function() {
-                        this.list.sort(function(a, b) { return a.secondsBefore - b.secondsBefore; })
+                        this.list.sort(function(a, b) { return a.deadline - b.deadline; })
                     },
 
                     add: function(kwargs, toReplace) {
@@ -564,6 +564,7 @@ GameManager = {
                         }
                         kwargs.secondsBefore = defaultValue(kwargs.secondsBefore, 0);
                         kwargs.secondsBetween = defaultValue(kwargs.secondsBetween, -1); // Not repeating, no time between
+                        kwargs.deadline = Global.time + kwargs.secondsBefore;
                         kwargs.abort = false;
                         this.list.push(kwargs);
                         this.sortList();
@@ -577,29 +578,28 @@ GameManager = {
             },
 
             act: function(seconds) {
-                var changed = false;
-                var newList = filter(function(item) {
+                var events = this.eventManager.list;
+                var numEvents = events.length;
+                var currIndex = 0;
+                for (var i = 0; i < numEvents; i++) {
+                    var item = events[currIndex];
+                    if (Global.time < item.deadline) break;
+                    // The item's time is now
                     if (item.abort || (item.entity && item.entity.deactivated)) {
-                        changed = true;
-                        return false;
+                        events.shift();
+                        continue;
                     }
-                    item.secondsBefore -= seconds;
-                    if (item.secondsBefore <= 0) {
-                        changed = true;
-                        var more = item.func();
-                        if (item.secondsBetween >= 0 && more !== false) {
-                            item.secondsBefore = item.secondsBetween + (more ? more : 0);
-                            return true;
-                        } else {
-                            return false;
-                        }
+                    var more = item.func();
+                    if (item.secondsBetween >= 0 && more !== false) {
+                        if (more < 0) more *= -(Math.random()+0.5); // negative more means 'add some jitter'
+                        item.deadline = Global.time + item.secondsBetween + (more ? more : 0);
+                        currIndex += 1;
                     } else {
-                        return true;
+                        events.shift();
                     }
-                }, this.eventManager.list, this);
+                }
 
-                if (changed) {
-                    this.eventManager.list = newList;
+                if (currIndex > 0) {
                     this.eventManager.sortList();
                 }
             },

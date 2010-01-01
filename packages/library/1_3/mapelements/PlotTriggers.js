@@ -130,6 +130,17 @@ PlotTrigger = registerEntityClass(bakePlugins(ResettableAreaTrigger, [ChildEntit
         GameManager.getSingleton().renderingHashHint = this.uniqueId;
         CAPI.renderModel2.apply(null, args);
     },
+
+    createStateDataDict: function() {
+        var ret = this._super.apply(this, arguments);
+
+        // On the client, we are saving entities... for that, save the ORIGINAL door position!
+        if (Global.CLIENT) {
+            ret['state'] = 'closed';
+        }
+
+        return ret;
+    },
 }]));
 
 
@@ -403,6 +414,7 @@ Door = registerEntityClass(bakePlugins(PlotBarrier, [{
 
         // On the client, we are saving entities... for that, save the ORIGINAL door position!
         if (Global.CLIENT && this.originalPosition) {
+            ret['state'] = 'closed';
             ret['position'] = WrappedCVector3.prototype.toData(this.originalPosition);
         }
 
