@@ -389,7 +389,7 @@ Character.plugins = {
         },
 
         clientAct: function(seconds) {
-            if (this === getPlayerEntity() && this.effectiveCameraHeightTimer.tick(seconds)) {
+            if (this === getPlayerEntity() && this.effectiveCameraHeightTimer.tick(seconds) && !isPlayerEditing(this)) {
                 if (Math.abs(Math.cos(this.pitch*Math.PI/180)) < 0.05) return;
 
                 var target = CAPI.getTargetPosition();
