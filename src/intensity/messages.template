@@ -121,7 +121,7 @@ PrepareForNewScenario(server->client)
     implicit clientNumber
     std::string scenarioCode
     receive:
-        IntensityGUI::showMessage("Server", "New map being prepared on server, please wait");
+        IntensityGUI::showMessage("Server", "Map being prepared on server, please wait");
         ClientSystem::prepareForNewScenario(scenarioCode);
 end
 

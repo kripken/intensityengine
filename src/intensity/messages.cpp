@@ -365,7 +365,7 @@ namespace MessageSystem
         getstring(tmp_scenarioCode, p);
         std::string scenarioCode = tmp_scenarioCode;
 
-        IntensityGUI::showMessage("Server", "New map being prepared on server, please wait");
+        IntensityGUI::showMessage("Server", "Map being prepared on server, please wait");
         ClientSystem::prepareForNewScenario(scenarioCode);
     }
 #endif

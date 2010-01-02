@@ -32,7 +32,11 @@ The following are the shared aspects.
 
         * You need to compile V8 yourself (it uses SCons)
         * You need to run generate_messages.py yourself, if you modify
-            the messages.template file
+            the messages.template file. Do so by running
+
+                python src/generate_messages.py
+
+            in the install directory.
 
 3. After compiling, see the README.txt file for instructions on running
    the Intensity Engine.
