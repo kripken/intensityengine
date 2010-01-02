@@ -10,7 +10,7 @@ endif(${WIN32})
 #message(STATUS "${BOOST_ROOT}")
 #set(Boost_LIBRARYDIR "${INTENSITY_DEP_PATH}/boost/lib")
 #set(CMAKE_PREFIX_PATH ${INTENSITY_DEP_PATH}/boost ${CMAKE_PREFIX_PATH})
-find_package(Boost 1.36.0 COMPONENTS python REQUIRED)
+find_package(Boost 1.35.0 COMPONENTS python REQUIRED)
 
 find_package(OpenGL REQUIRED)
 
