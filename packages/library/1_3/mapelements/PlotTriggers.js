@@ -116,6 +116,14 @@ PlotTrigger = registerEntityClass(bakePlugins(ResettableAreaTrigger, [ChildEntit
         });
     },
 
+    clientActivate: function() {
+        this.connect('client_onModify_state', function(state) {
+            if (this.state === 'closed' && state === 'open' && this.visualModelName && this.visualModelName !== 'areatrigger') {
+                Sound.play('swarm/trigger.ogg', this.position.copy());
+            }
+        });
+    },
+
     onTrigger: function(collider) {
         this.setState('open');
     },

@@ -309,9 +309,9 @@ log(ERROR, this.health);
 
                 // Restart map / TODO: Move to next map
                 GameManager.getSingleton().eventManager.add({
-                    secondsBefore: 19.5, // XXX: Coordinate with player cutscene!
+                    secondsBefore: 21, // XXX: Coordinate with player cutscene!
                     func: function() {
-                        log(ERROR, "restart mappp");
+                        CAPI.signalComponent('MapControl', 'restart');
                     },
                     entity: this,
                 });
