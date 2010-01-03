@@ -23,8 +23,6 @@
 
 Global.LIBRARY_VERSION = '1_3';
 
-Library.include('library/' + Global.LIBRARY_VERSION + '/__CorePatches');
-
 // Intensity version comparing
 
 function isIntensityVersionAtLeast(test) {
