@@ -486,14 +486,8 @@ namespace MessageSystem
             send_PersonalServerMessage(sender, -1, "Server", "You are not an administrator, and cannot restart the map");
             return;
         }
-        REFLECT_PYTHON( AssetManager );
-        REFLECT_PYTHON( get_curr_activity_id );
-        REFLECT_PYTHON( get_curr_map_asset_id );
-        REFLECT_PYTHON( set_map );
-        AssetManager.attr("clear_cache")();
-        std::string activityId = python::extract<std::string>(get_curr_activity_id());
-        std::string mapAssetId = python::extract<std::string>(get_curr_map_asset_id());
-        set_map(activityId, mapAssetId);
+        REFLECT_PYTHON( restart_map );
+        restart_map();
     }
 #endif
 

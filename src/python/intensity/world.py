@@ -169,6 +169,11 @@ def set_map(activity_id, map_asset_id):
     return True # TODO: Do something with this value
 
 
+def restart_map():
+    AssetManager.clear_cache() # Make sure we will load the latest assets
+    set_map(get_curr_activity_id(), get_curr_map_asset_id())
+
+
 ## Returns the path to a file in the map script directory, i.e., a file is given in
 ## relative position to the current map, and we return the full path
 def get_mapfile_path(relative_path):
