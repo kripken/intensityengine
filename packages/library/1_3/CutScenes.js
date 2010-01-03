@@ -40,8 +40,9 @@ CutScenes = {
         */
 
         clientClick: function() {
-            this.canBeCancelled = true;
-            this.cancel();
+            if (this.canBeCancelled) {
+                this.cancel();
+            }
         },
 
         doStart: function() {

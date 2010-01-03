@@ -70,7 +70,15 @@ Projectiles = {
                 if (entity.velocity) {
                     entity.velocity.add(entity.position.subNew(position).add(velocity.copy().normalize().mul(4)).add(new Vector3(0,0,2)).normalize().mul(bump*4));
                 }
-                entity.sufferDamage({ damage: bump });
+                if (Projectiles.serverside) {
+                    entity.sufferDamage({ damage: bump });
+                } else {
+//                    if (owner === getPlayerEntity()) {
+                        entity.sufferDamage({ damage: bump });
+//                    } else {
+//                        entity.sufferDamage({ damage: 0, nonControllerDamage: bump });
+//                    }
+                }
             } else {
                 customDamageFunc(entity, bump);
             }

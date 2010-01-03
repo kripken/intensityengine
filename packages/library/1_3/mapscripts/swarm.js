@@ -11,6 +11,7 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/modes/Teamwork');
 Library.include('library/' + Global.LIBRARY_VERSION + '/World');
 Library.include('library/' + Global.LIBRARY_VERSION + '/CutScenes');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Swarm');
+Library.include('library/' + Global.LIBRARY_VERSION + '/CustomEffect');
 Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Rocket');
 Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Chaingun');
 Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Insta');
@@ -274,7 +275,7 @@ BigBossTrigger = registerEntityClass(bakePlugins(PlotTrigger, [{
 BigBossHeart = registerEntityClass(bakePlugins(RecursivePlotTrigger, [{
     _class: 'BigBossHeart',
 
-    maxHealth: 1000,
+    maxHealth: 10,
     health: new StateInteger(),
 
     init: function() {
@@ -296,6 +297,27 @@ log(ERROR, this.health);
             }, this),
             entity: this,
         });
+
+        this.connect('onModify_health', function(health) {
+            if (health <= 0) {
+                // Stop attackers in last room
+                GameManager.getSingleton().disableAutoTargeting = true;
+                forEach(getEntitiesByClass('SwarmBugSpawner'), function(spawner) {
+                    spawner.reactivateDelay = 10000;
+                    spawner.deactivateSpawner();
+                });
+
+                // Restart map / TODO: Move to next map
+                GameManager.getSingleton().eventManager.add({
+                    secondsBefore: 19.5, // XXX: Coordinate with player cutscene!
+                    func: function() {
+                        log(ERROR, "restart mappp");
+                    },
+                    entity: this,
+                });
+
+            }
+        });
     },
 
     clientActivate: function(seconds) {
@@ -308,15 +330,17 @@ log(ERROR, this.health);
             }, this),
             entity: this,
         });
+
+        this.connect('client_onModify_health', function(health) {
+            if (health <= 0) {
+                GameManager.getSingleton().showEndTitles(this.position.addNew(new Vector3(0, 0, this.collisionRadiusHeight)));
+            }
+        });
     },
 
     sufferDamage: function(kwargs) {
-        if (Global.SERVER) {
+        if (kwargs.damage >= 10) {
             this.health -= kwargs.damage;
-
-            if (this.health <= 0) {
-                log(ERROR, "GAME OVER, MAN");
-            }
         }
     },
 }]));
@@ -480,6 +504,8 @@ GameManager.setup([
             }
 
             getPlayerEntity().queueAction(new (CutSceneWithBackgroundText.extend({
+                canBeCancelled: true,
+
                 subtitles: [
                     new (CutScenes.Subtitle.extend({
                         start: 0.5*factor, end: 9.0*factor, text: 'You have landed on a hostile planet...',
@@ -552,6 +578,68 @@ GameManager.setup([
                     });
                 },
             }))());
+        },
+
+        showEndTitles: function(fireworksOrigin) {
+            getPlayerEntity().health = getPlayerEntity().maxHealth; // don't die from final rockets!
+
+            // Fireworks
+
+            var startTime = Global.time;
+            for (var i = 0; i < 5; i++) {
+                GameManager.getSingleton().eventManager.add({
+                    secondsBefore: Math.random(),
+                    secondsBetween: 0, // Dynamic
+                    func: bind(function() {
+                        Sound.play('olpc/MichaelBierylo/sfx_DoorSlam.wav', fireworksOrigin);
+
+                        this.addParallelAction(new CustomEffect.Fireworks({
+                            shots: [{
+                                position: fireworksOrigin.copy(),
+                                velocity: new Vector3(30*(Math.random()-0.5), 30*(Math.random()-0.5), 20 + 30*(Math.random()-0.5)),
+                                secondsLeft: 3.0,
+                                childMinZ: fireworksOrigin.z - 50,
+                                minVelocityZ: -10,
+                                childSecondsLeft: 0.6,
+                                getColor: function() {
+                                    if (this.size === 1.0) return 0xFFEECC;
+                                    return Math.floor(Math.random()*255) + (Math.floor(Math.random()*255) << 8) + (Math.floor(Math.random()*255) << 16);
+                                },
+                                size: 1.0,
+                            }],
+                        }));
+
+                        if (Global.time - startTime > 25) {
+                            return false;
+                        } else {
+                            return -1;
+                        }
+                    }, this),
+                    entity: this,
+                });
+            }
+
+            // Cutscene
+
+            getPlayerEntity().queueAction(new (CutSceneWithBackgroundText.extend({
+                subtitles: [
+                    new (CutScenes.Subtitle.extend({
+                        start: 2/3, end: 25.0, text: 'You defeated the computer!',
+                    }))(),
+                ],
+            }))(
+                [
+                    new (CutScenes.SmoothAction.extend({
+                        markers: [
+                            { position: new Vector3(2568.11, 1109.05, 856.76), yaw: 59.81, pitch: 4.72 },
+                            { position: new Vector3(2521.69, 1161.13, 858.84), yaw: 44.90, pitch: -2.27 },
+                            { position: new Vector3(2598.12, 1222.86, 859.70), yaw: 19.18, pitch: -7.27 },
+                            { position: new Vector3(2738.24, 1256.46, 862.41), yaw: 335.99, pitch: -3.36 },
+                            { position: new Vector3(2767.91, 1167.78, 859.01), yaw: 312.99, pitch: -1.45 },
+                        ],
+                    }))(),
+                ]
+            ));
         },
     },
 ]);
