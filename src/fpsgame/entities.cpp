@@ -14,32 +14,9 @@ namespace entities
     bool mayattach(extentity &e) { return false; }
     bool attachent(extentity &e, extentity &a) { return false; }
     
-
-    const char *entmdlname(int type)
-    {
-        static const char *entmdlnames[] =
-        {
-            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-            "ammo/shells", "ammo/bullets", "ammo/rockets", "ammo/rrounds", "ammo/grenades", "ammo/cartridges",
-            "health", "boost", "armor/green", "armor/yellow", "quad", "teleporter",
-            NULL, NULL,
-            "carrot",
-            NULL, NULL,
-            "checkpoint",
-            NULL, NULL,
-            NULL, NULL,
-            NULL
-        };
-        return entmdlnames[type];
-    }
-
     const char *entmodel(const entity &e)
     {
-        extentity *ext = (extentity*)&e;
-        LogicEntityPtr logicEntity = LogicSystem::getLogicEntity(*ext);
-        if (!logicEntity) return NULL;
-        model* mdl = logicEntity->getModel(); // e.type < MAXENTTYPES ? entmdlname(e.type) : NULL;
-        return mdl ? mdl->name() : NULL;
+        return NULL;
     }
 
     void preloadentities()
@@ -49,15 +26,11 @@ namespace entities
     void renderent(extentity &e, const char *mdlname, float z, float yaw)
     {
         assert(0);
-#if 0
-        if(!mdlname) return;
-        rendermodel(&e.light, mdlname, ANIM_MAPMODEL|ANIM_LOOP, vec(e.o).add(vec(0, 0, z)), yaw, 0, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED);
-#endif
     }
 
     void renderent(extentity &e, int type, float z, float yaw)
     {
-        renderent(e, entmdlname(type), z, yaw);
+        assert(0);
     }
 
     void renderentities()
