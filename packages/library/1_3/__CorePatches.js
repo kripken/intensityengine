@@ -21,6 +21,11 @@
 //=============================================================================
 
 
+Map.fogColorOld = Map.fogColor;
+Map.fogColor = function(r, g, b) {
+    Map.fogColorOld((r<<16) + (g<<8) + b);
+}
+
 rayCollisionDistance = function(origin, ray) {
     var rayMag = ray.magnitude();
     if (rayMag === 0) return -1;
