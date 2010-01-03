@@ -441,6 +441,12 @@ SwarmPickups['rp'] = merge(SwarmPickups['r'], {
 });
 
 CutSceneWithBackgroundText = CutScenes.BaseAction.extend({
+    doExecute: function() {
+        this.oldShowHUDImage('packages/gamehud/gk/swarm/cutscene_overlay.png', 0.5, 0.5, Math.max(Global.aspectRatio, 1), Math.min(Global.aspectRatio, 1));
+
+        return this._super.apply(this, arguments);
+    },
+
 /*
     showSubtitleBackground: function() {
         var factors = Global.gameHUD.calcFactors();
