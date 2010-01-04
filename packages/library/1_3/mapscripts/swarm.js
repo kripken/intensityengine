@@ -34,7 +34,7 @@ Library.include('textures/gk/swarm/');
 
 Map.fogColor(45, 30, 10);
 Map.fog(1500);
-Map.loadSky("skyboxes/gk2/nnu_sb01");
+Map.loadSky("skyboxes/gk2/swarm/nnu_sb01");
 Map.skylight(0, 0, 0);
 Map.ambient(1);
 Map.shadowmapAmbient("0x101010");
