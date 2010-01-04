@@ -427,6 +427,10 @@ ApplicationManager.setApplicationClass(Application.extend({
             }
         }
     },
+
+    getCrosshair: function() {
+        return 'packages/gamehud/gk/swarm/crosshair.png';
+    },
 }));
 
 //// Game manager
