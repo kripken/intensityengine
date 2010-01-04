@@ -250,7 +250,7 @@ BigBossTrigger = registerEntityClass(bakePlugins(PlotTrigger, [{
             secondsBefore: 0,
             secondsBetween: 1,
             func: bind(function() {
-                if (this.state === 'open' && Global.time - this.openTime > 10.0) {
+                if (this.state === 'open' && Global.time - this.openTime > 30.0) {
                     this.state = 'closed'; // Players must reopen!
                 }
             }, this),
@@ -269,13 +269,20 @@ BigBossTrigger = registerEntityClass(bakePlugins(PlotTrigger, [{
             }, this),
             entity: this,
         });
+
+        this.connect('client_onModify_state', function(state) {
+            if (state === 'open' && this.state === 'closed') {
+                Sound.play('0ad/alarmcreatemiltaryfoot_1.ogg', this.position.copy());
+            }
+        });
     },
 }]));
 
 BigBossHeart = registerEntityClass(bakePlugins(RecursivePlotTrigger, [{
     _class: 'BigBossHeart',
+    shouldAct: true,
 
-    maxHealth: 10,
+    maxHealth: 100,
     health: new StateInteger(),
 
     init: function() {
@@ -291,9 +298,11 @@ BigBossHeart = registerEntityClass(bakePlugins(RecursivePlotTrigger, [{
             secondsBefore: 0,
             secondsBetween: 1,
             func: bind(function() {
-log(ERROR, this.health);
-                var children = filter(function(child) { return child.state === 'closed'; }, getEntitiesByClass('BigBossTrigger'));
-                this.health = Math.min(this.health + 25*children.length, this.maxHealth);
+                if (this.health < this.maxHealth) {
+                    log(ERROR, this.health);
+                    var children = filter(function(child) { return child.state === 'closed'; }, getEntitiesByClass('BigBossTrigger'));
+                    this.health = Math.min(this.health + 10*children.length, this.maxHealth);
+                }
             }, this),
             entity: this,
         });
@@ -323,10 +332,16 @@ log(ERROR, this.health);
     clientActivate: function(seconds) {
         GameManager.getSingleton().eventManager.add({
             secondsBefore: 0,
-            secondsBetween: 1/10,
+            secondsBetween: 0,
             func: bind(function() {
-                var color = clamp(255*this.health/this.maxHealth, 0, 255);
-                Effect.splash(PARTICLE.SPARK, 10, 1/5, this.center, color + (color << 8) + (color << 16), 1.0, 70, 1);
+                var factor = this.health/this.maxHealth;
+                if (factor < 0.9) {
+                    var color = 255;//clamp(255*factor, 0, 255);
+                    Effect.splash(PARTICLE.SPARK, 10, factor*1/2, this.center, color + (color << 8) + (color << 16), 1.0, 70, 1);
+                    return factor*1/3;
+                } else {
+                    return 1/2;
+                }
             }, this),
             entity: this,
         });
@@ -338,9 +353,28 @@ log(ERROR, this.health);
         });
     },
 
+    clientAct: function() {
+        if (getPlayerEntity() && this.position.isCloseTo(getPlayerEntity().position, 512)) {
+            var factors = Global.gameHUD.calcFactors();
+            CAPI.showHUDImage(
+                'packages/gamehud/gk/swarm/boss/GK_Boss_IMG_Overlay_256x256.png',
+                (1/Global.aspectRatio)*factors.x*128/Global.screenWidth, factors.y*128/Global.screenHeight,
+                factors.x*256/Global.screenWidth, factors.y*256/Global.screenHeight
+            );
+
+            var raw = Math.floor(10*this.health/this.maxHealth);
+
+            CAPI.showHUDImage(
+                'packages/gamehud/gk/swarm/boss/GK_Boss_IMG_Overlay_64x256_HP_0' + raw + '.png',
+                factors.x*((1/Global.aspectRatio)*128+32)/Global.screenWidth, factors.y*128/Global.screenHeight,
+                factors.x*64/Global.screenWidth, factors.y*256/Global.screenHeight
+            );
+        }
+    },
+
     sufferDamage: function(kwargs) {
-        if (kwargs.damage >= 10) {
-            this.health -= kwargs.damage;
+        if (kwargs.damage >= 0) {
+            this.health -= Math.max(kwargs.damage, 10);
         }
     },
 }]));
