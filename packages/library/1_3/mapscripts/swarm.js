@@ -552,13 +552,13 @@ GameManager.setup([
 
                 subtitles: [
                     new (CutScenes.Subtitle.extend({
-                        start: 0.5*factor, end: 9.0*factor, text: 'You have landed on a hostile planet...',
+                        start: 0.5*factor, end: 9.0*factor, text: 'You have been sent to a malfunctioning base...',
                     }))(), 
                     new (CutScenes.Subtitle.extend({
-                        start: 11.0*factor, end: 19.0*factor, text: 'Others have failed at this mission...',
+                        start: 11.0*factor, end: 19.0*factor, text: 'Others have been sent before you...',
                     }))(), 
                     new (CutScenes.Subtitle.extend({
-                        start: 22.0*factor, end: 29.0*factor, text: 'Now you must go forth and explore...',
+                        start: 22.0*factor, end: 29.0*factor, text: 'Their video feeds indicate the base is overrun...',
                     }))(), 
                 ],
             }))(
