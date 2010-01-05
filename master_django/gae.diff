@@ -1,0 +1,222 @@
+diff --git a/intensity_master.py b/intensity_master.py
+index 0c88f40..87ae3a4 100644
+--- a/intensity_master.py
++++ b/intensity_master.py
+@@ -25,7 +25,7 @@ import os, sys
+ 
+ import master_django.intensity.conf as intensity_conf
+ 
+-sys.path += [os.path.join(os.getcwd(), 'master_django')]
++sys.path += [os.path.join(os.getcwd(), 'master_django'), os.path.join(os.getcwd(), 'master_django', 'django.zip')]
+ 
+ def show_usage():
+     print "Usage: intensity_master.py HOME_DIR [prod | Django manage.py command+arguments]"
+diff --git a/master_django/django.zip b/master_django/django.zip
+deleted file mode 100644
+index 1b704b6..0000000
+Binary files a/master_django/django.zip and /dev/null differ
+diff --git a/master_django/intensity/conf.py b/master_django/intensity/conf.py
+index d4f1b15..14b39a1 100644
+--- a/master_django/intensity/conf.py
++++ b/master_django/intensity/conf.py
+@@ -21,7 +21,7 @@
+ #=============================================================================
+ 
+ 
+-import os, ConfigParser
++import os, ConfigParser, logging
+ 
+ 
+ INTENSITY_HOME_DIR_LABEL = 'INTENSITY_HOME_DIR'
+@@ -30,6 +30,11 @@ config = None
+ home_dir = os.path.dirname(__file__) # Default value, is the one used in testing
+ 
+ def get(category, key, default=''):
++    global config
++    if config is None:
++        set_home_dir()
++
++    logging.info(category + ',' + key + "  CONFIG:" + str(config))
+     try:
+         return config.get(category, key)
+     except:
+@@ -54,8 +59,11 @@ def set_home_dir(_home_dir=None):
+         config = ConfigParser.ConfigParser()
+         config.read( config_file )
+ 
+-        import intensity.logging_system as intensity_logging
+-        intensity_logging.init(home_dir, get('Logging', 'level', 'INFO'))
++        if get('Django', 'appengine') != '1':
++            import intensity.logging_system as intensity_logging
++            intensity_logging.init(home_dir, get('Logging', 'level', 'INFO'))
++    print 'Home dir: ' + home_dir
++    logging.info('Home dir: ' + home_dir)
+ 
+ 
+ if INTENSITY_HOME_DIR_LABEL in os.environ:
+diff --git a/master_django/intensity/models.py b/master_django/intensity/models.py
+index 8d383fa..aa9d314 100644
+--- a/master_django/intensity/models.py
++++ b/master_django/intensity/models.py
+@@ -33,6 +33,11 @@ from django.db.models.signals import pre_save, post_save, pre_delete
+ from intensity.tracker.signals import store_asset
+ import intensity.conf as intensity_conf
+ 
++GAE = (intensity_conf.get('Django', 'appengine') == '1')
++if GAE:
++    from appengine_django.models import BaseModel
++    from google.appengine.ext import db
++
+ 
+ ## Generic utility that takes an 'enum' (a class with members, e.g.
+ ##    class STATUS:
+@@ -72,7 +77,7 @@ def make_uuid():
+ 
+ ## Base class for all Intensity Engine 'things', which we
+ ## identify using UUIDs
+-class IntensityUUIDModel(models.Model):
++class IntensityUUIDModel(models.Model if not GAE else BaseModel):
+     uuid = models.SlugField(max_length=50, unique=True, default='')
+ 
+     @staticmethod
+@@ -93,7 +98,7 @@ def intensity_uuid_model(_class):
+ ## the Django User account, in a sense
+ ## TODO: User a signal to delete this along with a user account, etc.
+ class UserAccount(IntensityUUIDModel):
+-    user = models.OneToOneField(User)
++    user = models.OneToOneField(User) if not GAE else db.ReferenceProperty(User)
+     nickname = models.CharField(max_length=30)
+     kb_storage_left = models.IntegerField()
+     seconds_left = models.IntegerField()
+diff --git a/master_django/manage.py b/master_django/manage.py
+index 13d31b9..2dcba55 100755
+--- a/master_django/manage.py
++++ b/master_django/manage.py
+@@ -1,20 +1,40 @@
+-#!/usr/bin/python
++#!/usr/bin/env python
++# Copyright 2008 Google Inc.
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
+ 
+-import os, sys
++
++import sys
++django_path = 'django.zip'
++sys.path.insert(0, django_path)
+ 
+ import intensity.conf as intensity_conf
+ intensity_conf.set_home_dir()
+ 
+-#import sys
+-#sys.path.insert(0, '.') # Use local Django for testing
++GAE = intensity_conf.get('Django', 'appengine') == '1'
++if GAE:
++    from appengine_django import InstallAppengineHelperForDjango
++    InstallAppengineHelperForDjango()
+ 
+ from django.core.management import execute_manager
+ try:
+-    settings = __import__(intensity_conf.get('Django', 'settings')) # Assumed to be in the same directory.
++    import settings # Assumed to be in the same directory.
+ except ImportError:
+     import sys
+     sys.stderr.write("Error: Can't find the file 'settings.py' in the directory containing %r. It appears you've customized things.\nYou'll have to run django-admin.py, passing it your settings module.\n(If the file settings.py does indeed exist, it's causing an ImportError somehow.)\n" % __file__)
+     sys.exit(1)
+ 
++
+ if __name__ == "__main__":
+     execute_manager(settings)
++
+diff --git a/master_django/settings.py b/master_django/settings.py
+index ea45068..58fb394 100644
+--- a/master_django/settings.py
++++ b/master_django/settings.py
+@@ -4,6 +4,7 @@ import os
+ ROOT_PATH = os.path.dirname(__file__)
+ 
+ import intensity.conf as intensity_conf
++GAE = intensity_conf.get('Django', 'appengine') == '1'
+ 
+ 
+ DEBUG = True
+@@ -16,20 +17,28 @@ ADMINS = (
+ 
+ MANAGERS = ADMINS
+ 
+-DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+-DATABASE_NAME = os.path.join(intensity_conf.get_home_dir(), 'sqlite.db') # Or path to database file if using sqlite3.
+-DATABASE_USER = ''             # Not used with sqlite3.
+-DATABASE_PASSWORD = ''         # Not used with sqlite3.
+-DATABASE_HOST = ''             # Set to empty string for localhost. Not used with sqlite3.
+-DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
+-DATABASE_OPTIONS = { 'timeout': 15 } # Wait more than the default 5 seconds for 'database is locked' errors
++if not GAE:
++    DATABASE_ENGINE = 'sqlite3'           # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
++    DATABASE_NAME = os.path.join(intensity_conf.get_home_dir(), 'sqlite.db') # Or path to database file if using sqlite3.
++    DATABASE_USER = ''             # Not used with sqlite3.
++    DATABASE_PASSWORD = ''         # Not used with sqlite3.
++    DATABASE_HOST = ''             # Set to empty string for localhost. Not used with sqlite3.
++    DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
++    DATABASE_OPTIONS = { 'timeout': 15 } # Wait more than the default 5 seconds for 'database is locked' errors
++else:
++    DATABASE_ENGINE = 'appengine'  # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
++    DATABASE_NAME = ''             # Or path to database file if using sqlite3.
++    DATABASE_USER = ''             # Not used with sqlite3.
++    DATABASE_PASSWORD = ''         # Not used with sqlite3.
++    DATABASE_HOST = ''             # Set to empty string for localhost. Not used with sqlite3.
++    DATABASE_PORT = ''             # Set to empty string for default. Not used with sqlite3.
+ 
+ # Local time zone for this installation. Choices can be found here:
+ # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
+ # although not all choices may be available on all operating systems.
+ # If running in a Windows environment this must be set to the same as your
+ # system time zone.
+-TIME_ZONE = 'America/Chicago'
++TIME_ZONE = 'UTC'
+ 
+ # Language code for this installation. All choices can be found here:
+ # http://www.i18nguy.com/unicode/language-identifiers.html
+@@ -76,7 +85,10 @@ MIDDLEWARE_CLASSES = (
+     'intensity.middleware.request_logger.RequestLoggerMiddleware',
+ )
+ 
+-ROOT_URLCONF = 'master_django.urls' # Should have the name of this directory
++if not GAE:
++    ROOT_URLCONF = 'master_django.urls' # Should have the name of this directory
++else:
++    ROOT_URLCONF = 'urls'
+ 
+ TEMPLATE_DIRS = (
+     os.path.join(ROOT_PATH, 'intensity', 'templates'),
+@@ -98,12 +110,16 @@ INSTALLED_APPS = (
+     'intensity.components',
+ )
+ 
++if GAE:
++    INSTALLED_APPS = ('appengine_django',) + INSTALLED_APPS
++
+ 
+ # Use file-based sessions for speed
+-SESSION_ENGINE = "django.contrib.sessions.backends.file"
+-SESSION_FILE_PATH = os.path.join(intensity_conf.get_home_dir(), 'sessions')
+-if not os.path.exists(SESSION_FILE_PATH):
+-    os.mkdir(SESSION_FILE_PATH)
++if not GAE:
++    SESSION_ENGINE = "django.contrib.sessions.backends.file"
++    SESSION_FILE_PATH = os.path.join(intensity_conf.get_home_dir(), 'sessions')
++    if not os.path.exists(SESSION_FILE_PATH):
++        os.mkdir(SESSION_FILE_PATH)
+ 
+ 
+ from django.conf.global_settings import TEMPLATE_CONTEXT_PROCESSORS
