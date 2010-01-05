@@ -596,9 +596,10 @@ GameManager.setup([
                         {
                             delayBefore: 1.0,
                             markers: [
-                                { position: new Vector3(522.99,  717.87,  577.47), yaw: 19.63, pitch: 1.90 },
-                                { position: new Vector3(520.65,  706.02,  586.36), yaw: 185.90, pitch: -11.45 },
-                                { position: new Vector3(491.87,  917.46,  576.36), yaw: 116.72, pitch: 1.09 },
+                                { position: new Vector3(522.99,  717.87,  577.47), yaw: 30, pitch: 1.90 },
+                                { position: new Vector3(520.65,  706.02,  586.36), yaw: -90.90, pitch: -20.45 },
+                                { position: new Vector3(491.87,  917.46,  576.36), yaw: 125.72, pitch: 1.09 },
+                                { position: new Vector3(525.50,  918.42,  554), yaw: 117.81, pitch: -21.27 },
                             ],
                         },
                         RenderingCaptureActionPlugin,
