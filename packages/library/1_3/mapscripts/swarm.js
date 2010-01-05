@@ -251,7 +251,7 @@ BigBossTrigger = registerEntityClass(bakePlugins(PlotTrigger, [{
             secondsBetween: 1,
             func: bind(function() {
                 // 1 player: 30, 2 players: 15, 3+ players: 5
-                var resetDelay = clamp(45 - 15*getClientEntities().length, 5, 30);
+                var resetDelay = clamp(50 - 10*getClientEntities().length, 5, 30);
                 if (this.state === 'open' && Global.time - this.openTime > resetDelay) {
                     this.state = 'closed'; // Players must reopen!
                 }
@@ -303,14 +303,16 @@ BigBossHeart = registerEntityClass(bakePlugins(RecursivePlotTrigger, [{
                 if (this.health < this.maxHealth) {
                     log(ERROR, this.health);
                     var children = filter(function(child) { return child.state === 'closed'; }, getEntitiesByClass('BigBossTrigger'));
-                    this.health = Math.min(this.health + 10*children.length, this.maxHealth);
+                    this.health = Math.min(this.health + 5*children.length, this.maxHealth);
                 }
             }, this),
             entity: this,
         });
 
         this.connect('onModify_health', function(health) {
-            if (health <= 0) {
+            if (health <= 0 && !this.gameOver) {
+                this.gameOver = true;
+
                 // Stop attackers in last room
                 GameManager.getSingleton().disableAutoTargeting = true;
                 forEach(getEntitiesByClass('SwarmBugSpawner'), function(spawner) {
