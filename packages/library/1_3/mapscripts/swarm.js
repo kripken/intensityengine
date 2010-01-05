@@ -250,7 +250,9 @@ BigBossTrigger = registerEntityClass(bakePlugins(PlotTrigger, [{
             secondsBefore: 0,
             secondsBetween: 1,
             func: bind(function() {
-                if (this.state === 'open' && Global.time - this.openTime > 30.0) {
+                // 1 player: 30, 2 players: 15, 3+ players: 5
+                var resetDelay = clamp(45 - 15*getClientEntities().length, 5, 30);
+                if (this.state === 'open' && Global.time - this.openTime > resetDelay) {
                     this.state = 'closed'; // Players must reopen!
                 }
             }, this),
@@ -354,7 +356,7 @@ BigBossHeart = registerEntityClass(bakePlugins(RecursivePlotTrigger, [{
     },
 
     clientAct: function() {
-        if (getPlayerEntity() && this.position.isCloseTo(getPlayerEntity().position, 512)) {
+        if (getPlayerEntity() && this.position.isCloseTo(getPlayerEntity().position, 384)) {
             var factors = Global.gameHUD.calcFactors();
             CAPI.showHUDImage(
                 'packages/gamehud/gk/swarm/boss/GK_Boss_IMG_Overlay_256x256.png',
@@ -777,6 +779,16 @@ Global.gameHUD = {
                 w: factors.x*64/Global.screenWidth,
                 h: factors.y*128/Global.screenHeight,
             },
+        };
+    },
+
+    getPlotItemParams: function(index) {
+        var factors = this.calcFactors();
+        return {
+            x: factors.x*(Global.screenWidth+factors.y*(-282-64-64-64/2-16-48*index))/Global.screenWidth,
+            y: factors.y*(5 + 64/2)/Global.screenHeight,
+            w: factors.x*32/Global.screenWidth,
+            h: factors.y*32/Global.screenHeight,
         };
     },
 

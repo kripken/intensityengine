@@ -158,7 +158,7 @@ PlotTriggerItem = registerEntityClass(bakePlugins(PlotTrigger, [{
         this.stateModelNames = ['nut', '', ''];
         this.stateAnimations = ['ANIM_IDLE|ANIM_LOOP', 'ANIM_TRIGGER', 'ANIM_TRIGGER']
         this.HUDIcon = 'packages/gamehud/.../.../...';
-        this.HUDPosition = [0.92, 0.75]; // XXX
+        this.HUDPosition = [0.92, 0.75, -1]; // XXX
         this.droppedModelName = 'nut';
         this.droppedPosition = [0,0,0];
     },
@@ -259,8 +259,14 @@ PlotTriggerItem = registerEntityClass(bakePlugins(PlotTrigger, [{
             var position = Health.isActiveEntity(carrier) ? carrier.position.copy() : this.droppedPosition;
             // HUD
             if (carrier === getPlayerEntity()) {
-                var factors = Global.gameHUD.calcFactors();
-                CAPI.showHUDImage(this.HUDIcon, factors.x*this.HUDPosition.get(0), factors.y*this.HUDPosition.get(1), factors.x*32/Global.screenWidth, factors.y*32/Global.screenHeight);
+                var HUDPosition = this.HUDPosition.asArray();
+                if (HUDPosition[2] === -1 || HUDPosition[2] === undefined) {
+                    var factors = Global.gameHUD.calcFactors();
+                    CAPI.showHUDImage(this.HUDIcon, factors.x*this.HUDPosition.get(0), factors.y*this.HUDPosition.get(1), factors.x*32/Global.screenWidth, factors.y*32/Global.screenHeight);
+                } else {
+                    var params = Global.gameHUD.getPlotItemParams(HUDPosition[2]);
+                    CAPI.showHUDImage(this.HUDIcon, params.x, params.y, params.w, params.h);
+                }
             } else {
                 // Radar
                 if (carrier !== getPlayerEntity) {
