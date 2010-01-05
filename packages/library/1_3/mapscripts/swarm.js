@@ -136,7 +136,7 @@ registerEntityClass(
                     this.canMove = false; // Start immobile, until spawned
                     this.gunIndexes = [playerChaingun, playerRocketLauncher];
                     this.currGunIndex = playerChaingun;
-                    this.maxHealth = 250;
+                    this.maxHealth = 125;
 
                     // 115% size model
                     this.eyeHeight = 15.35;
