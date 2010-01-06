@@ -41,4 +41,5 @@ def handle(sender, **kwargs):
         return True
 
     return 'You are not authorized to enter this server instance'
+validate_client.connect(handle, weak=False)
 

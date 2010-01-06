@@ -137,7 +137,7 @@ def do_login(code, client_number, ip_addr):
 
             # Validate with plugins. String results are error messages, True values are successes
 
-            validation_errors = filter(lambda x: type(x) is str, multiple_send(validate_client, None, {
+            validation_errors = filter(lambda x: type(x) is str, multiple_send(validate_client, None, **{
                 'client_number': client_number,
                 'ip_addr': ip_addr,
                 'username': username,
