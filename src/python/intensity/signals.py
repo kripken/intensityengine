@@ -56,6 +56,7 @@ bandwidth_out = Signal(providing_args=['bytes'])
 def signal_bandwidth_out(bytes): # C++ access is to this
     bandwidth_out.send(None, bytes=bytes)
 
+validate_client = Signal(providing_args=['client_number', 'ip_addr', 'username', 'can_edit'])
 client_connect = Signal(providing_args=['client_number'])
 client_disconnect = Signal(providing_args=['client_number'])
 

@@ -28,7 +28,7 @@ from intensity.logging import *
 from intensity.errors import *
 from intensity.message_system import *
 from intensity.asset import *
-from intensity.signals import client_connect, client_disconnect
+from intensity.signals import client_connect, client_disconnect, validate_client, multiple_send
 
 
 ## Information about a single connected client
@@ -133,10 +133,26 @@ def do_login(code, client_number, ip_addr):
                 return
 
             username = response['username']
+            can_edit = response['can_edit'] == '1'
+
+            # Validate with plugins. String results are error messages, True values are successes
+
+            validation_errors = filter(lambda x: type(x) is str, multiple_send(validate_client, None, {
+                'client_number': client_number,
+                'ip_addr': ip_addr,
+                'username': username,
+                'can_edit': can_edit,
+            }))
+            if len(validation_errors) > 0:
+                for error in validation_errors:
+                    log(logging.WARNING, '%s login failure: %s' % (username, error))
+                return fail(validation_errors[0]) # Show user only first error. They should fix that and try again
+
+            # Success, proceed
 
             CModule.update_username(client_number, username)
 
-            if response['can_edit'] == '1':
+            if can_edit:
                 CModule.set_admin(client_number, True);
                 admin = True
             else:
