@@ -106,7 +106,7 @@ def do_login(code, client_number, ip_addr):
         return fail("Login failure: instance is in private edit mode and occupied")
 
     if Clients.count() >= get_max_clients():
-        return fail("Login failure: instance is at its maximum number of clients (%d)" % max_clients)
+        return fail("Login failure: instance is at its maximum number of clients (%d)" % get_max_clients())
 
     # All contact to the master server is done in the side thread, here
     def side_operations():
