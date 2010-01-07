@@ -9,9 +9,9 @@ Map.texture("1", "materials/GK_Water_01_dudv.jpg", 0, 0, 0, 2);     // water dis
 Map.texture("1", "materials/GK_Water_F_01_nm.jpg", 0, 0, 0, 2);    // waterfall normals
 Map.texture("1", "materials/GK_Water_F_01_dudv.jpg", 0, 0, 0, 2); // waterfall distortion
 
-Map.texture("lava", "materials/GK_Lava_01_cc.jpg", 0, 0, 0, 4);    // lava surface
-Map.texture("1", "materials/GK_Lava_01_cc.jpg", 0, 0, 0, 4);     // lavafall
-Map.texture("1", "materials/GK_Lava_01_nm.jpg", 0, 0, 0, 4);        // lava normals
+Map.texture("lava", "materials/GK_Lava_01_cc.jpg", 0, 0, 0, 2);    // lava surface
+Map.texture("1", "materials/GK_Lava_01_cc.jpg", 0, 0, 0, 2);     // lavafall
+Map.texture("1", "materials/GK_Lava_01_nm.jpg", 0, 0, 0, 2);        // lava normals
 
 //// Textures
 

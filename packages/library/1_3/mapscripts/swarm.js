@@ -23,7 +23,7 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/Pickups');
 
 // Default materials, etc.
 
-Library.include('library/MapDefaults');
+Library.include('library/' + Global.LIBRARY_VERSION + '/MapDefaults');
 
 // Textures
 
