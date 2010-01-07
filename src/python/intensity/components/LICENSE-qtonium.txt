@@ -1,0 +1,10 @@
+Licensing
+=========
+
+Triple-licensed under: Apache 2.0, GPL 3+, AGPL3+.
+
+This software is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+specific licenses for more details.
+

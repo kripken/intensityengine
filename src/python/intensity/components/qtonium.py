@@ -67,6 +67,9 @@ def main_loop():
     # Main setup - done in same thread that will do Qt commands
     app = QApplication(sys.argv)
 
+    web_settings = QWebSettings.globalSettings()
+    web_settings.setAttribute(QWebSettings.PluginsEnabled, True) # Enables Flash - but cannot see it yet, only hear it
+
     old_time = time.time()
     while True:
         time.sleep(0.01) # Always sleep a tiny bit, no matter what
