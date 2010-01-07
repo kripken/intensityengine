@@ -15,7 +15,6 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/CustomEffect');
 Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Rocket');
 Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Chaingun');
 Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Insta');
-Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Stunball');
 Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/FlickeringLights');
 Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/Cannons');
 Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/PlotTriggers');
@@ -126,7 +125,6 @@ registerEntityClass(
             Chaingun.plugin,
             Character.plugins.effectiveCameraHeight,
             Character.plugins.footsteps,
-            StunballVictimPlugin,
             {
                 _class: "GamePlayer",
                 HUDModelOffset: new Vector3(0, 0, 1.5), // Adjust for higher eyeheight&aboveeye with 115% model
@@ -143,7 +141,9 @@ registerEntityClass(
                     this.aboveEye = 1.15;
                     this.radius = 3.5;
 
-                    this.position = [1631.68,326.32,425.07]; // Place there immediately, for nicer spawning the first time
+                    this.position = [1631.93, 299.10, 416.05];
+                    this.yaw = 200.81;
+                    this.pitch = -15.27;
                 },
 
                 activate: function() {
@@ -157,10 +157,29 @@ registerEntityClass(
                 clientActivate: function() {
                     this.gunAmmos[playerChaingun] = null;
                     this.gunAmmos[playerRocketLauncher] = 10;
+                    this.maxMovementSpeed = 75; // Sync!
                 },
-//                clientAct: function() {
-//                    this.pitch = clamp(this.pitch, -45, 90);
-//                },
+
+                // Big cavern
+                clientAct: function() {
+                    var position = this.position.copy();
+                    if (1542 <= position.x && position.x <= 2688 &&
+                        716 <= position.y && position.y <= 1179 &&
+                        500 <= position.z && position.z <= 550) {
+                        if (position.z >= 511.8) {
+                            CAPI.setMaxSpeed(this, this.maxMovementSpeed);
+                        } else {
+                            CAPI.setMaxSpeed(this, this.maxMovementSpeed/5); // stuck in the mud...
+                        }
+                    }
+/*
+>[[ERROR]] - 1542.09, 1179.30, 512.58), yaw: 357.18, pitch: -5.27
+
+[[ERROR]] - 2688.85, 716.77, 515.14), yaw: 274.63, pitch: -1.54
+
+[[ERROR]] - 2222.36, 895.24, 512.09), yaw: 274.18, pitch: -3.90
+*/
+                },
             }
         ]
     )
@@ -179,12 +198,10 @@ BigCavernDoorTrigger = registerEntityClass(bakePlugins(PlotTrigger, [{
         this.timer = new RepeatingTimer(1/10);
 
         this.connect('client_onModify_state', function(state) {
-            if (state === 'open') {
+            if (state === 'open' && this.state === 'closed') {
+                Sound.play('0ad/thunder_10.ogg', this.center);
                 var player = getPlayerEntity();
-                if (!player) return;
-                if (player.position.isCloseTo(this.position, 50)) {
-                    player.sufferStun(100);
-                    Sound.play('0ad/thunder_10.ogg', player.center);
+                if (player && player.position.isCloseTo(this.position, 50)) {
                     Effect.lightning(player.center, this.center, 0.5, 0xFF9933, 1.0);
                 }
             }
@@ -619,10 +636,10 @@ GameManager.setup([
             getPlayerEntity().queueAction(new (Action.extend({
                 doStart: function() {
                     GameManager.getSingleton().addHUDMessage({
-                        text: "Note: This is a *PREVIEW* version! :)", // "Tip: Press '9' for firstperson"
+                        text: "Tip: Press '9' for firstperson",
                         color: 0xFFDDCC,
                         duration: 5,
-                        y: 0.333,
+                        y: 0.8,
                         size: 0.66,
                     });
                 },
