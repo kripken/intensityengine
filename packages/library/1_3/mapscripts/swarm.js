@@ -158,27 +158,25 @@ registerEntityClass(
                     this.gunAmmos[playerChaingun] = null;
                     this.gunAmmos[playerRocketLauncher] = 10;
                     this.maxMovementSpeed = 75; // Sync!
+
+                    this.bigCavernSlowness = 0;
                 },
 
                 // Big cavern
-                clientAct: function() {
+                clientAct: function(seconds) {
                     var position = this.position.copy();
                     if (1542 <= position.x && position.x <= 2688 &&
                         716 <= position.y && position.y <= 1179 &&
                         500 <= position.z && position.z <= 550) {
+
                         if (position.z >= 511.8) {
-                            CAPI.setMaxSpeed(this, this.maxMovementSpeed);
+                            this.bigCavernSlowness = Math.max(0, this.bigCavernSlowness - seconds);
                         } else {
-                            CAPI.setMaxSpeed(this, this.maxMovementSpeed/5); // stuck in the mud...
+                            this.bigCavernSlowness = 1.0;
                         }
+                        var speed = (1-this.bigCavernSlowness)*this.maxMovementSpeed + this.bigCavernSlowness*this.maxMovementSpeed/3.33;
+                        CAPI.setMaxSpeed(this, speed);
                     }
-/*
->[[ERROR]] - 1542.09, 1179.30, 512.58), yaw: 357.18, pitch: -5.27
-
-[[ERROR]] - 2688.85, 716.77, 515.14), yaw: 274.63, pitch: -1.54
-
-[[ERROR]] - 2222.36, 895.24, 512.09), yaw: 274.18, pitch: -3.90
-*/
                 },
             }
         ]
@@ -487,7 +485,7 @@ SwarmPickups['r'] = merge(SwarmPickups['base'], {
         CAPI.renderModel2.apply(null, args);
     },
     doPickup: function(player) {
-        player.gunAmmos[playerRocketLauncher] += 5;
+        player.gunAmmos[playerRocketLauncher] = Math.min(player.gunAmmos[playerRocketLauncher] + 5, 99);
     },
 });
 
