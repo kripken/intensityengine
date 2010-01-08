@@ -41,11 +41,13 @@ assert(WINDOWS or LINUX or OSX)
 # Version
 #
 
-INTENSITY_VERSION_STRING = '1.1.5'
+INTENSITY_VERSION_STRING = '1.1.6'
 
 def comparable_version(version_string):
     return tuple(map(int, version_string.split('.')))
 INTENSITY_VERSION = comparable_version(INTENSITY_VERSION_STRING)
+
+print "Intensity Engine version:", INTENSITY_VERSION_STRING
 
 #def check_version(version_string, strict=True):
 #    version = comparable_version(version_string)

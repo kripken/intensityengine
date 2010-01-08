@@ -42,7 +42,7 @@ class CModule:
 
 # Expose a C function so Python can call it.
 def expose_function(python_name, c_func):
-    print "Exposing C Function to Python:", python_name
+#    print "Exposing C Function to Python:", python_name
     CModule.holder.__dict__[python_name] = c_func
 
 # Set the python arguments
