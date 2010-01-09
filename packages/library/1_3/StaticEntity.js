@@ -625,14 +625,6 @@ WorldMarker = StaticEntity.extend({
 });
 
 
-//! PlayerStart - DEPRECATED.
-PlayerStart = StaticEntity.extend({
-    _class: "PlayerStart",
-
-    _sauerTypeIndex: 3
-});
-
-
 //
 // Register classes
 //
@@ -643,7 +635,5 @@ registerEntityClass(ParticleEffect, "particles");
 registerEntityClass(Mapmodel, "mapmodel");
 registerEntityClass(AreaTrigger, "mapmodel");
 registerEntityClass(ResettableAreaTrigger, "mapmodel");
-//registerEntityClass(Door, "mapmodel");
-registerEntityClass(PlayerStart, "playerstart"); // TODO: Remove
 registerEntityClass(WorldMarker, "playerstart");
 
