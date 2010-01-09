@@ -150,6 +150,19 @@ registerEntityClass(
                     this.movementSpeed = 75;
                 },
 
+                deactivate: function() {
+                    // After 1 player logs in, restart map after last player logs out - so fresh for new players TODO: This functionality in a plugin
+                    // 1 means just us - as we are in the process of deactivating; we aren't removed from the store yet
+                    if (getClientEntities().length === 1) {
+                        GameManager.getSingleton().eventManager.add({
+                            secondsBefore: 0.25, // After this client is safely out
+                            func: function() {
+                                CAPI.signalComponent('MapControl', 'restart');
+                            },
+                        });
+                    }
+                },
+
                 getColor: function() {
                     return this.HUDModelName.split('/').pop();
                 },
@@ -343,7 +356,6 @@ BigBossHeart = registerEntityClass(bakePlugins(RecursivePlotTrigger, [{
                     },
                     entity: this,
                 });
-
             }
         });
     },
