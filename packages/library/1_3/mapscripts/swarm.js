@@ -382,6 +382,19 @@ BigBossHeart = registerEntityClass(bakePlugins(RecursivePlotTrigger, [{
                 GameManager.getSingleton().showEndTitles(this.position.addNew(new Vector3(0, 0, this.collisionRadiusHeight)));
             }
         });
+
+/* XXX TEST
+        GameManager.getSingleton().eventManager.add({
+            secondsBefore: 3,
+            func: bind(function() {
+                for (var i = 0; i < Map.textures.length; i++) {
+//log(ERROR, i + ' / ' + Map.textures.length);
+                    Map.texture('0', '<dds>textures/gk/swarm/gk_botter_map_tex_0002_cc.jpg', 0, 0, 0, 0.5, i);
+                }
+            }, this),
+            entity: this,
+        });
+XXX TEST */
     },
 
     clientAct: function() {
