@@ -19,6 +19,7 @@ and leave both of them running. Note that for the
 master server you will need to have Django 1.0.x installed,
 which is bundled in master_django/django.
 (Note that Django 1.1+ currently does *not* work).
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Then run
 
