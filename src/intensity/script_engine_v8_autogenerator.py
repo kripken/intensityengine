@@ -32,7 +32,7 @@ strings = [
     'oddd', 'dddd', 'iddd', 'iiss', 'iiis', 'ssdd',
     'sdddi', 'sssdd', 'ddddi', 'sdddd', 'iiiss', 'iiisi', 'iiiii',
     'dddddd', 'iidddi', 'iiiddd', 'ddddii', 'idddsi', 'ssiiid', 'ddddddd', 'iiiiddd', 'iiddddd',
-    'ddddddii', 'ddddiiid',
+    'ddddddii', 'ddddiiid', 'ssiiidi',
     'ddddddiii', 'oidddiiii', 'idddidddi', 'dddsiiidi',
     'iiidddidii', 'ddddddiiid', 'osiddddddii',
     'iissdddiiii', 'iiddddddidi',
@@ -54,6 +54,7 @@ for string in strings:
         temp = { 'index': index, 'indexplus': index+1 }
         if param == 'i':
             out.write('int arg%(indexplus)d = args[%(index)d]->IntegerValue(); \\\n' % temp)
+#           out.write('int arg%(indexplus)d = !args[%(index)d]->IsUndefined() ? args[%(index)d]->IntegerValue() : -1; \\\n' % temp)
         elif param == 's':
             out.write('std::string _arg%(indexplus)d = *(v8::String::Utf8Value(args[%(index)d])); const char* arg%(indexplus)d = _arg%(indexplus)d.c_str(); \\\n' % temp)
         elif param == 'd':

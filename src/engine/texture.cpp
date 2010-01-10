@@ -982,7 +982,7 @@ void materialreset()
 
 COMMAND(materialreset, "");
 
-void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float *scale)
+void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float *scale, int *forcedindex) // INTENSITY: forcedindex
 {
     if(curtexnum<0 || curtexnum>=0x10000) return;
     struct { const char *name; int type; } types[] =
@@ -1006,7 +1006,12 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
     }
     else if(curmatslot>=0) matslot = curmatslot;
     else if(!curtexnum) return;
-    Slot &s = matslot>=0 ? materialslots[matslot] : (tnum!=TEX_DIFFUSE ? slots.last() : slots.add());
+
+    assert(*forcedindex <= 0 || slots.inrange(*forcedindex)); // INTENSITY
+    if (*forcedindex > 0 && tnum==TEX_DIFFUSE) // INTENSITY: reset old slots we force the index of
+        slots[*forcedindex].reset();
+    Slot &s = matslot>=0 ? materialslots[matslot] : (*forcedindex <= 0 ? (tnum!=TEX_DIFFUSE ? slots.last() : slots.add()) : slots[*forcedindex]); // INTENSITY: Allow forced indexes
+
     s.loaded = false;
     s.texmask |= 1<<tnum;
     if(s.sts.length()>=8) conoutf(CON_WARN, "warning: too many textures in slot %d", curtexnum);
@@ -1026,7 +1031,7 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
     }
 }
 
-COMMAND(texture, "ssiiif");
+COMMAND(texture, "ssiiifi");
 
 void autograss(char *name)
 {

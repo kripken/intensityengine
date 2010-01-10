@@ -289,7 +289,7 @@ void conoutf(const char *fmt, ...)
 }
 
 // Stubs to avoid 'missing command' warnings on server when executing .cfg's
-void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float *scale) { }
+void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float *scale, int *forcedindex) { }
 COMMAND(texture, "ssiiif");
 
 VARR(fog, 1, 2, 300000);

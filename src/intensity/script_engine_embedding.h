@@ -529,10 +529,11 @@ V8_FUNC_NOPARAM(__script__textureReset, {
     texturereset(&num);
 });
 
-extern void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float *scale);
-V8_FUNC_ssiiid(__script__texture, {
+extern void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float *scale, int *forcedindex);
+V8_FUNC_ssiiidi(__script__texture, {
     float arg6f = arg6;
-    texture((char*)arg1, (char*)arg2, &arg3, &arg4, &arg5, &arg6f);
+    // XXX: arg7 may not be given, in which case it is undefined, and turns into 0.
+    texture((char*)arg1, (char*)arg2, &arg3, &arg4, &arg5, &arg6f, &arg7);
 });
 
 extern void mapmodelreset();
