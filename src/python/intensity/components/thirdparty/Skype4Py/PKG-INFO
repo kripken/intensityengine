@@ -1,0 +1,15 @@
+Metadata-Version: 1.1
+Name: Skype4Py
+Version: 1.0.32.0
+Summary: Skype API wrapper for Python.
+Home-page: https://developer.skype.com/wiki/Skype4Py
+Author: Arkadiusz Wahlig
+Author-email: arkadiusz.wahlig@gmail.com
+License: BSD License
+Download-URL: http://downloads.sourceforge.net/skype4py/Skype4Py-1.0.32.0.tar.gz
+Description: Skype4Py is a high-level, platform independent Skype API
+        wrapper for Python with Skype4COM alike interface.
+Platform: Windows
+Platform: Linux
+Platform: MacOS X
+Provides: Skype4Py
