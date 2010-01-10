@@ -10,6 +10,7 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/GameManager');
 Library.include('library/' + Global.LIBRARY_VERSION + '/modes/Teamwork');
 Library.include('library/' + Global.LIBRARY_VERSION + '/World');
 Library.include('library/' + Global.LIBRARY_VERSION + '/CutScenes');
+Library.include('library/' + Global.LIBRARY_VERSION + '/Chat');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Swarm');
 Library.include('library/' + Global.LIBRARY_VERSION + '/CustomEffect');
 Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Rocket');
@@ -121,6 +122,7 @@ registerEntityClass(
             Firing.plugins.player,
             Health.plugin,
             GameManager.playerPlugin,
+            Chat.playerPlugin,
             Projectiles.plugin,
             Chaingun.plugin,
             Character.plugins.effectiveCameraHeight,
@@ -475,6 +477,8 @@ ApplicationManager.setApplicationClass(Application.extend({
     getCrosshair: function() {
         return 'packages/gamehud/gk/swarm/crosshair.png';
     },
+
+    handleTextMessage: Chat.handleTextMessage,
 }));
 
 //// Game manager
