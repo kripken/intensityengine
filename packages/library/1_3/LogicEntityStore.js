@@ -614,6 +614,8 @@ if (Global.SERVER) {
             var stateData = entity[2];
             log(DEBUG, format("loadEntities: {0},{1},{2}", uniqueId, _class, stateData));
 
+            if (_class === 'PlayerStart') _class = 'WorldMarker'; // backwards compatibility
+
             addEntity(_class, uniqueId, { 'stateData': serializeJSON(stateData) }); // TODO: See comment below on parsing speed
         });
 
