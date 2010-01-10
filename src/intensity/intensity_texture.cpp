@@ -23,6 +23,8 @@
  */
 
 
+#include <queue>
+
 #ifdef USE_JPEG2000
 #include "openjpeg.h"
 #endif
@@ -30,8 +32,52 @@
 #include "utility.h"
 
 
+// 'Background' loading system for texture slots
+
+static std::set<int> requested_slots;
+
+Slot &lookuptexture(int slot, bool load)
+{
+    Slot &s = slots.inrange(slot) ? slots[slot] : (slots.empty() ? dummyslot : slots[0]);
+    if (load && !s.loaded)
+    {
+        if (slots.inrange(slot))
+        {
+            if (requested_slots.count(slot) == 0)
+            {
+                requested_slots.insert(slot);
+                loopv(s.sts) s.sts[i].t = notexture; // Until we load them, do not crash in rendering code
+            }
+        } else
+            loadslot(s, false);
+    }
+    return s;
+}
+
 namespace IntensityTexture
 {
+
+void resetBackgroundLoading()
+{
+    requested_slots.clear();
+}
+
+void doBackgroundLoading(bool all)
+{
+    while (requested_slots.size() > 0)
+    {
+        int slot = *(requested_slots.begin());
+        requested_slots.erase(slot);
+
+        assert(slots.inrange(slot));
+        Slot &s = slots[slot];
+        loadslot(s, false); // for materials, would be true
+
+        if (!all) break;
+    }
+}
+
+
 #ifdef USE_JPEG2000
 //#define JP2_ALLOW_HIGH_PRECISION
 

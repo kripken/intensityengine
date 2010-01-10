@@ -24,6 +24,10 @@
 
 namespace IntensityTexture
 {
+    void resetBackgroundLoading();
+
+    void doBackgroundLoading(bool all=false);
+
 #ifdef USE_JPEG2000
     void convertJP2toPNG(std::string source, std::string dest);
 #endif

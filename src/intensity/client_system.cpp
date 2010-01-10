@@ -178,6 +178,7 @@ void ClientSystem::frameTrigger(int curtime)
     PlayerControl::handleExtraPlayerMovements(curtime);
     TargetingControl::determineMouseTarget();
     can_edit = int(isAdmin());
+    IntensityTexture::doBackgroundLoading();
 }
 
 void ClientSystem::gotoLoginScreen()

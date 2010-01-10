@@ -3,6 +3,8 @@
 
 #include "engine.h"
 
+#include "intensity_texture.h"
+
 VARF(floatvtx, 0, 0, 1, allchanged());
 
 #define GENVERTS(type, ptr, offset, body) \
@@ -1661,6 +1663,10 @@ void octarender()                               // creates va s for all leaf cub
 
 void precachetextures()
 {
+#ifdef CLIENT
+    IntensityTexture::resetBackgroundLoading(); // INTENSITY: see below for backgroundLoading
+#endif
+
     vector<int> texs;
     loopv(valist)
     {
@@ -1672,6 +1678,11 @@ void precachetextures()
         loadprogress = float(i+1)/texs.length();
         lookuptexture(texs[i]);
     }
+
+#ifdef CLIENT
+    IntensityTexture::doBackgroundLoading(true); // INTENSITY: lookuptexture just queues, now, so here we need to flush all the requests
+#endif
+
     loadprogress = 0;
 }
 

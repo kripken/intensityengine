@@ -1262,11 +1262,13 @@ Slot &lookupmaterialslot(int slot, bool load)
     return s.loaded || !load ? s : loadslot(s, true);
 }
 
+#if 0 // INTENSITY: Replaced
 Slot &lookuptexture(int slot, bool load)
 {
     Slot &s = slots.inrange(slot) ? slots[slot] : (slots.empty() ? dummyslot : slots[0]);
     return s.loaded || !load ? s : loadslot(s, false);
 }
+#endif
 
 void linkslotshaders()
 {

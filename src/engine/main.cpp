@@ -1237,7 +1237,7 @@ int sauer_main(int argc, char **argv) // INTENSITY: Renamed so we can access it 
             // INTENSITY: If we have all the data we need from the server to run the game, then we can actually draw
             if (ClientSystem::scenarioStarted())
             {
-                ClientSystem::frameTrigger(curtime); // INTENSITY
+                SystemManager::frameTrigger(curtime); // INTENSITY
 
                 static Benchmarker renderingBenchmarker;
                 renderingBenchmarker.start();

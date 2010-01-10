@@ -36,5 +36,8 @@ struct SystemManager
     static bool benchmarking;
 
     static void showBenchmark(std::string title, Benchmarker& benchmark);
+
+    //! Stuff done on each frame
+    static void frameTrigger(int curtime);
 };
 

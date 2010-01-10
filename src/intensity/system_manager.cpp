@@ -31,6 +31,10 @@
 #include "script_engine_manager.h"
 #include "utility.h"
 
+#ifdef CLIENT
+    #include "client_system.h"
+#endif
+
 #include "system_manager.h"
 
 
@@ -66,5 +70,12 @@ void SystemManager::showBenchmark(std::string title, Benchmarker& benchmark)
             benchmark.reset();
         }
     }
+}
+
+void SystemManager::frameTrigger(int curtime)
+{
+    #ifdef CLIENT
+        ClientSystem::frameTrigger(curtime);
+    #endif
 }
 
