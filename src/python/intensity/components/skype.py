@@ -27,8 +27,6 @@ from intensity.components.component_driver import *
 
 
 def skype_main(to_skype, from_skype):
-    from_skype.put((True,'I begin'))
-
     sys.path.append(os.path.join(os.path.dirname(__file__), 'thirdparty'))
     import Skype4Py
 
@@ -52,24 +50,31 @@ def skype_main(to_skype, from_skype):
     def CallStatusText(status):
         return skype.Convert.CallStatusToText(status)
 
+    class State:
+        curr_call = None
+        prepared_to_answer = []
+
     # This handler is fired when status of Call object has changed
     def OnCall(call, status):
         global CallStatus
         CallStatus = status
         print 'Call status: ' + CallStatusText(status)
+        if status == Skype4Py.clsRinging and call.PartnerHandle in State.prepared_to_answer:
+            call.Answer()
 
     def attach():
         try:
             skype.Attach()
         except Skype4Py.errors.SkypeAPIError, e:
-            from_skype.put((False, "Failed to attach to Skype. Is Skype working, and did you allow this program to connect to it?"))
+            print "Fail!"
+            from_skype.put((ComponentDriver.RESPONSE.Error, "Failed to attach to Skype. Is Skype working, and did you allow this program to connect to it?"))
             sys.exit(1)
 
     # This handler is fired when Skype attachment status changes
     def OnAttach(status): 
         print 'API attachment status: ' + AttachmentStatusText(status)
-    #    if status == Skype4Py.apiAttachAvailable:
-    #        attach()
+        if status == Skype4Py.apiAttachAvailable:
+            attach()
 
     skype.OnAttachmentStatus = OnAttach
     skype.OnCallStatus = OnCall
@@ -79,19 +84,25 @@ def skype_main(to_skype, from_skype):
     attach()
     print 'Connected.'
 
-    print "I am:", skype.CurrentUser.Handle
+    # Main loop
+    while True:
+        print "Skype wants something..."
+        command, params = to_skype.get()
+        print "Skype got something:", command, params
+        if command == 'whoami':
+            from_skype.put((ComponentDriver.RESPONSE.Callback, (params, skype.CurrentUser.Handle)))
+            print "Put something back...", from_skype.qsize()
+            print "get..."
+            print from_skype.get()
+            print "get2..."
+        elif command == 'call':
+            if State.curr_call is not None:
+                State.curr_call.Finish()
+            State.curr_call = skype.PlaceCall(*(params.split(',')))
+        elif command == 'preparetoanswer':
+            State.prepared_to_answer.append(params)
+            
 
-    # Checking if what we got from command line parameter is present in our contact list
-    print "Placing call.."
-    skype.PlaceCall('nicknamehandle')
-
-    print "Looping..."
-    while not CallStatus in CallIsFinished:
-        time.sleep(0.25)
-    print "Done"
-
-    from_skype.put((False,'all '))
-
-
+# Setup
 skype_driver = ComponentDriver('Skype', skype_main, keep_alive_when_outgoing=True)
 
