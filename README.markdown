@@ -20,7 +20,8 @@ You need to sign up for a free user account on Syntensity,
     http://www.syntensity.com
 
 Notes:
-  * On Windows, Python25 appears in the batch file for the
+
+  - On Windows, Python25 appears in the batch file for the
     client (and also the server, etc.). This is because the
     binary libraries provided (boost, etc.) are linked against
     Python 2.5. So, you should install Python 2.5 (it can
