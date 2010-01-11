@@ -261,11 +261,15 @@ Character = AnimatableLogicEntity.extend({
             var anim = this.decideAnimation(state, physstate, move, strafe, vel, falling, inwater, timeinair);
             var flags = this.getRenderingFlags();
 
-            this.renderingArgs = [this, mdlname, anim, o.x, o.y, o.z, yaw, pitch, flags, basetime];
+            this.renderingArgs = this.createRenderingArgs(mdlname, anim, o, yaw, pitch, flags, basetime);
             this.renderingArgsTimestamp = currTimestamp;
         }
 
         CAPI.renderModel.apply(this, this.renderingArgs);
+    },
+
+    createRenderingArgs: function(mdlname, anim, o, yaw, pitch, flags, basetime) {
+        return [this, mdlname, anim, o.x, o.y, o.z, yaw, pitch, flags, basetime];
     },
 
     getRenderingFlags: function() {
