@@ -44,7 +44,10 @@ GamePlayer = registerEntityClass(
 
                 init: function() {
                     this.accessories = {};
-                    this.eyeHeight = 0;
+                    this.eyeHeight = 6;
+                    this.aboveEye = 6;
+                    this.thrustPowerForward = 300;
+                    this.thrustPowerBackward = 10;
                 },
 
                 createRenderingArgs: function(mdlname, anim, o, yaw, pitch, flags, basetime) {
@@ -126,4 +129,6 @@ if (Global.SERVER) { // Run this only on the server - not the clients
         },
     ]);
 }
+
+Vehicles.AIR_FRICTION = 0.9;
 
