@@ -1,26 +1,14 @@
-=======================
-Intensity Engine README
-=======================
-www.intensityengine.com
+Intensity Engine
+================
 
+The Intensity Engine is the open source project powering Syntensity,
 
------------------------------------------------------------
-The Intensity Engine is the open source core of Syntensity,
-
-    www.syntensity.com
------------------------------------------------------------
-
-
-
-Compiling
-=========
-
-See COMPILE.txt for how to compile the source code, if this
-isn't a binary distribution.
+    http://www.syntensity.com
+    http://www.syntensity.com/toplevel/intensityengine/
 
 
 Running - Syntensity
-====================
+--------------------
 
 To run the client and connect to Syntensity, run
 
@@ -30,13 +18,6 @@ To run the client and connect to Syntensity, run
 You need to sign up for a free user account on Syntensity,
 
     http://www.syntensity.com
-
-
-Running - Locally (i.e., without Syntensity)
-============================================
-
-See README-standalone.txt.
-
 
 Notes:
   * On Windows, Python25 appears in the batch file for the
@@ -52,21 +33,41 @@ Notes:
     accordingly.
 
 
+Compiling
+---------
+
+See COMPILE.txt for how to compile the source code, if this
+isn't a binary distribution.
+
+
+Running - Locally (i.e., without Syntensity)
+--------------------------------------------
+
+See README-standalone.txt.
+
+
 Settings
-========
+--------
 
 You can change some settings in the settings.cfg file. This file is
 in
+
     ~/.intensityengine_client/settings.cfg
+
 or
-    ~/.intensityengine_server/settings.cfg
+
+    ~/.intensityengine_client/settings_server.cfg
+
 on Linux, for the client and server, respectively - note that these
 are purposefully two separate files. On Windows, the files are in
+
     C:\Documents and Settings\USERNAME\intensityengine_client\settings.cfg
-    C:\Documents and Settings\USERNAME\intensityengine_server\settings.cfg
+    C:\Documents and Settings\USERNAME\intensityengine_client\settings_server.cfg
+
 where USERNAME is your username. On Vista, the locations will be
+
     C:\Users\USERNAME\intensityengine_client\settings.cfg
-    C:\Users\USERNAME\intensityengine_server\settings.cfg
+    C:\Users\USERNAME\intensityengine_client\settings_server.cfg
 
 Note that the files are auto-generated when the client exits, so if
 you modify it while the client or server is running, then exit, your
@@ -81,46 +82,46 @@ as the first commandline argument to the client or server.
 
 
 Problems
-========
+--------
 
 See the TROUBLESHOOTING.txt file if you are having trouble running or
 compiling the Intensity Engine. You can also ask for help on IRC,
 
-    #intensityengine on FreeNode
+    #syntensity on FreeNode
 
-or on our mailing list,
+See also
 
-    https://launchpad.net/~intensityengine-general
-    intensityengine-general@lists.launchpad.net
+    http://wiki.syntensity.com/troubleshooting
 
 
 Documentation
-=============
+-------------
 
-See the included README-* files, and the Syntensity wiki:
+See the included README-* files, the contents of docs/,  and the
+Syntensity wiki:
 
     http://wiki.syntensity.com
 
 
 Reporting Bugs
-==============
+--------------
 
 Please do so here:
 
-    https://bugs.launchpad.net/intensityengine/
+    http://github.com/kripken/intensityengine/issues
 
 Notes on reporting crashing bugs:
 
-  * Set the logging level to DEBUG (or INFO, if feasible), and
+  - Set the logging level to DEBUG (or INFO, if feasible), and
     reproduce the crash. This will give more output than the
     default setting of WARNING. (This is set in the settings.cfg
     file in the home directory you are using.) On Windows,
     output should appear in out_client (or out_server); on other
     platforms, it goes to the console by default, so you
-    should redirect it to a file (or copy it from the console).
-  * If you can, try to run the program in the debugger, to find
+    should redirect it to a file (or copy it from the console.
+  - If you can, try to run the program in the debugger, to find
     the line number of the crash.
-  * In the bug report, please state if the crash is consistent
+  - In the bug report, please state if the crash is consistent
     (always happens in a particular case), and what exactly
     appears to trigger the crash - what you were doing just
     before, etc.
@@ -137,7 +138,7 @@ Notes
 2. For more information, including links to the mailing list,
    bugs, wiki, etc., see the main website,
 
-        http://www.intensityengine.com
+        http://www.syntensity.com/toplevel/intensityengine/
 
 3. This distribution may contain sources or binaries of other open
    source projects (in /build, /src, or /windows/dll), supplied for
