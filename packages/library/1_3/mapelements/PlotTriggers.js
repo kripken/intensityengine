@@ -307,6 +307,15 @@ PlotBarrierPlugin = {
             func: bind(this.refreshBarrier, this),
             entity: this,
         }, this.refreshEvent);
+
+        this.connect('onModify_state', function(state) {
+            // Changing this entity changes its children and other properties, all through resetBarrier
+            if (state === 'closed' && this.state === 'open' && state !== this.oldState) {
+                this.oldState = state; // Prevent infinite recursion
+                this.resetBarrier();
+            }
+            this.oldState = -1;
+        });
     },
 
     resetBarrier: function() {
