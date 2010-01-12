@@ -48,6 +48,9 @@ GamePlayer = registerEntityClass(
                 accessories: new StateJSON(),
 
                 init: function() {
+                    this.modelName = '';
+                    this.HUDModelName = '';
+
                     this.accessories = {};
                     this.eyeHeight = 6;
                     this.aboveEye = 6;
@@ -57,6 +60,27 @@ GamePlayer = registerEntityClass(
 
                 createRenderingArgs: function(mdlname, anim, o, yaw, pitch, flags, basetime) {
                     return [this, mdlname, anim, o.x, o.y, o.z, yaw-90, pitch, 60, flags, basetime];
+                },
+
+                onCollision: function() {
+                    this.health = 0;
+                    Effect.fireball(PARTICLE.EXPLOSION, this.position, 50);
+                    Sound.play('yo_frankie/DeathFlash.wav', this.position);
+                    this.deathDelay = 0.15;
+                    this.deathSize = 40;
+                },
+
+                clientAct: function(seconds) {
+                    if (this.health <= 0) {
+                        Effect.splash(PARTICLE.SMOKE, 2, 2.0, this.position, 0x000000, 5.25, 35, -100);
+                        this.deathDelay -= seconds;
+                        if (this.deathDelay <= 0 && this.deathSize >= 15) {
+                            this.deathDelay = 0.15;
+                            this.deathSize *= 0.95;
+                            Effect.fireball(PARTICLE.EXPLOSION, this.position, this.deathSize);
+                            if (Math.random() < 0.25) Sound.play('yo_frankie/DeathFlash.wav', this.position);
+                        }
+                    }
                 },
             },
         ]

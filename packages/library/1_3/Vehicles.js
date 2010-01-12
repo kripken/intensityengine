@@ -78,7 +78,7 @@ Vehicles = {
                 var now = this.velocity.copy();
                 if (saved && saved.magnitude() > 0 && now.magnitude() > 0 && saved.cosineAngleWith(now) < 0.95) {
                     if (saved.subNew(now).magnitude() > 30) {
-                        Sound.play('olpc/AdamKeshen/kik.wav', this.oldPosition);
+                        this.onCollision();
                     }
                     this.trueVelocity = now;
                 }
@@ -118,6 +118,10 @@ Vehicles = {
                 this.oldPosition = this.position.copy();
                 this.trueVelocity = new Vector3(0, 0, 0);
             }
+        },
+
+        onCollision: function() {
+            Sound.play('olpc/AdamKeshen/kik.wav', this.oldPosition);
         },
 
         getThrustDirection: function() {
