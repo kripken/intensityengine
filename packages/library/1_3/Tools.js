@@ -38,5 +38,45 @@ Tools = {
         }
         eval(originalName + ' = wrapper');
     },
+
+    callbacks: {
+        header: 'scriptcallback=',
+
+        map: [],
+
+        add: function(callback) {
+            for (var i = 0; i < this.map.length+3; i++) {
+                if (this.map[i] === undefined) {
+                    this.map[i] = callback;
+                    return this.header + i;
+                }
+            }
+            return null;
+        },
+
+        get: function(text, remove) {
+            if (text.substring(0, this.header.length) !== this.header) return null;
+            var i = text.substring(this.header.length, text.length);
+
+            remove = defaultValue(remove, true);
+
+            var ret = this.map[i];
+            if (remove) delete this.map[i];
+            return ret;
+        },
+
+        tryCall: function(text, param, remove) {
+            param = defaultValue(param, '');
+            remove = defaultValue(remove, true);
+
+            var callback = this.get(text);
+            if (callback !== null) callback(param);
+        },
+    },
 };
+
+function cleanFunctionName(func) {
+    var ret = func.im_func ? func.im_func : func;
+    return ret.toString().replace(/\n/g, ' ').substring(0, 70);
+}
 
