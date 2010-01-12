@@ -8,6 +8,9 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/Health');
 Library.include('library/' + Global.LIBRARY_VERSION + '/GameManager');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Vehicles');
 Library.include('library/' + Global.LIBRARY_VERSION + '/ZeroG');
+Library.include('library/' + Global.LIBRARY_VERSION + '/Chat');
+Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/PlotTriggers');
+Library.include('library/' + Global.LIBRARY_VERSION + '/modes/Racing');
 
 // Default materials, etc.
 
@@ -37,6 +40,8 @@ GamePlayer = registerEntityClass(
             Vehicles.plugin,
             Health.plugin,
             GameManager.playerPlugin,
+            Chat.playerPlugin,
+            RacingMode.playerPlugin,
             {
                 _class: "GamePlayer",
 
@@ -98,6 +103,8 @@ ApplicationManager.setApplicationClass(Application.extend({
         getPlayerEntity().accessories = temp;
     },
 */
+
+    handleTextMessage: Chat.handleTextMessage,
 }));
 
 // Setup game
@@ -105,12 +112,25 @@ ApplicationManager.setApplicationClass(Application.extend({
 GameManager.setup([
     GameManager.managerPlugins.messages,
     GameManager.managerPlugins.eventList,
+//    Chat.extraPlugins.skypeManager,
+    RacingMode.managerPlugin,
     {
         clientActivate: function() {
             if (!this.shownWelcome) {
 //                this.addHUDMessage("Press 'H' for help", 0xCCDDFF, 8.0);
                 this.shownWelcome = true;
             }
+        },
+
+        startRace: function() {
+            getEntityByTag('start_door').state = 'open';
+
+            GameManager.getSingleton().eventManager.add({
+                secondsBefore: 8,
+                func: function() {
+                    getEntityByTag('start_door').state = 'closed';
+                },
+            });
         },
     },
 ]);
