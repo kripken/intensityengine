@@ -115,5 +115,37 @@ Chat = {
         senderEntity.chatMessage = [target, text];
         return false;
     },
+
+    extraPlugins: {
+        skypeManager: {
+            skypeHandle: new StateString(),
+
+            init: function() {
+                this.skypeHandle = '';
+            },
+
+            clientActivate: function() {
+                log(ERROR, "clientactivate");
+                this.skypeAttempts = 0;
+                // Keep asking for handle until we get it
+                GameManager.getSingleton().eventManager.add({
+                    secondsBefore: 0,
+                    secondsBetween: 2,
+                    func: bind(function() {
+log(ERROR, "need handle?");
+                        if (this.skypeHandle) return false; // stop now
+                        this.skypeAttempts += 1;
+                        if (this.skypeAttempts === 10) return false; // give up
+
+log(ERROR, "need handle!!!1");
+                        CAPI.signalComponent('Skype', 'whoami|' + Tools.callbacks.add(bind(function(handle) {
+                            this.skypeHandle = handle;
+                        }, this)));
+                    }, this),
+                    entity: this,
+                });
+            },
+        },
+    },
 };
 
