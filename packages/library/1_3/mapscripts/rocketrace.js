@@ -66,9 +66,12 @@ GamePlayer = registerEntityClass(
                 onCollision: function() {
                     if (this === getPlayerEntity()) {
                         CutScenes.showDeathCamera(this);
+
+                        if (this.health > 0) {
+                            this.health = 0;
+                        }
                     }
 
-                    this.health = 0;
                     Effect.fireball(PARTICLE.EXPLOSION, this.position, 50);
                     Sound.play('yo_frankie/DeathFlash.wav', this.position);
                     this.deathDelay = 0.15;
@@ -78,6 +81,9 @@ GamePlayer = registerEntityClass(
                 clientAct: function(seconds) {
                     if (this.health <= 0) {
                         Effect.splash(PARTICLE.SMOKE, 2, 2.0, this.position, 0x000000, 5.25, 35, -100);
+
+                        this.gravity = 60; // antigravity failed
+
                         this.deathDelay -= seconds;
                         if (this.deathDelay <= 0 && this.deathSize >= 15) {
                             this.deathDelay = 0.15;
@@ -85,6 +91,8 @@ GamePlayer = registerEntityClass(
                             Effect.fireball(PARTICLE.EXPLOSION, this.position, this.deathSize);
                             if (Math.random() < 0.25) Sound.play('yo_frankie/DeathFlash.wav', this.position);
                         }
+                    } else {
+                        this.gravity = 0; // antigravity working
                     }
                 },
             },

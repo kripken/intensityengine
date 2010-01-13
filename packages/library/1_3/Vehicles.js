@@ -32,6 +32,8 @@ Vehicles = {
         thrustPowerForward: new StateFloat(),
         thrustPowerBackward: new StateFloat(),
 
+        gravity: 0,
+
         init: function() {
             this.thrustPowerForward = 150;
             this.thrustPowerBackward = 50;
@@ -77,7 +79,7 @@ Vehicles = {
                 var saved = this.savedVelocity;
                 var now = this.velocity.copy();
                 if (saved && saved.magnitude() > 0 && now.magnitude() > 0 && saved.cosineAngleWith(now) < 0.95) {
-                    if (saved.subNew(now).magnitude() > 30) {
+                    if (saved.subNew(now).magnitude() > 30 && !this.lastFrameEditing) {
                         this.onCollision();
                     }
                     this.trueVelocity = now;
@@ -93,7 +95,7 @@ Vehicles = {
 
                 this.trueVelocity = this.trueVelocity.mul(1 - friction*seconds); // Apply inertia slowing
 
-// gravity                this.trueVelocity.z -= 100*seconds;
+                this.trueVelocity.z -= this.gravity*seconds;
 
 //                this.move = 0;
                 this.strafe = 0;
@@ -118,6 +120,8 @@ Vehicles = {
                 this.oldPosition = this.position.copy();
                 this.trueVelocity = new Vector3(0, 0, 0);
             }
+
+            this.lastFrameEditing = isPlayerEditing(this);
         },
 
         onCollision: function() {
