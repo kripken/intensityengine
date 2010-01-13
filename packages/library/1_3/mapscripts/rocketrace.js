@@ -8,6 +8,7 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/Health');
 Library.include('library/' + Global.LIBRARY_VERSION + '/GameManager');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Vehicles');
 Library.include('library/' + Global.LIBRARY_VERSION + '/ZeroG');
+Library.include('library/' + Global.LIBRARY_VERSION + '/CutScenes');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Chat');
 Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/PlotTriggers');
 Library.include('library/' + Global.LIBRARY_VERSION + '/modes/Racing');
@@ -63,6 +64,10 @@ GamePlayer = registerEntityClass(
                 },
 
                 onCollision: function() {
+                    if (this === getPlayerEntity()) {
+                        CutScenes.showDeathCamera(this);
+                    }
+
                     this.health = 0;
                     Effect.fireball(PARTICLE.EXPLOSION, this.position, 50);
                     Sound.play('yo_frankie/DeathFlash.wav', this.position);
@@ -147,12 +152,16 @@ GameManager.setup([
         },
 
         startRace: function() {
-            getEntityByTag('start_door').state = 'open';
+            forEach(getEntitiesByTag('start_door'), function(entity) {
+                entity.state = 'open';
+            });
 
             GameManager.getSingleton().eventManager.add({
                 secondsBefore: 8,
                 func: function() {
-                    getEntityByTag('start_door').state = 'closed';
+                    forEach(getEntitiesByTag('start_door'), function(entity) {
+                        entity.state = 'closed';
+                    });
                 },
             });
         },

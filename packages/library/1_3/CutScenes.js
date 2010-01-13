@@ -170,6 +170,34 @@ CutScenes = {
                        normalizeAngle(nextMarker.pitch, currMarker.pitch)*beta;
         },
     }),
+
+
+    showDeathCamera: function(target) {
+        var viewPosition, targetPosition = target.position.copy();
+        var triesLeft = 25;
+        while (triesLeft > 0) {
+            viewPosition = targetPosition.addNew(Random.normalizedVector3().mul(75+Math.random()*50));
+            if (hasLineOfSight(targetPosition, viewPosition)) break;
+            triesLeft -= 1;
+        }
+        if (triesLeft === 0) return; // failed
+
+        var orientation = targetPosition.subNew(viewPosition).toYawPitch();
+
+        getPlayerEntity().clearActions();
+        getPlayerEntity().queueAction(new (CutScenes.BaseAction.extend({
+        }))(
+            [
+                new (CutScenes.SmoothAction.extend({
+                    markers: [
+                        { position: viewPosition.copy(), yaw: orientation.yaw, pitch: orientation.pitch },
+                        { position: viewPosition.copy(), yaw: orientation.yaw, pitch: orientation.pitch },
+                    ],
+                }))(),
+            ]
+        ));
+
+    },
 };
 
 

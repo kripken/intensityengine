@@ -80,7 +80,6 @@ RacingMode = {
                         this.eventManager.add({
                             secondsBefore: 10,
                             func: bind(function() {
-                                log(ERROR, "Race is on! " + counter);
                                 this.raceStartTime = Global.time;
 
                                 this.raceStatus = 3;
