@@ -141,7 +141,8 @@ that can help, check at
 The windows_dev.zip file is what you need for compilation. Place the
 contents under /src/windows_dev. (The windows_runtime.zip contains
 the runtime dlls, which should be placed under /windows/dll in the
-install directory).
+install directory). Note that you will be merging the contents of
+the src/windows_dev/include directory.
 
 If instead you want/need to get the development headers and libraries
 yourself, then you should do the following: Get the following
