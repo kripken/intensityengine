@@ -171,6 +171,18 @@ CutScenes = {
         },
     }),
 
+    // A subaction in a cutscene, that tracks some object
+    TrackAction: Action.extend({
+        doExecute: function() {
+            var orientation = this.targetPosition.subNew(this.position).toYawPitch();
+
+            CAPI.forceCamera(
+                this.position.x, this.position.y, this.position.z, orientation.yaw, orientation.pitch, 0
+            );
+
+            return this._super.apply(this, arguments);
+        },
+    }),
 
     showDeathCamera: function(target) {
         var viewPosition, targetPosition = target.position.copy();
@@ -188,11 +200,13 @@ CutScenes = {
         getPlayerEntity().queueAction(new (CutScenes.BaseAction.extend({
         }))(
             [
-                new (CutScenes.SmoothAction.extend({
-                    markers: [
-                        { position: viewPosition.copy(), yaw: orientation.yaw, pitch: orientation.pitch },
-                        { position: viewPosition.copy(), yaw: orientation.yaw, pitch: orientation.pitch },
-                    ],
+                new (CutScenes.TrackAction.extend({
+                    position: viewPosition,
+                    targetPosition: target.position,
+                    doExecute: function() {
+                        this._super.apply(this, arguments);
+                        return getPlayerEntity().health > 0;
+                    },
                 }))(),
             ]
         ));
