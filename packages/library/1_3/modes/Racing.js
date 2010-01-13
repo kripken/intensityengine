@@ -104,7 +104,7 @@ RacingMode = {
             } else {
                 // Race in progress, check for expiration. Frag players that are too tardy
                 // For fragged players, restart their status to ready
-                if (Global.time - this.raceStartTime > this.raceMode.maxTime) {
+                if (Global.time - this.raceStartTime > this.raceMode.maxTime || statuses[RacingMode.STATUS.inProgress] === 0) {
                     forEach(getClientEntities(), function(player) {
                         if (player.raceStatus === RacingMode.STATUS.inProgress && Health.isValidTarget(player)) player.health = 0;
                     });
