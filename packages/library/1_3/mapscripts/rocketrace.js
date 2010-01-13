@@ -63,23 +63,33 @@ GamePlayer = registerEntityClass(
                     return [this, mdlname, anim, o.x, o.y, o.z, yaw-90, pitch, 60, flags, basetime];
                 },
 
-                onCollision: function() {
-                    if (this === getPlayerEntity()) {
-                        CutScenes.showDeathCamera(this);
+                clientActivate: function() {
+                    this.connect('client_onModify_health', function(health) {
+                        if (health <= 0) {
+                            if (this.health > 0 && this === getPlayerEntity()) {
+                                CutScenes.showDeathCamera(this);
+                            }
 
+                            this.deathSize = 50;
+                            Effect.fireball(PARTICLE.EXPLOSION, this.position, this.deathSize);
+                            Sound.play('yo_frankie/DeathFlash.wav', this.position);
+                            this.deathDelay = 0.15;
+                        }
+                    });
+                },
+
+                onCollision: function(magnitude) {
+                    if (magnitude < 25) return;
+
+                    if (this === getPlayerEntity()) {
                         if (this.health > 0) {
-                            this.health = 0;
+                            this.health = Math.max(0, this.health - magnitude);
                         }
                     }
-
-                    Effect.fireball(PARTICLE.EXPLOSION, this.position, 50);
-                    Sound.play('yo_frankie/DeathFlash.wav', this.position);
-                    this.deathDelay = 0.15;
-                    this.deathSize = 40;
                 },
 
                 clientAct: function(seconds) {
-                    if (this.health <= 0) {
+                    if (this.health <= 0 && this.spawnStage === 0) {
                         Effect.splash(PARTICLE.SMOKE, 2, 2.0, this.position, 0x000000, 5.25, 35, -100);
 
                         this.gravity = 60; // antigravity failed

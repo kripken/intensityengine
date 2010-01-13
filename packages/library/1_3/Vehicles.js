@@ -79,8 +79,9 @@ Vehicles = {
                 var saved = this.savedVelocity;
                 var now = this.velocity.copy();
                 if (saved && saved.magnitude() > 0 && now.magnitude() > 0 && saved.cosineAngleWith(now) < 0.95) {
-                    if (saved.subNew(now).magnitude() > 30 && !this.lastFrameEditing) {
-                        this.onCollision();
+                    if (!this.lastFrameEditing) {
+                        var collisionMagnitude = saved.subNew(now).magnitude();
+                        this.onCollision(collisionMagnitude);
                     }
                     this.trueVelocity = now;
                 }
@@ -124,8 +125,10 @@ Vehicles = {
             this.lastFrameEditing = isPlayerEditing(this);
         },
 
-        onCollision: function() {
-            Sound.play('olpc/AdamKeshen/kik.wav', this.oldPosition);
+        onCollision: function(magnitude) {
+            if (magnitude > 30) {
+                Sound.play('olpc/AdamKeshen/kik.wav', this.oldPosition);
+            }
         },
 
         getThrustDirection: function() {
