@@ -170,7 +170,7 @@ elsewhere, you will need to edit the SConstruct file so it can find them):
 In the directory where the source code was placed (usually 'intensityengine'),
 run (in a DOS shell, that is, inside cmd.exe) the following commands.
 
-First, build V8 by going to src\thirdparty\V8 and running
+First, build V8 by going to src\thirdparty\v8 and running
 
     scons mode=release env="INCLUDE:C:\Program Files\Microsoft SDKs\Windows\v6.0A\Include;C:\Program Files\Microsoft Visual Studio 9.0\VC\Include;,LIB:C:\Program Files\Microsoft SDKs\Windows\v6.0A\Lib;C:\Program Files\Microsoft Visual Studio 9.0\VC\Lib;"
 
