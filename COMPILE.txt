@@ -193,6 +193,11 @@ Some things to be aware of:
       that may cause errors (see 'version mismatch?' below). The simplest solution
       is to use Python 2.5.x. Or, build Boost from scratch so there is no dependency
       on Python 2.5.
+    * In general, it is best to use Python 2.5.x for everything, as trying to use
+      another version for some things may cause confusion. However, if you build
+      all the dependencies entirely from scratch, it should not be hard to use
+      a later Python version (2.6 or 2.7 - not 3.0), in which case again you
+      should use just that version for everything.
     * Related to the last point, if you get
 
         "Fatal Python Error: Interpreter not initialized (version mismatch?)"
