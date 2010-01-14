@@ -984,10 +984,19 @@ void entpaste()
         // INTENSITY: Create entity using new system
         LogicEntityPtr entity = LogicSystem::getLogicEntity(c);
         std::string _class = entity->getClass();
+
+        ScriptEngineManager::getGlobal()->setProperty(
+            "__intensityentcopy__TEMP",
+            entity->scriptEntity->call("createStateDataDict")
+        );
+        ScriptEngineManager::runScript("__intensityentcopy__TEMP.position = '[" +
+            Utility::toString(o.x) + "|" + Utility::toString(o.y) + "|" + Utility::toString(o.z) +
+        "]';"); // Fix position
         std::string stateData = ScriptEngineManager::getGlobal()->call(
             "serializeJSON",
-            entity->scriptEntity->call("createStateDataDict")
+            ScriptEngineManager::getGlobal()->getProperty("__intensityentcopy__TEMP")
         )->getString();
+
         EditingSystem::newEntity(_class, stateData);
         // INTENSITY: end Create entity using new system
 
