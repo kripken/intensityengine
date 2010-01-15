@@ -1,4 +1,3 @@
-
 #=============================================================================
 # Copyright 2008 Alon Zakai ('Kripken') kripkensteiner@gmail.com
 #
@@ -21,13 +20,12 @@
 #=============================================================================
 
 
-import threading, time
-from multiprocessing import Process
-from multiprocessing import Queue
+import os, signal, threading, time
+from multiprocessing import Process, Queue
 
 from intensity.base import *
 from intensity.logging import *
-from intensity.signals import signal_component
+from intensity.signals import signal_component, shutdown
 
 
 ## A general framework for a component, run in a separate process
@@ -46,6 +44,7 @@ class ComponentDriver:
         self.from_component = Queue()
 
         self.proc = None
+        self.proc_counter = 0
         self.kickstart()
 
         thread = threading.Thread(target=self.main_loop)
@@ -60,6 +59,13 @@ class ComponentDriver:
         signal_component.connect(self.receive, weak=False)
 
     def kickstart(self):
+        curr_proc_counter = self.proc_counter
+        self.proc_counter += 1
+
+        try:
+            shutdown.disconnect(self.proc.dispatch_uid)
+        except:
+            pass
         try:
             self.proc.terminate()
         except:
@@ -68,15 +74,28 @@ class ComponentDriver:
         self.proc.daemon = True
         self.proc.start()
 
+        # Daemon flag seems not to work, so do this
+        curr_proc = self.proc
+        curr_proc.dispatch_uid = curr_proc_counter
+        def terminate_proc(sender, **kwargs):
+            if curr_proc.is_alive():
+                try:
+                    if WINDOWS:
+                        curr_proc.terminate()
+                    else:
+                        os.kill(curr_proc.pid, signal.SIGKILL) # Stronger method
+                except:
+                    pass
+
+        shutdown.connect(terminate_proc, weak=False, dispatch_uid=curr_proc_counter)
+
     def main_loop(self):
         while True:
-            print "Seek something..."
             response_type, data = self.from_component.get()
-            print "Got from compontn", callback, param
 
             if response_type == ComponentDriver.RESPONSE.Callback:
                 callback, param = data
-                CModule.run_script('Tools.callbacks.tryCall("%s", "%s%")' % callback, param)
+                CModule.run_script('Tools.callbacks.tryCall("%s", "%s")' % (callback, param), 'component %s callback' % self.name)
             elif response_type == ComponentDriver.RESPONSE.Error:
                 CModule.show_message('Error in %s component: %s' % (self.name, data))
 
@@ -86,15 +105,12 @@ class ComponentDriver:
 
             # Restart
             if not self.proc.is_alive() and (self.keep_alive_always or (self.keep_alive_when_outgoing and not self.to_component.empty())):
-                print "kickstart:", self.name
                 self.kickstart()
                 continue
 
     def receive(self, sender, **kwargs):
         component_id = kwargs['component_id']
         data = kwargs['data']
-
-        print "C,D:", component_id, data
 
         try:
             if component_id == self.name:

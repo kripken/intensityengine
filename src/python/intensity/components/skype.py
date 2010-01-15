@@ -82,19 +82,12 @@ def skype_main(to_skype, from_skype):
     # Attatching to Skype..
     print 'Connecting to Skype..'
     attach()
-    print 'Connected.'
 
     # Main loop
     while True:
-        print "Skype wants something..."
         command, params = to_skype.get()
-        print "Skype got something:", command, params
         if command == 'whoami':
             from_skype.put((ComponentDriver.RESPONSE.Callback, (params, skype.CurrentUser.Handle)))
-            print "Put something back...", from_skype.qsize()
-            print "get..."
-            print from_skype.get()
-            print "get2..."
         elif command == 'call':
             if State.curr_call is not None:
                 State.curr_call.Finish()
@@ -104,5 +97,12 @@ def skype_main(to_skype, from_skype):
             
 
 # Setup
-skype_driver = ComponentDriver('Skype', skype_main, keep_alive_when_outgoing=True)
+# XXX Seems to be problem with creating multiprocessing.Queue objects during __imports__
+# which is exactly where we are now (a component being imported). As a workaround,
+# queue it
+#  * http://bugs.python.org/issue7707
+def setup():
+    global skype_driver
+    skype_driver = ComponentDriver('Skype', skype_main, keep_alive_when_outgoing=True)
+main_actionqueue.add_action(setup)
 
