@@ -31,6 +31,8 @@ RacingMode = {
     },
 
     managerPlugin: {
+        playerFinishedRace: new StateInteger({ hasHistory: false }),
+
         raceMode: {
             maxTime: 1*60,
         },
@@ -45,6 +47,36 @@ RacingMode = {
             });
 
             this.raceStatus = 0;
+
+            this.connect('onModify_playerFinishedRace', function(uniqueId) {
+                var player = getEntity(uniqueId);
+                if (!player) return;
+
+                this.addHUDMessage({
+                    text: "Your time: " + decimal2(Global.time - this.raceStartTime),
+                    color: 0xFFEEFF,
+                    duration: 5,
+                    y: 0.333,
+                    size: 0.66,
+                    player: player,
+                });
+
+                GameManager.getSingleton().eventManager.add({
+                    secondsBefore: 5,
+                    func: function() {
+                        player.respawn();
+                    },
+                });
+            });
+        },
+
+        clientActivate: function() {
+            this.connect('client_onModify_playerFinishedRace', function(uniqueId) {
+                var player = getEntity(uniqueId);
+                if (player !== getPlayerEntity()) return;
+
+                Sound.play('0ad/alarmvictory_1.ogg');
+            });
         },
 
         //! Override with stuff that starts the race, like opening the way to the start line
@@ -131,6 +163,7 @@ RacingMode = {
         clientActivate: function() {
             this.connect('clientRespawn', function() {
                 this.raceStatus = RacingMode.STATUS.ready;
+                if (this.resetWorldSequence) this.resetWorldSequence('racetrack');
             });
         },
     },

@@ -10,7 +10,9 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/Vehicles');
 Library.include('library/' + Global.LIBRARY_VERSION + '/ZeroG');
 Library.include('library/' + Global.LIBRARY_VERSION + '/CutScenes');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Chat');
+Library.include('library/' + Global.LIBRARY_VERSION + '/World');
 Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/PlotTriggers');
+Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/WorldSequences');
 Library.include('library/' + Global.LIBRARY_VERSION + '/modes/Racing');
 
 // Default materials, etc.
@@ -42,6 +44,7 @@ GamePlayer = registerEntityClass(
             Health.plugin,
             GameManager.playerPlugin,
             Chat.playerPlugin,
+            WorldSequences.plugins.player,
             RacingMode.playerPlugin,
             {
                 _class: "GamePlayer",
@@ -109,6 +112,21 @@ GamePlayer = registerEntityClass(
         ]
     )
 );
+
+registerEntityClass(bakePlugins(AreaTrigger, [WorldSequences.plugins.areaTrigger, {
+    _class: 'RacetrackSequence',
+
+    init: function() {
+        this.sequenceId = 'racetrack';
+        this.collisionRadiusWidth = 20;
+    },
+
+    onSequenceArrival: function(entity) {
+        if (entity === getPlayerEntity() && this.sequenceNumber === 0) {
+            GameManager.getSingleton().playerFinishedRace = entity.uniqueId;
+        }
+    },
+}]));
 
 //// Application
 
