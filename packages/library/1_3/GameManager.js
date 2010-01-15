@@ -246,17 +246,19 @@ GameManager = {
 
             HUDMessages: [],
 
-            addHUDMessage: function(text, color, duration, size, x, y) {
+            addHUDMessage: function(text, color, duration, size, x, y, player) {
                 var kwargs;
                 if (typeof text === 'object') {
                     kwargs = text;
                 } else {
-                    kwargs = { text: text, color: color, duration: duration, size: size, x: x, y: y };
+                    kwargs = { text: text, color: color, duration: duration, size: size, x: x, y: y, player: player };
                 }
 
                 if (Global.SERVER) {
+                    kwargs.player = kwargs.player ? kwargs.player.uniqueId : -1;
                     this.serverMessage = kwargs;
                 } else {
+                    if (typeof kwargs.player === 'number') kwargs.player = getEntity(kwargs.player);
                     this.clearHUDMessages(); // XXX: only 1 for now
                     this.HUDMessages.push(kwargs);
                 }
@@ -276,6 +278,8 @@ GameManager = {
 
             clientAct: function(seconds) {
                 this.HUDMessages = filter(function(msg) {
+                    if (msg.player && msg.player !== getPlayerEntity()) return;
+
                     var size = msg.size ? msg.size : 1.0;
                     size = msg.duration >= 0.5 ? size : size*Math.pow(msg.duration*2, 2);
                     CAPI.showHUDText(msg.text, msg.x ? msg.x : 0.5, msg.y ? msg.y : 0.2, size, msg.color);
