@@ -56,6 +56,10 @@ static std::string SCRIPT_DIR = "src/javascript/";
 
 ScriptEngine* ScriptEngineManager::engine = NULL;
 
+// Statics
+
+std::map<std::string, std::string> ScriptEngineManager::engineParameters;
+
 /// Modules
 
 /// Logging module
@@ -258,6 +262,8 @@ void ScriptEngineManager::setupEmbedding()
 void ScriptEngineManager::createEngine()
 {
     Logging::log(Logging::DEBUG, "ScriptEngineManager::createEngine()\r\n");
+
+    engineParameters.clear();
 
     // Engine-specific creation (might want to generalize this, but just 1 line)
     engine = new V8Engine(); // new TraceMonkeyEngine();

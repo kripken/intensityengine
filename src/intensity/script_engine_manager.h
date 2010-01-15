@@ -38,6 +38,8 @@ class ScriptEngineManager
     static void setupCAPIModule(bool runTests);
 
 public:
+    static std::map<std::string, std::string> engineParameters; //!< Internal parameters, not modifiable by scripts
+
     static void createEngine();
     static void destroyEngine();
     static bool hasEngine();

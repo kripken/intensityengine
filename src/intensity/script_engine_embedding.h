@@ -892,6 +892,16 @@ V8_FUNC_ddd(__script__getMaterial, {
     V8_FUNC_s(__script__showInputDialog__, {
         IntensityGUI::showInputDialog("Script input", arg1);
     });
+
+    V8_FUNC_i(__script__setDefaultThirdpersonMode, {
+        // Only allow this to be done once
+        if (ScriptEngineManager::engineParameters.count("setDefaultThirdpersonMode") == 0)
+        {
+            ScriptEngineManager::engineParameters["setDefaultThirdpersonMode"] = "set";
+            thirdperson = arg1;
+        } else
+            Logging::log(Logging::WARNING, "Can only set default thirdperson mode once per map\r\n");
+    });
 #endif
 
 // Network

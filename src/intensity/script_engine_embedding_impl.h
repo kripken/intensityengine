@@ -25,6 +25,8 @@
 #define EMBED_CAPI_FUNC(scriptName, cName, num_params) \
     module->setProperty(scriptName, engine->createFunction((NativeFunction)cName, num_params));
 
+#define EMBED_CAPI_FUNC_STD(name, num) EMBED_CAPI_FUNC(#name, __script__##name, num);
+
 // Entity attribs
 
 EMBED_CAPI_FUNC("currTime", __script__currTime, 0);
@@ -219,6 +221,7 @@ EMBED_CAPI_FUNC("getMaterial", __script__getMaterial, 3);
 #ifdef CLIENT
     EMBED_CAPI_FUNC("showMessage", __script__showMessage__, 1);
     EMBED_CAPI_FUNC("showInputDialog", __script__showInputDialog__, 1);
+    EMBED_CAPI_FUNC_STD(setDefaultThirdpersonMode, 1);
 #endif
 
 // Network
@@ -243,8 +246,6 @@ EMBED_CAPI_FUNC("compile", __script__compile__, 2);
 EMBED_CAPI_FUNC("signalComponent", __script__signalComponent__, 2);
 
 // Models
-
-#define EMBED_CAPI_FUNC_STD(name, num) EMBED_CAPI_FUNC(#name, __script__##name, num);
 
 EMBED_CAPI_FUNC_STD(modelShadow, 1);
 EMBED_CAPI_FUNC_STD(modelCollide, 1);
