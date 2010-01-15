@@ -43,6 +43,9 @@ void force_quit() // INTENSITY - change quit to force_quit
     localdisconnect();
     writecfg();
     cleanup();
+
+    EXEC_PYTHON_FILE("intensity/quit.py"); // INTENSITY
+
     exit(EXIT_SUCCESS);
 }
 

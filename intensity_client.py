@@ -98,9 +98,6 @@ if get_config('System', 'console', '') == '1':
 log(logging.DEBUG, "Running main()")
 CModule.main()
 
-# Quit
-execfile( os.path.join(PYTHON_SCRIPT_DIR, "quit.py") )
-
 
 #
 #
