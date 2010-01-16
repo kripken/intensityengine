@@ -26,8 +26,6 @@
 #include <vector>
 #include <map>
 
-#include "python_wrap.h"
-
 #define MAX_ATTACHMENTS 20
 
 //! An entity in the scenario, something that can act or be acted upon. Note that most of the

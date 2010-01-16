@@ -5,6 +5,8 @@
 #define gamma __gamma
 #endif
 
+#include "python_wrap.h" // INTENSITY - must be first, as Python itself does some hacks
+
 #include <math.h>
 
 #ifdef __GNUC__

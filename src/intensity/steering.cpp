@@ -29,8 +29,6 @@
 // e.g., planning where to go, so long as they are not intensive and done
 // again and again on each frame.
 
-#include "math.h"
-
 #include "cube.h"
 #include "engine.h"
 

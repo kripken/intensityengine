@@ -10,7 +10,7 @@ endif(${WIN32})
 #message(STATUS "${BOOST_ROOT}")
 #set(Boost_LIBRARYDIR "${INTENSITY_DEP_PATH}/boost/lib")
 #set(CMAKE_PREFIX_PATH ${INTENSITY_DEP_PATH}/boost ${CMAKE_PREFIX_PATH})
-find_package(Boost 1.35.0 COMPONENTS python REQUIRED)
+#find_package(Boost 1.35.0 COMPONENTS python REQUIRED)
 
 find_package(OpenGL REQUIRED)
 
@@ -27,11 +27,15 @@ find_package(ZLIB REQUIRED)
 
 # Internal software sources
 
-include_directories(shared engine fpsgame intensity enet/include ${Boost_INCLUDE_DIRS} ${SDL_INCLUDE_DIR} ${SDLMIXER_INCLUDE_DIR} ${SDLIMAGE_INCLUDE_DIR} ${PYTHON_INCLUDE_PATH})
+include_directories(shared engine fpsgame intensity enet/include thirdparty/boost ${SDL_INCLUDE_DIR} ${SDLMIXER_INCLUDE_DIR} ${SDLIMAGE_INCLUDE_DIR} ${PYTHON_INCLUDE_PATH})
 link_directories(enet)
+link_directories(src/thirdparty/boost/libs/python)
 
 # Subdirs
 
+set(Boost_Python_Library boost_python)
+
+add_subdirectory(thirdparty)
 add_subdirectory(enet)
 add_subdirectory(server)
 add_subdirectory(client)
