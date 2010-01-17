@@ -44,9 +44,28 @@ for line in open(filename, 'r'):
         line = line.split(" ")
         command = line[0]
         num_quoted_params = 2
-        if command == 'setshader': command = 'Map.setShader'
-        if command == 'texture': command = 'Map.texture'
-        if command == 'setshaderparam':
+
+        COMMANDS = {
+            'setshader': 'Map.setShader',
+            'texture': 'Map.texture',
+            'fog': 'Map.fog',
+            'blurskylight': 'Map.blurSkylight',
+            'shadowmapambient': 'Map.shadowmapAmbient',
+            'waterfog': 'Map.waterFog',
+            'watercolour': 'Map.waterColor',
+            'texturereset': 'Map.textureReset',
+            'loadsky': 'Map.loadSky',
+            'spinsky': 'Map.spinSky',
+            'cloudlayer': 'Map.cloudLayer',
+            'cloudscrollx': 'Map.cloudScrollX',
+            'cloudscrolly': 'Map.cloudScrollY',
+            'cloudscale': 'Map.cloudScale',
+            'skytexture': 'Map.skyTexture',
+        }
+
+        if command in COMMANDS.keys():
+            command = COMMANDS[command]
+        elif command == 'setshaderparam':
             command = 'Map.setShaderParam'
             num_quoted_params = 1
         elif command == 'texlayer':

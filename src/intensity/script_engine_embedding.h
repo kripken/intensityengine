@@ -642,6 +642,106 @@ V8_FUNC_i(__script__fog, {
 #endif
 
 #ifdef CLIENT
+V8_FUNC_i(__script__waterFog, {
+    std::string command = "waterfog ";
+    command += Utility::toString(arg1);
+    execute(command.c_str());
+});
+#else
+V8_FUNC_i(__script__waterFog, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_iii(__script__waterColor, {
+    std::string command = "watercolour ";
+    command += Utility::toString(arg1) + " ";
+    command += Utility::toString(arg2) + " ";
+    command += Utility::toString(arg3) + " ";
+    execute(command.c_str());
+});
+#else
+V8_FUNC_iii(__script__waterColor, {
+    arg1 = arg1; arg2 = arg2; arg3 = arg3; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__spinSky, {
+    std::string command = "spinsky ";
+    command += Utility::toString(arg1);
+    execute(command.c_str());
+});
+#else
+V8_FUNC_d(__script__spinSky, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_s(__script__cloudLayer, {
+    std::string command = "cloudlayer ";
+    assert(Utility::validateRelativePath(arg1));
+    command += Utility::toString(arg1);
+    execute(command.c_str());
+});
+#else
+V8_FUNC_s(__script__cloudLayer, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+
+#ifdef CLIENT
+V8_FUNC_d(__script__cloudScrollX, {
+    std::string command = "cloudscrollx ";
+    command += Utility::toString(arg1);
+    execute(command.c_str());
+});
+#else
+V8_FUNC_d(__script__cloudScrollX, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__cloudScrollY, {
+    std::string command = "cloudscrolly ";
+    command += Utility::toString(arg1);
+    execute(command.c_str());
+});
+#else
+V8_FUNC_d(__script__cloudScrollY, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_d(__script__cloudScale, {
+    std::string command = "cloudscale ";
+    command += Utility::toString(arg1);
+    execute(command.c_str());
+});
+#else
+V8_FUNC_d(__script__cloudScale, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
+V8_FUNC_i(__script__skyTexture, {
+    std::string command = "skytexture ";
+    command += Utility::toString(arg1);
+    execute(command.c_str());
+});
+#else
+V8_FUNC_i(__script__skyTexture, {
+    arg1 = arg1; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
 V8_FUNC_i(__script__shadowmapAngle, {
     std::string command = "shadowmapangle ";
     command += Utility::toString(arg1);

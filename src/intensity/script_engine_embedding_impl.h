@@ -175,6 +175,14 @@ EMBED_CAPI_FUNC("loadSky", __script__loadSky, 1);
 
 EMBED_CAPI_FUNC("fogColor", __script__fogColor, 1);
 EMBED_CAPI_FUNC("fog", __script__fog, 1);
+EMBED_CAPI_FUNC_STD(waterFog, 1);
+EMBED_CAPI_FUNC_STD(waterColor, 3);
+EMBED_CAPI_FUNC_STD(spinSky, 1);
+EMBED_CAPI_FUNC_STD(cloudLayer, 1);
+EMBED_CAPI_FUNC_STD(cloudScrollX, 1);
+EMBED_CAPI_FUNC_STD(cloudScrollY, 1);
+EMBED_CAPI_FUNC_STD(cloudScale, 1);
+EMBED_CAPI_FUNC_STD(skyTexture, 1);
 EMBED_CAPI_FUNC("shadowmapAmbient", __script__shadowmapAmbient, 1);
 EMBED_CAPI_FUNC("shadowmapAngle", __script__shadowmapAngle, 1);
 EMBED_CAPI_FUNC("skylight", __script__skylight, 3);
