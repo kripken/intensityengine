@@ -61,6 +61,7 @@ for line in open(filename, 'r'):
             'cloudscrolly': 'Map.cloudScrollY',
             'cloudscale': 'Map.cloudScale',
             'skytexture': 'Map.skyTexture',
+            'texscroll': 'Map.texScroll',
         }
 
         if command in COMMANDS.keys():
