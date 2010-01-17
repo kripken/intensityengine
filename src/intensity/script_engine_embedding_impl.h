@@ -183,6 +183,7 @@ EMBED_CAPI_FUNC_STD(cloudScrollX, 1);
 EMBED_CAPI_FUNC_STD(cloudScrollY, 1);
 EMBED_CAPI_FUNC_STD(cloudScale, 1);
 EMBED_CAPI_FUNC_STD(skyTexture, 1);
+EMBED_CAPI_FUNC_STD(texScroll, 2);
 EMBED_CAPI_FUNC("shadowmapAmbient", __script__shadowmapAmbient, 1);
 EMBED_CAPI_FUNC("shadowmapAngle", __script__shadowmapAngle, 1);
 EMBED_CAPI_FUNC("skylight", __script__skylight, 3);

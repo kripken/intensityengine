@@ -742,6 +742,19 @@ V8_FUNC_i(__script__skyTexture, {
 #endif
 
 #ifdef CLIENT
+V8_FUNC_dd(__script__texScroll, {
+    std::string command = "texscroll ";
+    command += Utility::toString(arg1) + " ";
+    command += Utility::toString(arg2);
+    execute(command.c_str());
+});
+#else
+V8_FUNC_dd(__script__texScroll, {
+    arg1 = arg1; arg2 = arg2; // warning otherwise
+});
+#endif
+
+#ifdef CLIENT
 V8_FUNC_i(__script__shadowmapAngle, {
     std::string command = "shadowmapangle ";
     command += Utility::toString(arg1);

@@ -144,6 +144,16 @@ Map = {
     blurSkylight: CAPI.blurSkylight,
     ambient: CAPI.ambient,
 
+    waterFog: CAPI.waterFog,
+    waterColor: CAPI.waterColor,
+    spinSky: CAPI.spinSky,
+    cloudLayer: CAPI.cloudLayer,
+    cloudScrollX: CAPI.cloudScrollX,
+    cloudScrollY: CAPI.cloudScrollY,
+    cloudScale: CAPI.cloudScale,
+    skyTexture: CAPI.skyTexture,
+    texScroll: CAPI.texScroll,
+
     preloadSound: function(_name, volume) {
         volume = defaultValue(volume, 100);
         CAPI.preloadSound(_name, volume);
