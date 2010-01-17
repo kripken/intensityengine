@@ -21,7 +21,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     add_definitions (-DLINUX) # For now...
     set(CMAKE_CXX_FLAGS "-g -O1 -Wall")
     # Workarounds:
-    include_directories(/usr/X11/include)
+#    include_directories(/usr/X11/include)
     link_directories(src/thirdparty/v8)
 else(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     message(STATUS "...Windows...")

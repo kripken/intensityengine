@@ -27,7 +27,7 @@ find_package(ZLIB REQUIRED)
 
 # Internal software sources
 
-include_directories(shared engine fpsgame intensity enet/include thirdparty/boost ${SDL_INCLUDE_DIR} ${SDLMIXER_INCLUDE_DIR} ${SDLIMAGE_INCLUDE_DIR} ${PYTHON_INCLUDE_PATH})
+include_directories(shared engine fpsgame intensity enet/include thirdparty/boost include ${SDL_INCLUDE_DIR} ${SDLMIXER_INCLUDE_DIR} ${SDLIMAGE_INCLUDE_DIR} ${PYTHON_INCLUDE_PATH})
 link_directories(enet)
 link_directories(src/thirdparty/boost/libs/python)
 
