@@ -86,6 +86,7 @@ PYTHON_SCRIPT_DIR = os.path.join("src", "python", "intensity")
 HOME_SUBDIR = None
 
 def set_home_dir(home_dir):
+    print "Set home dir:", home_dir
     global HOME_SUBDIR
     HOME_SUBDIR = home_dir
 

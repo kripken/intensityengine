@@ -50,16 +50,26 @@ import __main__
 print "Setting home dir"
 
 home_dir = None
+config_filename = None
 try:
     home_dir = sys.argv[1] if sys.argv[1][0] != '-' else None
 except IndexError:
     print "Note: No home directory specified, so using default (which is tied to this operating-system level user)"
 if home_dir is not None:
+    if home_dir[-4:] == '.cfg':
+        # A home dir ending in cfg is HOME_DIR/CFG_NAME.cfg
+        # This lets us use the same home dir for the client and server, with a different cfg for each
+        config_filename = home_dir.split(os.path.sep)[-1]
+        home_dir = os.path.sep.join(home_dir.split(os.path.sep)[:-1])
     set_home_dir(home_dir)
+    if config_filename is not None:
+        config_filename = os.path.join( get_home_subdir(), config_filename )
 
 print "Initializing config"
 
-config_filename = os.path.join( get_home_subdir(), 'settings.cfg' )
+if config_filename is None:
+    config_filename = os.path.join( get_home_subdir(), 'settings.cfg' )
+
 # Allow the server to run in the client home dir, to share the assets. This is done
 # by using settings_server.cfg instead of settings.cfg (which the client uses).
 # This option is enabled if you do NOT provide a home dir, i.e., if you use the
