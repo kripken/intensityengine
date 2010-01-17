@@ -18,11 +18,12 @@ else(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     message(STATUS "...OS X...")
-    add_definitions (-DLINUX) # For now...
+    add_definitions (-DLINUX) # For now... should really rename it to UNIX though
     set(CMAKE_CXX_FLAGS "-g -O1 -Wall")
     # Workarounds:
 #    include_directories(/usr/X11/include)
     link_directories(src/thirdparty/v8)
+    set(CMAKE_OSX_ARCHITECTURES "i386")
 else(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     message(STATUS "...Windows...")
     add_definitions (-DWINDOWS)

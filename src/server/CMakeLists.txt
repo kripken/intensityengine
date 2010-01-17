@@ -4,6 +4,7 @@ endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 include_directories(../thirdparty/v8/include)
 link_directories(../../../src/thirdparty/v8)
+link_directories(../../src/thirdparty/v8)
 
 #add_definitions(-DUSE_JPEG2000)
 
