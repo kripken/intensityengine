@@ -85,6 +85,9 @@ World = WorldClass()
 # Parses a URL to an activity, finding the activity ID, and then contacting the master to
 # find the map asset id as well, for that activity
 def autodiscover_activity(activity_id):
+    if get_config('Network', 'master_server', '') == '':
+        return '', ''
+
     if '/' in activity_id:
         activity_id = re.search('/(\w+)/$', activity_id).group(1)
 
@@ -124,15 +127,19 @@ def set_map(activity_id, map_asset_id):
     set_curr_activity_id(activity_id)
     set_curr_map_asset_id(map_asset_id)
 
-    try:
-        asset_info = AssetManager.acquire(map_asset_id)
-    except AssetRetrievalError, e:
-        log(logging.ERROR, "Error in retrieving assets for map: %s" % str(e))
-        if Global.CLIENT:
-            CModule.show_message("Error", "Could not retrieve assets for the map: " + str(e))
-            CModule.disconnect()
-            CModule.logout()
-        return False
+    if get_config('Network', 'master_server', '') != '':
+        try:
+            asset_info = AssetManager.acquire(map_asset_id)
+        except AssetRetrievalError, e:
+            log(logging.ERROR, "Error in retrieving assets for map: %s" % str(e))
+            if Global.CLIENT:
+                CModule.show_message("Error", "Could not retrieve assets for the map: " + str(e))
+                CModule.disconnect()
+                CModule.logout()
+            return False
+    else:
+        # Working entirely locally - use config location and run from there
+        asset_info = AssetInfo('xyz', get_config('Activity', 'force_location', '?'), '?', 'NONE', [], 'b')
 
     World.asset_info = asset_info
 

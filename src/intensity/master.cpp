@@ -39,6 +39,7 @@ SVAR(true_username, "");  // Has "@", can be sent to server to login
 SVAR(entered_password, "");
 SVARP(hashed_password, "");
 
+VAR(have_master, 0, 1, 1);
 VAR(logged_into_master, 0, 0, 1);
 
 SVAR(error_message, ""); // TODO: Move

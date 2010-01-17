@@ -64,6 +64,10 @@ def get_redirect_url(response):
 ## @param session A MasterSession object containing our session info. We use this
 ##                to send the session info, which many/all requests need.
 def contact_master(request, params={}, POST=False, accept_redirect=False):
+    if get_config('Network', 'master_server', '') == '':
+        log(logging.DEBUG, 'Request to master ignored, as have no master: %s' % request)
+        return {}
+
     master_server = get_master_server()
 
     # Parse params into httplib format

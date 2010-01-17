@@ -91,7 +91,7 @@ def update_master(params={}, act=True):
         # This update has been like a login - save our info
         get_master_session().set_info(response['instance_id'], response['session_id'])
 
-    forced = get_config('Activity', 'force_activity_id', '') != '' or get_config('Activity', 'force_map_asset_id', '') != ''
+    forced = get_config('Activity', 'force_activity_id', '') != '' or get_config('Activity', 'force_map_asset_id', '') != '' or get_config('Activity', 'force_location', '') != ''
 
     if InstanceStatus.in_standby:
         log(logging.WARNING, "In standby mode, not even considering loading a map")
