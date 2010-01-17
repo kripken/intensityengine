@@ -281,16 +281,17 @@ def upload_asset_by_location(location):
 
 
 def upload_map():
-    try:
-        upload_asset(
-            get_curr_map_asset_id(),
-            backup_postfix = '.js',
-            num_backups = 2, # We already backed up the ogz and entities beforehand
-            num_backups_to_keep = 3
-        )
-    except Exception, e:
-        CModule.show_message("Error", "Could not upload the map to the asset server: " + str(e))
-        return
+    if get_config('Network', 'master_server', '') != '':
+        try:
+            upload_asset(
+                get_curr_map_asset_id(),
+                backup_postfix = '.js',
+                num_backups = 2, # We already backed up the ogz and entities beforehand
+                num_backups_to_keep = 3
+            )
+        except Exception, e:
+            CModule.show_message("Error", "Could not upload the map to the asset server: " + str(e))
+            return
 
     # Notify server
     MessageSystem.send(CModule.RestartMap)
