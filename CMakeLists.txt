@@ -15,6 +15,15 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     add_definitions (-DLINUX)
     set(CMAKE_CXX_FLAGS "-g -O1 -Wall -Werror")
 else(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    message(STATUS "...OS X...")
+    add_definitions (-DLINUX) # For now...
+    set(CMAKE_CXX_FLAGS "-g -O1 -Wall")
+    # Workarounds:
+    include_directories(/usr/X11/include)
+    link_directories(src/thirdparty/v8)
+else(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     message(STATUS "...Windows...")
     add_definitions (-DWINDOWS)
     set(CMAKE_CXX_FLAGS "/DWIN32 /O2 /EHsc")
@@ -30,6 +39,8 @@ else(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     file(TO_CMAKE_PATH "C:\\Program Files\\Microsoft Visual Studio 9.0\\VC" PLATFORM_SDK_B)
     include_directories(${PLATFORM_SDK_B}/Include)
     message(STATUS "Set up SDKs at: ${PLATFORM_SDK_A};${PLATFORM_SDK_B}")
+endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 add_subdirectory(src)
