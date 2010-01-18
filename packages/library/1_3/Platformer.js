@@ -48,7 +48,7 @@ Platformer = {
         platformPosition: new StateString({ clientSet: true }),
 
         //! The axis for the camera: axis and a distance
-        platformCamera: new StateJSON({ clientSet: true }),
+        platformCameraAxis: new StateString({ clientSet: true }),
 
         //! Direction the player is facing, in the platform axis : left or right
         getPlatformDirection: function() {
@@ -62,15 +62,13 @@ Platformer = {
         init: function() {
             this.platformAxis = '+x';
             this.platformPosition = 512;
-            this.platformCamera = {
-                axis: '+y',
-                distance: 100,
-            };
+            this.platformCameraAxis = '+y';
 
             this.movementSpeed = 75;
         },
 
         clientActivate: function() {
+            this.platformCameraDistance = 100;
             this.setPlatformDirection(1);
         },
 
@@ -95,7 +93,7 @@ Platformer = {
                 var orientation = Platformer.vector3FromAxis(this.platformAxis).mul(this.getPlatformDirection()).toYawPitch();
                 this.yaw = orientation.yaw;
 
-                var cameraPosition = this.position.copy().add(Platformer.vector3FromAxis(this.platformCamera.axis).mul(this.platformCamera.distance));
+                var cameraPosition = this.position.copy().add(Platformer.vector3FromAxis(this.platformCameraAxis).mul(this.platformCameraDistance));
                 cameraPosition.z += this.radius*3;
                 var direction = this.position.subNew(cameraPosition);
                 orientation = direction.toYawPitch();
@@ -103,17 +101,6 @@ Platformer = {
                     cameraPosition.x, cameraPosition.y, cameraPosition.z, orientation.yaw, orientation.pitch, 0
                 );
             }
-        },
-
-        isOnFloor: function() {
-            if (floorDistance(this.position, 1024) < 1) return true;
-log(ERROR, "wha?" + this.velocity + ',' + this.falling);
-            if (this.velocity.z < -1 || this.falling.z < -1) return false;
-            var axis = Platformer.vector3FromAxis(this.platformAxis).mul(this.radius);
-log(ERROR, axis);
-            if (floorDistance(this.position.copy().add(axis), 1024) < 1) return true;
-            if (floorDistance(this.position.copy().add(axis.mul(-1)), 1024) < 1) return true;
-            return false;
         },
     },
 
@@ -130,7 +117,7 @@ log(ERROR, axis);
         if (isPlayerEditing(getPlayerEntity())) return this._super.apply(this, arguments);
 
         var player = getPlayerEntity();
-        if (Platformer.vector3FromAxis(player.platformCamera.axis).crossProduct(Platformer.vector3FromAxis(player.platformAxis)).z < 0)
+        if (Platformer.vector3FromAxis(player.platformCameraAxis).crossProduct(Platformer.vector3FromAxis(player.platformAxis)).z < 0)
             strafe = -strafe;
 
         var old = player.getPlatformDirection(strafe);
@@ -145,11 +132,15 @@ log(ERROR, axis);
 //        }
         Character.plugins.jumpWhilePressingSpace.performJump(down); 
     },
+
+    clientClick: function(button, down, position) {
+        if (down && button === 3) {
+            var player = getPlayerEntity();
+            player.platformCameraDistance *= 1.25;
+            if (player.platformCameraDistance > 200) player.platformCameraDistance = 50;
+        }
+    },
 };
-
-// mouse wheel zooming out etc.
-
-// jump while pressing
 
 // fov control
 

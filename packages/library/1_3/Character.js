@@ -426,7 +426,7 @@ Character.plugins = {
 
     jumpWhilePressingSpace: {
         performJump: function(down) {
-            getPlayerEntity().isPressingJumpSeconds = down ? 0.25 : -1;
+            getPlayerEntity().isPressingJumpSeconds = (down && getPlayerEntity().isOnFloor()) ? 0.25 : -1;
         },
 
         plugin: {
@@ -439,6 +439,17 @@ Character.plugins = {
                     this.velocity.z += (1500+World.gravity)*seconds*this.isPressingJumpSeconds/0.25;
                     this.isPressingJumpSeconds -= seconds;
                 }
+            },
+
+            isOnFloor: function() {
+                if (floorDistance(this.position, 1024) < 1) return true;
+
+                if (this.velocity.z < -1 || this.falling.z < -1) return false;
+                var axis = Platformer.vector3FromAxis(this.platformAxis).mul(this.radius);
+
+                if (floorDistance(this.position.copy().add(axis), 1024) < 1) return true;
+                if (floorDistance(this.position.copy().add(axis.mul(-1)), 1024) < 1) return true;
+                return false;
             },
         },
     },
