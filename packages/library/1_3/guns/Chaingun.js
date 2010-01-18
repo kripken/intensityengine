@@ -71,6 +71,15 @@ Chaingun = Gun.extend({
             targetEntity = temp.entity;
         }
 
+        // Check for hitting the scenery from the gun source
+        direction = target.subNew(visualOrigin);
+        var dist = direction.magnitude();
+        var target2 = World.getRayCollisionWorld(visualOrigin, direction.normalize(), dist);
+        if (target2.isCloseTo(visualOrigin, dist-2)) {
+            target = target2;
+            targetEntity = null;
+        }
+
         if (targetEntity && targetEntity.sufferDamage) {
             targetEntity.sufferDamage({
                 origin: target,
