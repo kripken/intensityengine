@@ -77,10 +77,19 @@ Platformer = {
         clientAct: function() {
             if (this === getPlayerEntity() && !isPlayerEditing(this)) {
                 // Affix to the position
+                var position = this.position.copy();
                 if (this.platformAxis[1] == 'x') {
-                    this.position.y = this.platformPosition;
+                    if (Math.abs(position.y - this.platformPosition) > 0.5) {
+                        position.y = this.platformPosition;
+                    } else position = null;
                 } else {
-                    this.position.x = this.platformPosition;
+                    if (Math.abs(position.x - this.platformPosition) > 0.5) {
+                        position.x = this.platformPosition;
+                    } else position = null;
+                }
+                if (position !== null) {
+                    this.position = position;
+                    log(DEBUG, "Fixed platform position");
                 }
 
                 var orientation = Platformer.vector3FromAxis(this.platformAxis).mul(this.getPlatformDirection()).toYawPitch();
@@ -136,4 +145,10 @@ log(ERROR, axis);
         }
     },
 };
+
+// mouse wheel zooming out etc.
+
+// jump while pressing
+
+// fov control
 
