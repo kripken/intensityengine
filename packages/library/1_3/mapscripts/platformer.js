@@ -57,14 +57,17 @@ ApplicationManager.setApplicationClass(Application.extend({
         return "GamePlayer";
     },
 
-    // Replace this with appropriate behaviour for when a player falls of the map
-    clientOnEntityOffMap: function(entity) {
-        entity.position = [600,600,600];
-    },
+    clientOnEntityOffMap: Health.dieIfOffMap,
 
     getScoreboardText: GameManager.getScoreboardText,
 
     handleTextMessage: Chat.handleTextMessage,
+
+    performMovement: Platformer.performMovement,
+    performStrafe: Platformer.performStrafe,
+    performJump: Platformer.performJump,
+
+    getCrosshair: function() { return '' },
 }));
 
 // Setup game
