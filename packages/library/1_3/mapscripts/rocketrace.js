@@ -44,6 +44,7 @@ GamePlayer = registerEntityClass(
             Health.plugin,
             GameManager.playerPlugin,
             Chat.playerPlugin,
+//            Chat.extraPlugins.skype,
             WorldSequences.plugins.player,
             RacingMode.playerPlugin,
             {
@@ -177,7 +178,6 @@ ApplicationManager.setApplicationClass(Application.extend({
 GameManager.setup([
     GameManager.managerPlugins.messages,
     GameManager.managerPlugins.eventList,
-//    Chat.extraPlugins.skypeManager,
     RacingMode.managerPlugin,
     {
         clientActivate: function() {
@@ -220,4 +220,10 @@ if (Global.SERVER) { // Run this only on the server - not the clients
 }
 
 Vehicles.AIR_FRICTION = 0.9;
+
+if (Global.CLIENT) {
+    if (CAPI.setDefaultThirdpersonMode) {
+        CAPI.setDefaultThirdpersonMode(0);
+    }
+}
 
