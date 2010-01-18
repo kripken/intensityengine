@@ -128,6 +128,19 @@ Some specific comments:
         http://code.google.com/p/chromium/issues/detail?id=289
 
 
+OS X
+====
+
+The following works on Snow Leopard 10.6 (thanks to abs1nth!):
+
+    * Install SDL.framework, SDL_mixer.frameworks and SDL_image.framework in /Library/Frameworks
+    * Install scons and cmake (probably using MacPorts or Fink)
+    * Follow the main part of the Linux build instructions above, that is,
+          git clone git://github.com/kripken/intensityengine.git
+          Run 'scons' in ./src/thirdparty/v8
+          in ./cbuild run 'cmake ..' and then 'make' 
+    * The built file "Intensity_CClient" ends up in ./src/client/ . Either copy it to "./cbuild/src/client/" or start it directly.
+
 
 Windows
 =======
