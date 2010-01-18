@@ -425,20 +425,21 @@ Character.plugins = {
     },
 
     jumpWhilePressingSpace: {
-        application: {
-            performJump: function(down) {
-                getPlayerEntity().isPressingJump = down;
+        performJump: function(down) {
+            getPlayerEntity().isPressingJumpSeconds = down ? 0.25 : -1;
+        },
+
+        plugin: {
+            clientActivate: function() {
+                this.isPressingJumpSeconds = -1;
             },
-        },
 
-        clientActivate: function() {
-            this.isPressingJump = false;
-        },
-
-        clientAct: function(seconds) {
-            if (this.isPressingJump) {
-                this.velocity.z += (1000+World.gravity)*seconds;
-            }
+            clientAct: function(seconds) {
+                if (this.isPressingJumpSeconds > 0) {
+                    this.velocity.z += (1500+World.gravity)*seconds*this.isPressingJumpSeconds/0.25;
+                    this.isPressingJumpSeconds -= seconds;
+                }
+            },
         },
     },
 

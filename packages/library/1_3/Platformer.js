@@ -120,7 +120,7 @@ log(ERROR, axis);
     performMovement: function(move, down) {
         if (isPlayerEditing(getPlayerEntity())) return this._super.apply(this, arguments);
 
-        if (move === 1) this.performJump(down);
+        this.performJump(move === 1 && down);
     },
 
     //! Called when the left/right buttons are pressed. By default we do a normal strafe
@@ -139,10 +139,11 @@ log(ERROR, axis);
     },
 
     performJump: function(down) {
-        var player = getPlayerEntity();
-        if (down && player.isOnFloor()) {
-            player.velocity.z += 200;
-        }
+//        var player = getPlayerEntity();
+//        if (down && player.isOnFloor()) {
+//            player.velocity.z += 200;
+//        }
+        Character.plugins.jumpWhilePressingSpace.performJump(down); 
     },
 };
 

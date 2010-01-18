@@ -36,6 +36,7 @@ GamePlayer = registerEntityClass(
             GameManager.playerPlugin,
             Chat.playerPlugin,
             Platformer.plugin,
+            Character.plugins.jumpWhilePressingSpace.plugin,
             {
                 _class: "GamePlayer",
 
