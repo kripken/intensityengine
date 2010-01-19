@@ -68,9 +68,10 @@ Platformer = {
         },
 
         clientActivate: function() {
-            this.platformCameraDistance = 100;
+            this.platformCameraDistance = 150;
             this.lastCameraPosition = null;
             this.platformYaw = -1;
+            this.platformFov = 50;
             this.platformMove = 0;
             this.setPlatformDirection(1);
         },
@@ -91,7 +92,7 @@ Platformer = {
                     } else position = null;
                 }
                 if (position !== null) {
-                    this.position = position;
+                    this.position = position.lerp(this.position, seconds*5);
                     this.velocity = velocity;
                     log(WARNING, "Fixed platform position " + Global.time);
                 }
@@ -116,9 +117,7 @@ Platformer = {
                 cameraPosition.z += this.radius*3;
                 var direction = this.position.subNew(cameraPosition);
                 orientation = direction.toYawPitch();
-                CAPI.forceCamera(
-                    cameraPosition.x, cameraPosition.y, cameraPosition.z, orientation.yaw, orientation.pitch, 0
-                );
+                UserInterface.forceCamera(cameraPosition, orientation.yaw, orientation.pitch, 0, this.platformFov);
             }
         },
     },
@@ -142,14 +141,6 @@ Platformer = {
         var old = player.getPlatformDirection(strafe);
         if (strafe !== 0) player.setPlatformDirection(strafe);
         player.platformMove = down;
-    },
-
-    performJump: function(down) {
-//        var player = getPlayerEntity();
-//        if (down && player.isOnFloor()) {
-//            player.velocity.z += 200;
-//        }
-        Character.plugins.jumpWhilePressingSpace.performJump(down); 
     },
 };
 

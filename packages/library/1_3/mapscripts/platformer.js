@@ -66,7 +66,7 @@ ApplicationManager.setApplicationClass(Application.extend({
 
     performMovement: Platformer.performMovement,
     performStrafe: Platformer.performStrafe,
-    performJump: Platformer.performJump,
+    performJump: Character.plugins.jumpWhilePressingSpace.performJump,
 
 //    clientClick: Platformer.clientClick,
 

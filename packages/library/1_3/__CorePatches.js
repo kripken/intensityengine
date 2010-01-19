@@ -184,3 +184,12 @@ Random = {
     },
 };
 
+
+Tools.replaceFunction('CAPI.forceCamera', function(x, y, z, yaw, pitch, roll, fov) {
+    arguments.callee._super(x, y, z, yaw, pitch, roll, defaultValue(fov, -1));
+}, false);
+
+UserInterface.forceCamera = function(position, yaw, pitch, roll, fov) {
+    CAPI.forceCamera(position.x, position.y, position.z, yaw, pitch, roll, defaultValue(fov, -1));
+};
+

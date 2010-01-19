@@ -28,11 +28,11 @@ Tools = {
     //!     Tools.replaceFunction('Map.texture', function() { ... },);
     replaceFunction: function(originalName, replacement, callOriginal, _this) {
         callOriginal = defaultValue(callOriginal, true);
-        var original = eval(originalName);
+        replacement._super = eval(originalName);
         function wrapper() {
             _this = defaultValue(_this, this); // Use global if not otherwise specified
             if (callOriginal) {
-                original.apply(_this, arguments);
+                replacement._super.apply(_this, arguments);
             }
             replacement.apply(_this, arguments);
         }
