@@ -97,8 +97,9 @@ Platformer = {
                     log(WARNING, "Fixed platform position " + Global.time);
                 }
 
+                var platformAxis = Platformer.vector3FromAxis(this.platformAxis);
                 this.platformYaw = normalizeAngle(
-                    Platformer.vector3FromAxis(this.platformAxis).mul(this.getPlatformDirection()).toYawPitch().yaw,
+                    platformAxis.mul(this.getPlatformDirection()).toYawPitch().yaw,
                     this.yaw
                 );
                 this.yaw = magnet(lerp(this.yaw, this.platformYaw, 1-seconds*15), this.platformYaw, 45);
@@ -109,12 +110,13 @@ Platformer = {
                     this.platformCameraDistance = lerp(this.platformCameraDistance, Global.cameraDistance*3, 1-seconds*5);
                 }
 
-                var cameraPosition = this.position.copy().add(Platformer.vector3FromAxis(this.platformCameraAxis).mul(this.platformCameraDistance));
+                var cameraPosition = platformAxis.mul(-this.platformCameraDistance*0.15);
                 if (this.lastCameraPosition === null) this.lastCameraPosition = cameraPosition;
-                this.lastCameraPosition.z = cameraPosition.z;
-                cameraPosition = this.lastCameraPosition.lerp(cameraPosition, 1-seconds*7.5);
+                cameraPosition = this.lastCameraPosition.lerp(cameraPosition, 1-seconds*0.5);
                 this.lastCameraPosition = cameraPosition.copy();
+                cameraPosition.add(this.position);
                 cameraPosition.z += this.radius*3;
+                cameraPosition.add(Platformer.vector3FromAxis(this.platformCameraAxis).mul(this.platformCameraDistance));
                 var direction = this.position.subNew(cameraPosition);
                 orientation = direction.toYawPitch();
                 UserInterface.forceCamera(cameraPosition, orientation.yaw, orientation.pitch, 0, this.platformFov);
@@ -141,6 +143,33 @@ Platformer = {
         var old = player.getPlatformDirection(strafe);
         if (strafe !== 0) player.setPlatformDirection(strafe);
         player.platformMove = down;
+    },
+
+    mapelements: {
+        AxisSwitcher: registerEntityClass(bakePlugins(AreaTrigger, [{
+            _class: 'AxisSwitcher',
+
+            platformAxis: new StateString(),
+            platformCameraAxis: new StateString(),
+
+            init: function() {
+                this.platformAxis = '+x';
+                this.platformCameraAxis = '+y';
+            },
+
+            clientOnCollision: function(collider) {
+                if (collider !== getPlayerEntity()) return;
+                if (collider.platformAxis !== this.platformAxis) {
+                    collider.platformAxis = this.platformAxis;
+                    collider.platformCameraAxis = this.platformCameraAxis;
+                    if (this.platformAxis[1] === 'x') {
+                        collider.platformPosition = this.position.x;
+                    } else {
+                        collider.platformPosition = this.position.y;
+                    }
+                }
+            },
+        }])),
     },
 };
 
