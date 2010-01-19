@@ -35,15 +35,13 @@ WorldAreas = {
                 this.worldArea = {
                     colliding: false,
                     action: null,
-                    clientClick: null,
-                    actionKey: null,
                 };
             },
 
             clientOnCollision: function(entity) {
                 if (entity !== getPlayerEntity()) return;
 
-                this.worldArea.colliding = true;
+                this.worldArea.collidingDelay = 0.5; // Must be at least the span between collision checks!
 
                 if (!this.worldArea.action) {
                     this.worldArea.action = new WorldAreas.InputCaptureAction();
@@ -64,9 +62,9 @@ WorldAreas = {
     },
 
     Action: Action.extend({
-        doExecute: function() {
-            var ret = !this.actor.worldArea.colliding;
-            this.actor.worldArea.colliding = false; // Reset to false, unless a collision occurs and sets to true
+        doExecute: function(seconds) {
+            this.actor.worldArea.collidingDelay -= seconds; // When collisions occur they refresh this
+            var ret = this.actor.worldArea.collidingDelay <= 0;
             if (!ret) {
                 this.actor.emit('worldAreaActive')
             }
@@ -83,8 +81,8 @@ WorldAreas = {
 
 WorldAreas.InputCaptureAction = WorldAreas.Action.extend(InputCaptureActionPlugin).extend({
     doStart: function() {
-        this.clientClick = this.actor.worldArea.clientClick;
-        this.actionKey = this.actor.worldArea.actionKey;
+        this.clientClick = permanentBind(this.actor.clientClick, this.actor);
+        this.actionKey = permanentBind(this.actor.actionKey, this.actor);
 
         this._super();
     },

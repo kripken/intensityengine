@@ -89,3 +89,9 @@ function magnet(value, otherValue, radius) {
     return Math.abs(value - otherValue) <= radius ? otherValue : value;
 }
 
+function permanentBind(func, self) {
+    return function() {
+        func.apply(self, arguments);
+    };
+}
+

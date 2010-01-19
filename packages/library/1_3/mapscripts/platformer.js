@@ -14,7 +14,7 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/Platformer');
 
 Library.include('library/' + Global.LIBRARY_VERSION + '/MapDefaults');
 
-Library.include('yo_frankie/');
+//Library.include('yo_frankie/');
 Library.include('textures/gk/swarm/');
 
 // Map settings
@@ -71,7 +71,7 @@ ApplicationManager.setApplicationClass(Application.extend({
 
 //    clientClick: Platformer.clientClick,
 
-    getCrosshair: function() { return '' },
+    getCrosshair: function() { return isPlayerEditing(getPlayerEntity()) ? "data/crosshair.png" : '' },
 }));
 
 // Setup game

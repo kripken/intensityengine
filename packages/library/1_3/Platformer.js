@@ -23,6 +23,8 @@
  */
 
 
+Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/WorldAreas');
+
 //! Allows '2D' platform games, i.e., games inherently 2D in gameplay but
 //! shown in nice 3D.
 Platformer = {
@@ -69,7 +71,9 @@ Platformer = {
 
         clientActivate: function() {
             this.platformCameraDistance = 150;
+            this.platformCameraSmoothing = false;
             this.lastCameraPosition = null;
+            this.lastCameraSmoothPosition = null;
             this.platformYaw = -1;
             this.platformFov = 50;
             this.platformMove = 0;
@@ -117,6 +121,15 @@ Platformer = {
                 cameraPosition.add(this.center);
                 cameraPosition.z += this.radius*this.platformCameraDistance*0.04;
                 cameraPosition.add(Platformer.vector3FromAxis(this.platformCameraAxis).mul(this.platformCameraDistance));
+
+                if (this.platformCameraSmoothing) {
+                    if (this.lastCameraSmoothPosition.isCloseTo(cameraPosition, 1)) {
+                        this.platformCameraSmoothing = false;
+                    }
+                    cameraPosition = this.lastCameraSmoothPosition.lerp(cameraPosition, 1-seconds*0.5);
+                }
+                this.lastCameraSmoothPosition = cameraPosition.copy();
+
                 var direction = this.center.subNew(cameraPosition);
                 orientation = direction.toYawPitch();
                 cameraPosition.z += this.radius*this.platformCameraDistance*0.02;
@@ -147,28 +160,40 @@ Platformer = {
     },
 
     mapelements: {
-        AxisSwitcher: registerEntityClass(bakePlugins(AreaTrigger, [{
+        AxisSwitcher: registerEntityClass(bakePlugins(AreaTrigger, [WorldAreas.plugins.Core, {
             _class: 'AxisSwitcher',
 
-            platformAxis: new StateString(),
-            platformCameraAxis: new StateString(),
+            platformAxises: new StateArrayString(),
+            platformCameraAxises: new StateArrayString(),
 
             init: function() {
-                this.platformAxis = '+x';
-                this.platformCameraAxis = '+y';
+                this.platformAxises = ['+x','+y'];
+                this.platformCameraAxises = ['+y','-x'];
             },
 
-            clientOnCollision: function(collider) {
-                if (collider !== getPlayerEntity()) return;
-                if (collider.platformAxis !== this.platformAxis) {
-                    collider.platformAxis = this.platformAxis;
-                    collider.platformCameraAxis = this.platformCameraAxis;
-                    if (this.platformAxis[1] === 'x') {
-                        collider.platformPosition = this.position.x;
-                    } else {
-                        collider.platformPosition = this.position.y;
+            clientClick: function(button, down) {
+                if (down) this.flipAxes();
+            },
+
+            actionKey: function(index, down) {
+                if (down) this.flipAxes();
+            },
+
+            flipAxes: function() {
+                var player = getPlayerEntity();
+
+                for (var i = 0; i < this.platformAxises.length; i++) {
+                    var axis = this.platformAxises.get(i);
+                    if (player.platformAxis !== axis) {
+                        player.platformAxis = axis;
+                        player.platformPosition = (axis[1] === 'x') ? this.position.y : this.position.x;
+                        player.platformCameraAxis = this.platformCameraAxises.get(i);
+                        player.platformCameraSmoothing = true;
+                        return;
                     }
                 }
+
+                log(ERROR, "Did not find player axis to flip, " + player.platformAxis);
             },
         }])),
     },
