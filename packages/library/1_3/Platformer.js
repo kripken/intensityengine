@@ -70,30 +70,39 @@ Platformer = {
         clientActivate: function() {
             this.platformCameraDistance = 100;
             this.lastCameraPosition = null;
+            this.platformYaw = -1;
+            this.platformMove = 0;
             this.setPlatformDirection(1);
         },
 
         clientAct: function(seconds) {
             if (this === getPlayerEntity() && !isPlayerEditing(this)) {
                 // Affix to the position
-                var position = this.position.copy();
+                var position = this.position.copy(), velocity = this.velocity.copy();
                 if (this.platformAxis[1] == 'x') {
                     if (Math.abs(position.y - this.platformPosition) > 0.5) {
                         position.y = this.platformPosition;
+                        velocity.y = 0;
                     } else position = null;
                 } else {
                     if (Math.abs(position.x - this.platformPosition) > 0.5) {
                         position.x = this.platformPosition;
+                        velocity.x = 0;
                     } else position = null;
                 }
                 if (position !== null) {
                     this.position = position;
-                    log(DEBUG, "Fixed platform position");
+                    this.velocity = velocity;
+                    log(WARNING, "Fixed platform position " + Global.time);
                 }
 
-                var orientation = Platformer.vector3FromAxis(this.platformAxis).mul(this.getPlatformDirection()).toYawPitch();
-                this.yaw = orientation.yaw;
+                this.platformYaw = normalizeAngle(
+                    Platformer.vector3FromAxis(this.platformAxis).mul(this.getPlatformDirection()).toYawPitch().yaw,
+                    this.yaw
+                );
+                this.yaw = magnet(lerp(this.yaw, this.platformYaw, 1-seconds*15), this.platformYaw, 45);
                 this.pitch = 0;
+                this.move = this.platformMove && (Math.abs(this.platformYaw - this.yaw) < 1);
 
                 if (Global.cameraDistance) {
                     this.platformCameraDistance = lerp(this.platformCameraDistance, Global.cameraDistance, 1-seconds*5);
@@ -132,7 +141,7 @@ Platformer = {
 
         var old = player.getPlatformDirection(strafe);
         if (strafe !== 0) player.setPlatformDirection(strafe);
-        getPlayerEntity().move = down;
+        player.platformMove = down;
     },
 
     performJump: function(down) {

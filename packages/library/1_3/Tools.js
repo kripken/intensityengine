@@ -85,3 +85,7 @@ function lerp(value, otherValue, alpha) {
     return alpha*value + (1-alpha)*otherValue;
 }
 
+function magnet(value, otherValue, radius) {
+    return Math.abs(value - otherValue) <= radius ? otherValue : value;
+}
+
