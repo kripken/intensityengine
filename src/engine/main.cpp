@@ -532,6 +532,8 @@ void setScreenScriptValues() // INTENSITY: New function
         ScriptEngineManager::getGlobal()->getProperty("Global")->setProperty("screenWidth", scr_w);
         ScriptEngineManager::getGlobal()->getProperty("Global")->setProperty("screenHeight", scr_h);
         ScriptEngineManager::getGlobal()->getProperty("Global")->setProperty("fontHeight", FONTH);
+        ScriptEngineManager::getGlobal()->getProperty("Global")->setProperty("cameraDistance", getvar("cam_dist"));
+        ScriptEngineManager::getGlobal()->getProperty("Global")->setProperty("cameraHeight", getvar("cameraheight"));
     }
 }
 

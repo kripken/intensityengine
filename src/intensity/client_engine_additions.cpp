@@ -50,6 +50,9 @@ void CameraControl::incrementCameraDist(int inc_dir)
     Logging::log(Logging::DEBUG, "changing camera increment: %d\r\n", inc_dir);
 
     cam_dist += (inc_dir * CameraControl::cameraMoveDist);
+
+    if (ScriptEngineManager::hasEngine())
+        ScriptEngineManager::getGlobal()->getProperty("Global")->setProperty("cameraDistance", cam_dist);
 }
 
 void inc_camera()
@@ -124,6 +127,14 @@ void CameraControl::positionCamera(physent* camera1)
         useForcedCamera = false; // Prepare for next frame
 
         return;
+    }
+
+    // Sync camera height to scripts, if necessary
+    static float lastCameraHeight = -1;
+    if (ScriptEngineManager::hasEngine() && lastCameraHeight != cameraheight)
+    {
+        lastCameraHeight = cameraheight;
+        ScriptEngineManager::getGlobal()->getProperty("Global")->setProperty("cameraHeight", cameraheight);
     }
 
     // If we just left forced camera mode, restore thirdperson state
