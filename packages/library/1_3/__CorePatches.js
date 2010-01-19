@@ -99,6 +99,7 @@ Vector3.prototype.toYawPitchRoll = function(up, yawHint) {
 };
 
 Vector3.prototype.lerp = function(other, alpha) {
+    alpha = clamp(alpha, 0, 1);
     return this.mulNew(alpha).add(other.mulNew(1-alpha));
 };
 

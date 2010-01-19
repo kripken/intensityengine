@@ -68,7 +68,7 @@ ApplicationManager.setApplicationClass(Application.extend({
     performStrafe: Platformer.performStrafe,
     performJump: Platformer.performJump,
 
-    clientClick: Platformer.clientClick,
+//    clientClick: Platformer.clientClick,
 
     getCrosshair: function() { return '' },
 }));

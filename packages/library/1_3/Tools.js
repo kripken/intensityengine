@@ -80,3 +80,8 @@ function cleanFunctionName(func) {
     return ret.toString().replace(/\n/g, ' ').substring(0, 70);
 }
 
+function lerp(value, otherValue, alpha) {
+    alpha = clamp(alpha, 0, 1);
+    return alpha*value + (1-alpha)*otherValue;
+}
+

@@ -69,10 +69,11 @@ Platformer = {
 
         clientActivate: function() {
             this.platformCameraDistance = 100;
+            this.lastCameraPosition = null;
             this.setPlatformDirection(1);
         },
 
-        clientAct: function() {
+        clientAct: function(seconds) {
             if (this === getPlayerEntity() && !isPlayerEditing(this)) {
                 // Affix to the position
                 var position = this.position.copy();
@@ -92,8 +93,17 @@ Platformer = {
 
                 var orientation = Platformer.vector3FromAxis(this.platformAxis).mul(this.getPlatformDirection()).toYawPitch();
                 this.yaw = orientation.yaw;
+                this.pitch = 0;
+
+                if (Global.cameraDistance) {
+                    this.platformCameraDistance = lerp(this.platformCameraDistance, Global.cameraDistance, 1-seconds*5);
+                }
 
                 var cameraPosition = this.position.copy().add(Platformer.vector3FromAxis(this.platformCameraAxis).mul(this.platformCameraDistance));
+                if (this.lastCameraPosition === null) this.lastCameraPosition = cameraPosition;
+                this.lastCameraPosition.z = cameraPosition.z;
+                cameraPosition = this.lastCameraPosition.lerp(cameraPosition, 1-seconds*7.5);
+                this.lastCameraPosition = cameraPosition.copy();
                 cameraPosition.z += this.radius*3;
                 var direction = this.position.subNew(cameraPosition);
                 orientation = direction.toYawPitch();
@@ -132,15 +142,5 @@ Platformer = {
 //        }
         Character.plugins.jumpWhilePressingSpace.performJump(down); 
     },
-
-    clientClick: function(button, down, position) {
-        if (down && button === 3) {
-            var player = getPlayerEntity();
-            player.platformCameraDistance *= 1.25;
-            if (player.platformCameraDistance > 200) player.platformCameraDistance = 50;
-        }
-    },
 };
-
-// fov control
 
