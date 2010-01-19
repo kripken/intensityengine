@@ -134,7 +134,7 @@ OS X
 The following works on Snow Leopard 10.6 (thanks to abs1nth!):
 
     * Install the developer tools, which are an optional install from the
-      OS X DVD
+      OS X DVD, or download them from http://developer.apple.com/mac/
     * Install SDL.framework, SDL_mixer.frameworks and SDL_image.framework
       in /Library/Frameworks
     * Install scons and cmake (probably using MacPorts or Fink)
