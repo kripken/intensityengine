@@ -56,7 +56,7 @@ struct CameraControl
     static void stopCharacterViewing();
 
     //! Forces the camera position for the next frame
-    static void forceCamera(vec& position, float yaw, float pitch, float roll);
+    static void forceCamera(vec& position, float yaw, float pitch, float roll, float fov);
 
     //! Return the current camera
     static physent* getCamera();

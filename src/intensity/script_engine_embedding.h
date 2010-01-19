@@ -1028,9 +1028,9 @@ V8_FUNC_ddd(__script__getMaterial, {
 // Camera
 
 #ifdef CLIENT
-    V8_FUNC_dddddd(__script__forceCamera__, {
+    V8_FUNC_ddddddd(__script__forceCamera__, {
         vec position(arg1, arg2, arg3);
-        CameraControl::forceCamera(position, arg4, arg5, arg6);
+        CameraControl::forceCamera(position, arg4, arg5, arg6, arg7);
     });
 
     V8_FUNC_NOPARAM(__script__getCamera__, {

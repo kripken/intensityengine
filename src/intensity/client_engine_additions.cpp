@@ -87,15 +87,17 @@ FVARP(cameraavoid, 0, 0.33, 1); // 1 means the camera is 100% away from the clos
 
 physent forcedCamera;
 bool useForcedCamera = false;
+float forcedCameraFov = -1;
 int savedThirdperson = -1;
 
-void CameraControl::forceCamera(vec& position, float yaw, float pitch, float roll)
+void CameraControl::forceCamera(vec& position, float yaw, float pitch, float roll, float fov)
 {
     useForcedCamera = true;
     forcedCamera.o = position;
     forcedCamera.yaw = yaw;
     forcedCamera.pitch = pitch;
     forcedCamera.roll = roll;
+    forcedCameraFov = fov;
 
     // If we just switched to forced camera mode, save thirdperson state and go to third person
     // (We need third person so that we show the player's avatar as the camera moves. There is

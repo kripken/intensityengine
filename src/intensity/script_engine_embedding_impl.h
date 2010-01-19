@@ -242,7 +242,7 @@ EMBED_CAPI_FUNC("getMaterial", __script__getMaterial, 3);
 // Camera
 
 #ifdef CLIENT
-    EMBED_CAPI_FUNC("forceCamera", __script__forceCamera__, 6);
+    EMBED_CAPI_FUNC("forceCamera", __script__forceCamera__, 7);
     EMBED_CAPI_FUNC("getCamera", __script__getCamera__, 0);
 #endif
 

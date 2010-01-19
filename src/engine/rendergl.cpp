@@ -710,6 +710,14 @@ void disablezoom()
 
 void computezoom()
 {
+    extern float forcedCameraFov; // INTENSITY: forced camera stuff
+    if (forcedCameraFov > 0)
+    {
+        curfov = forcedCameraFov;
+        forcedCameraFov = -1; // Prepare for next frame
+        return;
+    } // INTENSITY: end forced camera stuff
+
     if(!zoom) { curfov = fov; curavatarfov = avatarfov; return; }
     if(zoom < 0 && curfov >= fov) { zoom = 0; return; } // don't zoom-out if not zoomed-in
     int zoomvel = zoom > 0 ? zoominvel : zoomoutvel,
