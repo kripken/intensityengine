@@ -15,6 +15,7 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/Platformer');
 Library.include('library/' + Global.LIBRARY_VERSION + '/MapDefaults');
 
 Library.include('yo_frankie/');
+Library.include('textures/gk/swarm/');
 
 // Map settings
 

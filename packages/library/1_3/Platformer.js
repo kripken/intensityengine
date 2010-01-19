@@ -106,7 +106,7 @@ Platformer = {
                 this.move = this.platformMove && (Math.abs(this.platformYaw - this.yaw) < 1);
 
                 if (Global.cameraDistance) {
-                    this.platformCameraDistance = lerp(this.platformCameraDistance, Global.cameraDistance, 1-seconds*5);
+                    this.platformCameraDistance = lerp(this.platformCameraDistance, Global.cameraDistance*3, 1-seconds*5);
                 }
 
                 var cameraPosition = this.position.copy().add(Platformer.vector3FromAxis(this.platformCameraAxis).mul(this.platformCameraDistance));
