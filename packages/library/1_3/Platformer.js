@@ -114,11 +114,12 @@ Platformer = {
                 if (this.lastCameraPosition === null) this.lastCameraPosition = cameraPosition;
                 cameraPosition = this.lastCameraPosition.lerp(cameraPosition, 1-seconds*0.5);
                 this.lastCameraPosition = cameraPosition.copy();
-                cameraPosition.add(this.position);
-                cameraPosition.z += this.radius*3;
+                cameraPosition.add(this.center);
+                cameraPosition.z += this.radius*this.platformCameraDistance*0.04;
                 cameraPosition.add(Platformer.vector3FromAxis(this.platformCameraAxis).mul(this.platformCameraDistance));
-                var direction = this.position.subNew(cameraPosition);
+                var direction = this.center.subNew(cameraPosition);
                 orientation = direction.toYawPitch();
+                cameraPosition.z += this.radius*this.platformCameraDistance*0.02;
                 UserInterface.forceCamera(cameraPosition, orientation.yaw, orientation.pitch, 0, this.platformFov);
             }
         },
