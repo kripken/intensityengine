@@ -41,8 +41,6 @@ WorldAreas = {
             clientOnCollision: function(entity) {
                 if (entity !== getPlayerEntity()) return;
 
-                this.worldArea.collidingDelay = 0.5; // Must be at least the span between collision checks!
-
                 if (!this.worldArea.action) {
                     this.worldArea.action = new WorldAreas.InputCaptureAction();
                     this.queueAction(this.worldArea.action);
@@ -63,12 +61,11 @@ WorldAreas = {
 
     Action: Action.extend({
         doExecute: function(seconds) {
-            this.actor.worldArea.collidingDelay -= seconds; // When collisions occur they refresh this
-            var ret = this.actor.worldArea.collidingDelay <= 0;
-            if (!ret) {
+            if (World.isPlayerCollidingEntity(getPlayerEntity(), this.actor)) {
                 this.actor.emit('worldAreaActive')
-            }
-            return ret;
+                return false;
+            } else
+                return true;
         },
 
         doFinish: function() {
