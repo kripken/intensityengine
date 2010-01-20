@@ -126,7 +126,7 @@ Platformer = {
                     if (this.lastCameraSmoothPosition.isCloseTo(cameraPosition, 1)) {
                         this.platformCameraSmoothing = false;
                     }
-                    cameraPosition = this.lastCameraSmoothPosition.lerp(cameraPosition, 1-seconds*0.5);
+                    cameraPosition = this.lastCameraSmoothPosition.lerp(cameraPosition, 1-seconds*1.5);
                 }
                 this.lastCameraSmoothPosition = cameraPosition.copy();
 
@@ -159,6 +159,12 @@ Platformer = {
         player.platformMove = down;
     },
 
+    performMousemove: function(yaw, pitch) {
+        return isPlayerEditing(getPlayerEntity()) ? {
+            yaw: yaw, pitch: pitch
+        } : {};
+    },
+
     mapelements: {
         AxisSwitcher: registerEntityClass(bakePlugins(AreaTrigger, [WorldAreas.plugins.Core, {
             _class: 'AxisSwitcher',
@@ -176,6 +182,10 @@ Platformer = {
             },
 
             actionKey: function(index, down) {
+                if (down) this.flipAxes();
+            },
+
+            performJump: function(down) {
                 if (down) this.flipAxes();
             },
 

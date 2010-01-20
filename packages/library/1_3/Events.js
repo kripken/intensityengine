@@ -168,6 +168,18 @@ InputCaptureActionPlugin = {
             this.oldActionKey = ApplicationManager.instance.actionKey;
             ApplicationManager.instance.actionKey = bind(this.actionKey, this)
         }
+        if (this.performMove) {
+            this.oldPerformMove = ApplicationManager.instance.performMove;
+            ApplicationManager.instance.performMove = bind(this.performMove, this)
+        }
+        if (this.performMousemove) {
+            this.oldPerformMousemove = ApplicationManager.instance.performMousemove;
+            ApplicationManager.instance.performMousemove = bind(this.performMousemove, this)
+        }
+        if (this.performJump) {
+            this.oldPerformJump = ApplicationManager.instance.performJump;
+            ApplicationManager.instance.performJump = bind(this.performJump, this)
+        }
     },
 
     doFinish: function() {
@@ -176,6 +188,15 @@ InputCaptureActionPlugin = {
         }
         if (this.actionKey) {
             ApplicationManager.instance.actionKey = this.oldActionKey;
+        }
+        if (this.performMove) {
+            ApplicationManager.instance.performMove = this.oldPerformMove;
+        }
+        if (this.performMousemove) {
+            ApplicationManager.instance.performMousemove = this.oldPerformMousemove;
+        }
+        if (this.performJump) {
+            ApplicationManager.instance.performJump = this.oldPerformJump;
         }
 
         this._super.apply(this, arguments);

@@ -83,6 +83,9 @@ WorldAreas.InputCaptureAction = WorldAreas.Action.extend(InputCaptureActionPlugi
     doStart: function() {
         this.clientClick = permanentBind(this.actor.clientClick, this.actor);
         this.actionKey = permanentBind(this.actor.actionKey, this.actor);
+        this.performMove = permanentBind(this.actor.performMove, this.actor);
+        this.performMousemove = permanentBind(this.actor.performMousemove, this.actor);
+        this.performJump = permanentBind(this.actor.performJump, this.actor);
 
         this._super();
     },

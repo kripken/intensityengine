@@ -90,6 +90,7 @@ function magnet(value, otherValue, radius) {
 }
 
 function permanentBind(func, self) {
+    if (!(typeof func === 'function')) return func;
     return function() {
         func.apply(self, arguments);
     };

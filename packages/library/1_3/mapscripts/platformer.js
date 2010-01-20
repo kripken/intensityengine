@@ -14,17 +14,22 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/Platformer');
 
 Library.include('library/' + Global.LIBRARY_VERSION + '/MapDefaults');
 
+Tools.replaceFunction('Map.texture', function(type, _name, rot, xoffset, yoffset, scale, forceindex) {
+    scale = scale * 0.5;
+    arguments.callee._super.apply(this, [type, _name, rot, xoffset, yoffset, scale, forceindex]);
+}, false);
+
 //Library.include('yo_frankie/');
 Library.include('textures/gk/swarm/');
 
 // Map settings
 
-Map.fogColor(0, 0, 0);
-Map.fog(9999);
-Map.loadSky("skyboxes/philo/sky3");
-Map.skylight(100, 100, 100);
-Map.ambient(20);
-Map.shadowmapAmbient("0x000000");
+Map.fogColor(45, 30, 10);
+Map.fog(1500);
+Map.loadSky("skyboxes/gk2/swarm/nnu_sb01");
+Map.skylight(0, 0, 0);
+Map.ambient(1);
+Map.shadowmapAmbient("0x101010");
 Map.shadowmapAngle(300);
 
 //// Player class
@@ -68,6 +73,7 @@ ApplicationManager.setApplicationClass(Application.extend({
     performMovement: Platformer.performMovement,
     performStrafe: Platformer.performStrafe,
     performJump: Character.plugins.jumpWhilePressingSpace.performJump,
+    performMousemove: Platformer.performMousemove,
 
 //    clientClick: Platformer.clientClick,
 
