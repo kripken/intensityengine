@@ -60,7 +60,7 @@ Rocket = Projectiles.Projectile.extend({
         var flags = MODEL.LIGHT | MODEL.CULL_VFC | MODEL.CULL_OCCLUDED | MODEL.FULLBRIGHT | MODEL.CULL_DIST | MODEL.DYNSHADOW;
         var yawPitch = this.velocity.toYawPitch();
         var yaw = yawPitch.yaw - 90;
-        var pitch = 90 - yawPitch.pitch;
+        var pitch = replaceNaN(90 - yawPitch.pitch); // NaN is possible if velocity is equal to 0
         var args = [this.owner, 'guns/rocket', ANIM_IDLE|ANIM_LOOP, o.x, o.y, o.z, yaw, pitch, flags, 0];
         CAPI.renderModel.apply(this.owner, args);
     },

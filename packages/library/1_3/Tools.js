@@ -104,3 +104,7 @@ function callAll() {
     };
 }
 
+function replaceNaN(value, fallback) {
+    return !isNaN(value) ? value : fallback;
+}
+
