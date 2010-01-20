@@ -97,7 +97,7 @@ class ComponentDriver:
                 callback, param = data
                 CModule.run_script('Tools.callbacks.tryCall("%s", "%s")' % (callback, param), 'component %s callback' % self.name)
             elif response_type == ComponentDriver.RESPONSE.Error:
-                CModule.show_message('Error in %s component: %s' % (self.name, data))
+                CModule.show_message('Error', 'Component %s: %s' % (self.name, data))
 
     def keepalive_loop(self):
         while True:

@@ -47,6 +47,7 @@ GamePlayer = registerEntityClass(
             Health.plugin,
             GameManager.playerPlugin,
             Chat.playerPlugin,
+            Chat.extraPlugins.skype,
             Platformer.plugin,
             Character.plugins.jumpWhilePressingSpace.plugin,
             Firing.plugins.protocol,
@@ -95,7 +96,10 @@ ApplicationManager.setApplicationClass(Application.extend({
     performJump: Character.plugins.jumpWhilePressingSpace.performJump,
     performMousemove: Platformer.performMousemove,
 
-    clientClick: bind(Firing.clientClick, Firing),
+    clientClick: callAll(
+        bind(Firing.clientClick, Firing)
+        , function(button, down) { log(ERROR, "call?"); if (down && button === 2) Chat.voice.callTargetEntity() }
+    ),
 
     getCrosshair: function() { return isPlayerEditing(getPlayerEntity()) ? "data/crosshair.png" : '' },
 }));

@@ -116,12 +116,24 @@ Chat = {
         return false;
     },
 
+    voice: {
+        callTargetEntity: function() {
+log(ERROR, "call 1");
+            var entity = CAPI.getTargetEntity();
+            if (!entity) return;
+log(ERROR, "call 2");
+            getPlayerEntity().emit('voice.call', entity);
+        },
+    },
+
     extraPlugins: {
         skype: {
             skypeHandle: new StateString(),
+            targetSkypeHandle: new StateString(),
 
             init: function() {
                 this.skypeHandle = '';
+                this.targetSkypeHandle = '';
             },
 
             clientActivate: function() {
@@ -144,6 +156,20 @@ Chat = {
                         }, this)));
                     }, this),
                     entity: this,
+                });
+
+                this.connect('voice.call', function(entity) {
+log(ERROR, "call 3");
+
+                    CAPI.signalComponent('Skype', 'preparetoanswer|' + entity.skypeHandle); // Be ready to answer
+                    entity.targetSkypeHandle = this.skypeHandle; // Tell them to call us
+                });
+
+                this.connect('client_onModify_targetSkypeHandle', function(handle) {
+log(ERROR, "call 3.99");
+                    if (!handle) return;
+log(ERROR, "call 4");
+                    CAPI.signalComponent('Skype', 'call|' + handle);
                 });
             },
         },

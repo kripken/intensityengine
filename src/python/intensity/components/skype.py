@@ -63,12 +63,16 @@ def skype_main(to_skype, from_skype):
             call.Answer()
 
     def attach():
-        try:
-            skype.Attach()
-        except Skype4Py.errors.SkypeAPIError, e:
-            print "Fail!"
-            from_skype.put((ComponentDriver.RESPONSE.Error, "Failed to attach to Skype. Is Skype working, and did you allow this program to connect to it?"))
-            sys.exit(1)
+        for i in range(4):
+            try:
+                skype.Attach()
+                print "Skype attachment proceeding"
+                return
+            except Skype4Py.errors.SkypeAPIError, e:
+                print "Skype attachment failed (%d): %s" % (i, str(e))
+            time.sleep(2.0)
+        from_skype.put((ComponentDriver.RESPONSE.Error, "Failed to attach to Skype. Is Skype working, and did you allow this program to connect to it?"))
+        sys.exit(1)
 
     # This handler is fired when Skype attachment status changes
     def OnAttach(status): 
@@ -87,6 +91,7 @@ def skype_main(to_skype, from_skype):
     while True:
         command, params = to_skype.get()
         if command == 'whoami':
+            print "Who am i?"
             from_skype.put((ComponentDriver.RESPONSE.Callback, (params, skype.CurrentUser.Handle)))
         elif command == 'call':
             if State.curr_call is not None:

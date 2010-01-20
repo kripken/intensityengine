@@ -96,3 +96,11 @@ function permanentBind(func, self) {
     };
 }
 
+function callAll() {
+    var targets = arguments;
+    return function() {
+        for (var i = 0; i < targets.length; i++)
+            targets[i].apply(this, arguments);
+    };
+}
+
