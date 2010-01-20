@@ -195,6 +195,41 @@ Firing = {
         }
         entity.currGunIndex = indexes[curr];
     },
+
+    findTarget: function(shooter, visualOrigin, targetingOrigin, fallbackTarget, range, scatter) {
+        // Targeting from the camera - where the player aimed the mouse
+        var direction = new Vector3().fromYawPitch(shooter.yaw, shooter.pitch);
+        if (isNaN(direction.x)) return { target: fallbackTarget };
+        if (scatter) direction.add(Random.normalizedVector3().mul(scatter)).normalize();
+        var target = World.getRayCollisionWorld(targetingOrigin, direction, range);
+        var temp = World.getRayCollisionEntities(targetingOrigin, target, shooter);
+        var targetEntity;
+        if (temp) {
+            target = temp.collisionPosition;
+            targetEntity = temp.entity;
+        }
+
+        // Check for hitting an entity from the gun source
+        var temp = World.getRayCollisionEntities(visualOrigin, target, shooter);
+        if (temp) {
+            target = temp.collisionPosition;
+            targetEntity = temp.entity;
+        }
+
+        // Check for hitting the scenery from the gun source
+        direction = target.subNew(visualOrigin);
+        var dist = direction.magnitude();
+        var target2 = World.getRayCollisionWorld(visualOrigin, direction.normalize(), dist);
+        if (target2.isCloseTo(visualOrigin, dist-2)) {
+            target = target2;
+            targetEntity = null;
+        }
+
+        return {
+            target: target,
+            targetEntity: targetEntity,
+        };
+    },
 };
 
 Gun = Class.extend({

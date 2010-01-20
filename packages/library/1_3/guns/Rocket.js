@@ -100,7 +100,9 @@ RocketGun = Projectiles.Gun.extend({
 
                 // Note that origin and target may have moved meanwhile
                 var currentOriginPosition = that.getOrigin(shooter);
-                var currentTargetPosition = (shooter === getPlayerEntity() ? CAPI.getTargetPosition() : targetPosition);
+                var targetingOrigin = shooter.getTargetingOrigin(currentOriginPosition);
+                var targetData = Firing.findTarget(shooter, currentOriginPosition, targetingOrigin, targetPosition, 2048);
+                var currentTargetPosition = targetData.target;
 
                 Effect.fireball(PARTICLE.EXPLOSION_NO_GLARE, currentOriginPosition, 3, 0.5, 0xFF775F, 3);
                 Effect.addDynamicLight(currentOriginPosition, 20, 0xFF775F, 0.8, 0.1, 0, 10);

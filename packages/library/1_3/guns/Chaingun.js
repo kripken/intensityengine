@@ -52,33 +52,9 @@ Chaingun = Gun.extend({
 
         var visualOrigin = this.getOrigin(shooter);
         var targetingOrigin = shooter.getTargetingOrigin(visualOrigin);
-
-        // Targeting from the camera - where the player aimed the mouse
-        var direction = new Vector3().fromYawPitch(shooter.yaw, shooter.pitch);
-        direction.add(Random.normalizedVector3().mul(this.scatter)).normalize();
-        var target = World.getRayCollisionWorld(targetingOrigin, direction, this.range);
-        var temp = World.getRayCollisionEntities(targetingOrigin, target, shooter);
-        var targetEntity;
-        if (temp) {
-            target = temp.collisionPosition;
-            targetEntity = temp.entity;
-        }
-
-        // Check for hitting an entity from the gun source
-        var temp = World.getRayCollisionEntities(visualOrigin, target, shooter);
-        if (temp) {
-            target = temp.collisionPosition;
-            targetEntity = temp.entity;
-        }
-
-        // Check for hitting the scenery from the gun source
-        direction = target.subNew(visualOrigin);
-        var dist = direction.magnitude();
-        var target2 = World.getRayCollisionWorld(visualOrigin, direction.normalize(), dist);
-        if (target2.isCloseTo(visualOrigin, dist-2)) {
-            target = target2;
-            targetEntity = null;
-        }
+        var targetData = Firing.findTarget(shooter, visualOrigin, targetingOrigin, null, this.range, this.scatter);
+        var target = targetData.target;
+        var targetEntity = targetData.targetEntity;
 
         if (targetEntity && targetEntity.sufferDamage) {
             targetEntity.sufferDamage({

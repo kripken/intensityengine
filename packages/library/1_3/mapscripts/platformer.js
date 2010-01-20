@@ -9,6 +9,8 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/GameManager');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Chat');
 Library.include('library/' + Global.LIBRARY_VERSION + '/World');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Platformer');
+Library.include('library/' + Global.LIBRARY_VERSION + '/Firing');
+Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Rocket');
 
 // Default materials, etc.
 
@@ -34,6 +36,8 @@ Map.shadowmapAngle(300);
 
 //// Player class
 
+playerRocketLauncher = Firing.registerGun(new RocketGun(), 'Rocket Launcher');
+
 GamePlayer = registerEntityClass(
     bakePlugins(
         Player,
@@ -43,12 +47,26 @@ GamePlayer = registerEntityClass(
             Chat.playerPlugin,
             Platformer.plugin,
             Character.plugins.jumpWhilePressingSpace.plugin,
+            Firing.plugins.protocol,
+            Firing.plugins.player,
+            Projectiles.plugin,
             {
                 _class: "GamePlayer",
 
                 init: function() {
                     this.modelName = '';
                     this.HUDModelName = '';
+                    this.gunIndexes = [playerRocketLauncher];
+                    this.currGunIndex = playerRocketLauncher;
+                },
+
+                clientActivate: function() {
+//                    this.gunAmmos[playerChaingun] = null;
+                    this.gunAmmos[playerRocketLauncher] = 20;
+                },
+
+                clientAct: function() {
+                    Effect.addDynamicLight(this.center, 30, 0x333333);
                 },
             },
         ]
@@ -75,7 +93,7 @@ ApplicationManager.setApplicationClass(Application.extend({
     performJump: Character.plugins.jumpWhilePressingSpace.performJump,
     performMousemove: Platformer.performMousemove,
 
-//    clientClick: Platformer.clientClick,
+    clientClick: bind(Firing.clientClick, Firing),
 
     getCrosshair: function() { return isPlayerEditing(getPlayerEntity()) ? "data/crosshair.png" : '' },
 }));
