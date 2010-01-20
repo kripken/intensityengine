@@ -772,13 +772,28 @@ void mousemove(int dx, int dy)
         else cursens = zoomsens;
     }
     cursens /= 33.0f*sensitivityscale;
-    camera1->yaw += dx*cursens;
-    camera1->pitch -= dy*cursens*(invmouse ? -1 : 1);
-    fixcamerarange();
-    if(camera1!=player && !detachedcamera)
+
+    // INTENSITY: Let scripts customize mousemoving
+    if (ScriptEngineManager::hasEngine())
     {
-        player->yaw = camera1->yaw;
-        player->pitch = camera1->pitch;
+        ScriptValuePtr scriptMovement = ScriptEngineManager::getGlobal()->getProperty("ApplicationManager")->getProperty("instance")->call(
+            "performMousemove",
+            ScriptValueArgs().append(dx*cursens).append(-dy*cursens*(invmouse ? -1 : 1))
+        );
+
+        if (scriptMovement->hasProperty("yaw"))
+        {
+            camera1->yaw += scriptMovement->getProperty("yaw")->getFloat();
+            camera1->pitch += scriptMovement->getProperty("pitch")->getFloat();
+            // INTENSITY: End
+
+            fixcamerarange();
+            if(camera1!=player && !detachedcamera)
+            {
+                player->yaw = camera1->yaw;
+                player->pitch = camera1->pitch;
+            }
+        }
     }
 }
 

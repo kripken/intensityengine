@@ -122,6 +122,12 @@ Application = Class.extend({
         getPlayerEntity().pitching = pitch;
     },
 
+    //! Allows customization of the effects of mouse moving. The returned yaw, pitch are applied to
+    //! the normal sauer camera system. You can set the return values to 0 and alter things otherwise if you want.
+    performMousemove: function(yaw, pitch) {
+        return { yaw: yaw, pitch: pitch };
+    },
+
     //! Called when the player clicks on a position in the world. This does the following: It calls
     //! clientClick(), which can contain user-defined behavior on the client. If this does not return True (i.e.,
     //! if it returns False or anything else, or nothing), then the server is contacted, and runs click(). By
