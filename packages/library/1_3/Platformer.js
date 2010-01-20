@@ -62,10 +62,6 @@ Platformer = {
         },
 
         init: function() {
-            this.platformAxis = '+x';
-            this.platformPosition = 512;
-            this.platformCameraAxis = '+y';
-
             this.movementSpeed = 75;
         },
 
@@ -78,6 +74,15 @@ Platformer = {
             this.platformFov = 50;
             this.platformMove = 0;
             this.setPlatformDirection(1);
+
+            this.connect('clientRespawn', function() {
+                // After we are respawned to the right place, we fix the axis etc.
+                addPostEmitEvent(function() {
+                    this.platformAxis = '+x';
+                    this.platformPosition = this.position.y;
+                    this.platformCameraAxis = '+y';
+                });
+            });
         },
 
         clientAct: function(seconds) {
