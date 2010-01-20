@@ -219,10 +219,12 @@ Firing = {
         // Check for hitting the scenery from the gun source
         direction = target.subNew(visualOrigin);
         var dist = direction.magnitude();
-        var target2 = World.getRayCollisionWorld(visualOrigin, direction.normalize(), dist);
-        if (target2.isCloseTo(visualOrigin, dist-2)) {
-            target = target2;
-            targetEntity = null;
+        if (dist > 2) {
+            var target2 = World.getRayCollisionWorld(visualOrigin, direction.normalize(), dist);
+            if (target2.isCloseTo(visualOrigin, dist-2)) {
+                target = target2;
+                targetEntity = null;
+            }
         }
 
         return {

@@ -82,23 +82,25 @@ Platformer = {
 
         clientAct: function(seconds) {
             if (this === getPlayerEntity() && !isPlayerEditing(this)) {
-                // Affix to the position
-                var position = this.position.copy(), velocity = this.velocity.copy();
-                if (this.platformAxis[1] == 'x') {
-                    if (Math.abs(position.y - this.platformPosition) > 0.5) {
-                        position.y = this.platformPosition;
-                        velocity.y = 0;
-                    } else position = null;
-                } else {
-                    if (Math.abs(position.x - this.platformPosition) > 0.5) {
-                        position.x = this.platformPosition;
-                        velocity.x = 0;
-                    } else position = null;
-                }
-                if (position !== null) {
-                    this.position = position.lerp(this.position, seconds*5);
-                    this.velocity = velocity;
-                    log(WARNING, "Fixed platform position " + Global.time);
+                if (this.spawnStage === 0) {
+                    // Affix to the position
+                    var position = this.position.copy(), velocity = this.velocity.copy();
+                    if (this.platformAxis[1] == 'x') {
+                        if (Math.abs(position.y - this.platformPosition) > 0.5) {
+                            position.y = this.platformPosition;
+                            velocity.y = 0;
+                        } else position = null;
+                    } else {
+                        if (Math.abs(position.x - this.platformPosition) > 0.5) {
+                            position.x = this.platformPosition;
+                            velocity.x = 0;
+                        } else position = null;
+                    }
+                    if (position !== null) {
+                        this.position = position.lerp(this.position, seconds*5);
+                        this.velocity = velocity;
+                        log(WARNING, "Fixed platform position " + Global.time);
+                    }
                 }
 
                 var platformAxis = Platformer.vector3FromAxis(this.platformAxis);
