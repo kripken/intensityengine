@@ -365,8 +365,7 @@ manageTriggeringCollisions = cacheByTimeDelay(function() {
         if (Global.profiling.data[_class] === undefined) Global.profiling.data[_class] = 0;
         Global.profiling.data[_class] += time;
     }
-}, 1/10); // Important for performance, until we have a script octree
-
+}, defaultValue(Global.triggeringCollisionsDelay, 1/10)); // Important for performance, until we have a script octree
 
 //! Perform dynamic rendering for all entities that need it. See renderDynamic
 //! in LogicEntity. Should only be called on the client, of course.

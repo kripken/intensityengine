@@ -71,7 +71,7 @@ Platformer = {
 
         clientActivate: function() {
             this.platformCameraDistance = 150;
-            this.platformCameraSmoothing = false;
+            this.platformCameraSmoothing = 0;
             this.lastCameraPosition = null;
             this.lastCameraSmoothPosition = null;
             this.platformYaw = -1;
@@ -122,11 +122,9 @@ Platformer = {
                 cameraPosition.z += this.radius*this.platformCameraDistance*0.04;
                 cameraPosition.add(Platformer.vector3FromAxis(this.platformCameraAxis).mul(this.platformCameraDistance));
 
-                if (this.platformCameraSmoothing) {
-                    if (this.lastCameraSmoothPosition.isCloseTo(cameraPosition, 1)) {
-                        this.platformCameraSmoothing = false;
-                    }
-                    cameraPosition = this.lastCameraSmoothPosition.lerp(cameraPosition, 1-seconds*1.5);
+                if (this.platformCameraSmoothing > 0) {
+                    cameraPosition = this.lastCameraSmoothPosition.lerp(cameraPosition, 1-1.6*seconds/this.platformCameraSmoothing);
+                    this.platformCameraSmoothing -= seconds*0.5;
                 }
                 this.lastCameraSmoothPosition = cameraPosition.copy();
 
@@ -198,7 +196,7 @@ Platformer = {
                         player.platformAxis = axis;
                         player.platformPosition = (axis[1] === 'x') ? this.position.y : this.position.x;
                         player.platformCameraAxis = this.platformCameraAxises.get(i);
-                        player.platformCameraSmoothing = true;
+                        player.platformCameraSmoothing = 1.0;
                         return;
                     }
                 }

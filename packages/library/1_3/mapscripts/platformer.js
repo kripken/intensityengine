@@ -1,5 +1,7 @@
 // Copyright (C) 2009 Alon 'Kripken' Zakai
 
+Global.triggeringCollisionsDelay = 0;
+
 Library.include('library/1_3/');
 
 Library.include('library/' + Global.LIBRARY_VERSION + '/__CorePatches');
