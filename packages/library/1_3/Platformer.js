@@ -76,7 +76,6 @@ Platformer = {
             this.lastCameraSmoothPosition = null;
             this.platformYaw = -1;
             this.platformFov = 50;
-            this.platformMove = 0;
             this.setPlatformDirection(1);
 
             this.connect('clientRespawn', function() {
@@ -85,6 +84,7 @@ Platformer = {
                     this.platformAxis = '+x';
                     this.platformPosition = this.position.y;
                     this.platformCameraAxis = '+y';
+                    this.platformMove = 0;
                 });
             });
         },
