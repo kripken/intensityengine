@@ -148,18 +148,19 @@ Platformer = {
     },
 
     performMovement: function(move, down) {
-        if (isPlayerEditing(getPlayerEntity())) return this._super.apply(this, arguments);
-
-        this.performJump(move === 1 && down);
+        var player = getPlayerEntity();
+        if (isPlayerEditing(player)) return this._super.apply(this, arguments);
+        if (Health.isActiveEntity(player)) this.performJump(move === 1 && down);
     },
 
     //! Called when the left/right buttons are pressed. By default we do a normal strafe
     //! @param strafe Left or right
     //! @param down If the button press is down or not
     performStrafe: function(strafe, down) {
-        if (isPlayerEditing(getPlayerEntity())) return this._super.apply(this, arguments);
-
         var player = getPlayerEntity();
+        if (isPlayerEditing(player)) return this._super.apply(this, arguments);
+        if (!Health.isActiveEntity(player)) return;
+
         if (Platformer.vector3FromAxis(player.platformCameraAxis).crossProduct(Platformer.vector3FromAxis(player.platformAxis)).z < 0)
             strafe = -strafe;
 

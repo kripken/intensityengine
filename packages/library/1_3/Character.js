@@ -435,7 +435,7 @@ Character.plugins = {
             },
 
             clientAct: function(seconds) {
-                if (this.isPressingJumpSeconds > 0) {
+                if (this.isPressingJumpSeconds > 0 && Health.isActiveEntity(this)) {
                     this.velocity.z += (1500+World.gravity)*seconds*this.isPressingJumpSeconds/0.25;
                     this.isPressingJumpSeconds -= seconds;
                 }
