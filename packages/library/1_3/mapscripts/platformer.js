@@ -72,7 +72,11 @@ GamePlayer = registerEntityClass(
                 },
 
                 clientAct: function() {
-                    Effect.addDynamicLight(this.center, 30, 0x333333);
+                    if (isPlayerEditing(this)) return;
+                    var lightPosition = this.center.copy();
+                    lightPosition.z += 10;
+                    lightPosition.add(Platformer.vector3FromAxis(this.platformCameraAxis).mul(10));
+                    Effect.addDynamicLight(lightPosition, 50, 0x333333);
                 },
             },
         ]
