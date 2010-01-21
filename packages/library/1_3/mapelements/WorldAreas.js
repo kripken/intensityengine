@@ -27,24 +27,19 @@
 Library.include('library/' + Global.LIBRARY_VERSION + '/Events');
 
 WorldAreas = {
+    //! The currently active area. Can only have *ONE* at a time
+    active: null,
+
     plugins: {
         Core: {
             shouldAct: true,
 
-            clientActivate: function() {
-                this.worldArea = {
-                    colliding: false,
-                    action: null,
-                };
-            },
-
             clientOnCollision: function(entity) {
                 if (entity !== getPlayerEntity()) return;
 
-                if (!this.worldArea.action) {
-                    this.worldArea.action = new WorldAreas.InputCaptureAction();
-                    this.queueAction(this.worldArea.action);
-                }
+                if (WorldAreas.active) return; // Cannot have more than one active. Might be this one, or another - in both cases stop
+                WorldAreas.active = this;
+                this.queueAction(new WorldAreas.InputCaptureAction());
             },
         },
 
@@ -60,6 +55,12 @@ WorldAreas = {
     },
 
     Action: Action.extend({
+        doStart: function() {
+            this._super();
+
+            eval(assert(' WorldAreas.active === this.actor '));
+        },
+
         doExecute: function(seconds) {
             if (World.isPlayerCollidingEntity(getPlayerEntity(), this.actor)) {
                 this.actor.emit('worldAreaActive')
@@ -71,7 +72,7 @@ WorldAreas = {
         doFinish: function() {
             this._super();
 
-            this.actor.worldArea.action = null;
+            WorldAreas.active = null;
         },
     }),
 };
