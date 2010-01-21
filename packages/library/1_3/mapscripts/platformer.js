@@ -14,6 +14,7 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/Platformer');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Firing');
 Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Rocket');
 Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Chaingun');
+Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/Cannons');
 
 // Default materials, etc.
 
@@ -36,6 +37,28 @@ Map.skylight(0, 0, 0);
 Map.ambient(1);
 Map.shadowmapAmbient("0x101010");
 Map.shadowmapAngle(300);
+
+//// NPCs
+
+CannonGunPlugin = {
+    getOrigin: function(shooter) {
+        var ret = shooter.autoTargetDirection.copy().mul(shooter.firingRadius);
+        ret.add(shooter.position);
+        ret.z += shooter.upperHeight*1.5;
+        return ret;
+    },
+};
+
+makeCannon('RocketCannon', RocketGun.extend({
+    projectileClass: Rocket.extend({
+        explosionPower: 25,
+        speed: 150,
+        timeLeft: 8.0,
+        gravityFactor: 0,
+    }),
+}), [Projectiles.plugin, {
+    firingRadius: 10,
+}]);
 
 //// Player class
 
@@ -113,9 +136,13 @@ ApplicationManager.setApplicationClass(Application.extend({
 
 // Setup game
 
+Projectiles.serverside = false;
+
 GameManager.setup([
     GameManager.managerPlugins.messages,
     GameManager.managerPlugins.eventList,
+    ParallelActionsPlugin,
+    Projectiles.plugin,
     {
         clientActivate: function() {
             if (!this.shownWelcome) {
