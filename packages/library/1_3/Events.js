@@ -168,9 +168,9 @@ InputCaptureActionPlugin = {
             this.oldActionKey = ApplicationManager.instance.actionKey;
             ApplicationManager.instance.actionKey = bind(this.actionKey, this)
         }
-        if (this.performMove) {
-            this.oldPerformMove = ApplicationManager.instance.performMove;
-            ApplicationManager.instance.performMove = bind(this.performMove, this)
+        if (this.performMovement) {
+            this.oldPerformMovement = ApplicationManager.instance.performMovement;
+            ApplicationManager.instance.performMovement = bind(this.performMovement, this)
         }
         if (this.performMousemove) {
             this.oldPerformMousemove = ApplicationManager.instance.performMousemove;
@@ -189,8 +189,8 @@ InputCaptureActionPlugin = {
         if (this.actionKey) {
             ApplicationManager.instance.actionKey = this.oldActionKey;
         }
-        if (this.performMove) {
-            ApplicationManager.instance.performMove = this.oldPerformMove;
+        if (this.performMovement) {
+            ApplicationManager.instance.performMovement = this.oldPerformMovement;
         }
         if (this.performMousemove) {
             ApplicationManager.instance.performMousemove = this.oldPerformMousemove;

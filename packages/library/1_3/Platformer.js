@@ -42,6 +42,10 @@ Platformer = {
         return ret;
     },
 
+    flipAxis: function(axis) {
+        return (axis[0] === '+' ? '-' : '+') + axis[1];
+    },
+
     plugin: {
         //! '+x', '-x', '+y' or '-y': the axis on which we move. Always +.
         platformAxis: new StateString({ clientSet: true }),
@@ -182,24 +186,18 @@ Platformer = {
                 this.platformCameraAxises = ['+y','-x'];
             },
 
-            clientClick: function(button, down) {
-                if (down) this.flipAxes();
+            performMovement: function(move, down) {
+                if (down) this.flipAxes(move);
             },
 
-            actionKey: function(index, down) {
-                if (down) this.flipAxes();
-            },
-
-            performJump: function(down) {
-                if (down) this.flipAxes();
-            },
-
-            flipAxes: function() {
+            flipAxes: function(up) {
                 var player = getPlayerEntity();
 
                 for (var i = 0; i < this.platformAxises.length; i++) {
                     var axis = this.platformAxises.get(i);
-                    if (player.platformAxis !== axis) {
+                    if (player.platformAxis[1] !== axis[1]) {
+                        axis = up < 0 ? player.platformCameraAxis : Platformer.flipAxis(player.platformCameraAxis);
+                        player.setPlatformDirection(1);
                         player.platformAxis = axis;
                         player.platformPosition = (axis[1] === 'x') ? this.position.y : this.position.x;
                         player.platformCameraAxis = this.platformCameraAxises.get(i);
