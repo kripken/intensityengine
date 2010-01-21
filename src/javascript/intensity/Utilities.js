@@ -122,7 +122,7 @@ Vector3 = Class.extend({
             this.y /= mag;
             this.z /= mag;
         } else {
-            log(ERROR, "Trying to normalize a length 0 Vector3");
+            log(WARNING, "Trying to normalize a length 0 Vector3");
 //            eval(assert(' false ')); // Uncomment this to help debug these messages
         }
 
