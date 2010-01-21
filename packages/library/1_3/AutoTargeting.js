@@ -222,6 +222,8 @@ AutoTargetingPlugin = {
             }, this.autoTargetSyncEvent);
         });
 
+        this.autoTargetParams = this.autoTargetParams; // Force setting up of event
+
         // Backwards compat
         if (!this.autoTargetParams.interpolateRate) {
             var params = this.autoTargetParams;
