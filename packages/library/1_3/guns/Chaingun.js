@@ -261,7 +261,13 @@ Chaingun.plugin = {
 
             if (this.chaingunFiringTimer.tick(seconds)) {
                 // Shoot (visual and maybe do damage, if controlled here)
-                Chaingun.prototype.doActualShot(this);
+                var gun = Firing.guns[this.currGunIndex];
+                if (gun instanceof Chaingun) {
+                    Firing.guns[this.currGunIndex].doActualShot(this);
+                } else {
+                    log(ERROR, "Chaingun firing error");
+                    this.chaingunFiring = false;
+                }
             }
 
             if (this._controlledHere) {

@@ -13,6 +13,7 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/World');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Platformer');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Firing');
 Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Rocket');
+Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Chaingun');
 
 // Default materials, etc.
 
@@ -39,6 +40,7 @@ Map.shadowmapAngle(300);
 //// Player class
 
 playerRocketLauncher = Firing.registerGun(new RocketGun(), 'Rocket Launcher');
+playerChaingun = Firing.registerGun(new (Chaingun.extend({ range: 25, }))(), 'Chaingun');
 
 GamePlayer = registerEntityClass(
     bakePlugins(
@@ -53,19 +55,20 @@ GamePlayer = registerEntityClass(
             Firing.plugins.protocol,
             Firing.plugins.player,
             Projectiles.plugin,
+            Chaingun.plugin,
             {
                 _class: "GamePlayer",
 
                 init: function() {
                     this.modelName = '';
                     this.HUDModelName = '';
-                    this.gunIndexes = [playerRocketLauncher];
+                    this.gunIndexes = [playerRocketLauncher, playerChaingun];
                     this.currGunIndex = playerRocketLauncher;
                 },
 
                 clientActivate: function() {
-//                    this.gunAmmos[playerChaingun] = null;
                     this.gunAmmos[playerRocketLauncher] = 20;
+                    this.gunAmmos[playerChaingun] = null;
                 },
 
                 clientAct: function() {
@@ -98,7 +101,7 @@ ApplicationManager.setApplicationClass(Application.extend({
 
     clientClick: callAll(
         bind(Firing.clientClick, Firing)
-        , function(button, down) { log(ERROR, "call?"); if (down && button === 2) Chat.voice.callTargetEntity() }
+        , function(button, down) { if (down && button === 2) Chat.voice.callTargetEntity() }
     ),
 
     getCrosshair: function() { return isPlayerEditing(getPlayerEntity()) ? "data/crosshair.png" : '' },
