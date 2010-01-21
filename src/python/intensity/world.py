@@ -154,6 +154,10 @@ def set_map(activity_id, map_asset_id):
         raise Exception("set_map failure")
 
     if Global.SERVER:
+        # Create script entities for connected clients
+        log(logging.DEBUG, "Creating scripting entities for map")
+        CModule.create_scripting_entities()
+
         auth.InstanceStatus.map_loaded = True
 
         # Update master server - we are finished preparing
@@ -161,12 +165,6 @@ def set_map(activity_id, map_asset_id):
 
         # Send map to all connected clients, if any
         send_curr_map(ALL_CLIENTS)
-
-        # Create script entities for connected clients - done *AFTER* sending them
-        # the map, otherwise when they get the map they would 'forget' the entities
-        # we meanwhile sent
-        log(logging.DEBUG, "Creating scripting entities for map")
-        CModule.create_scripting_entities()
 
         # Initialize instance status for this new map
         auth.InstanceStatus.private_edit_mode = False
