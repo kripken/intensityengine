@@ -426,7 +426,9 @@ Character.plugins = {
 
     jumpWhilePressingSpace: {
         performJump: function(down) {
-            getPlayerEntity().isPressingJumpSeconds = (down && getPlayerEntity().isOnFloor()) ? 0.25 : -1;
+            var player = getPlayerEntity();
+            var water = World.getMaterial(player.position) === MATERIAL.WATER;
+            getPlayerEntity().isPressingJumpSeconds = (down && (player.isOnFloor() || water)) ? (!water ? 0.25 : 0.175) : -1;
         },
 
         plugin: {
@@ -443,13 +445,8 @@ Character.plugins = {
 
             isOnFloor: function() {
                 if (floorDistance(this.position, 1024) < 1) return true;
-
                 if (this.velocity.z < -1 || this.falling.z < -1) return false;
-                var axis = Platformer.vector3FromAxis(this.platformAxis).mul(this.radius);
-
-                if (floorDistance(this.position.copy().add(axis), 1024) < 1) return true;
-                if (floorDistance(this.position.copy().add(axis.mul(-1)), 1024) < 1) return true;
-                return false;
+                return World.isColliding(this.position, 1, this);
             },
         },
     },
