@@ -26,7 +26,8 @@ Tools.replaceFunction('Map.texture', function(type, _name, rot, xoffset, yoffset
 }, false);
 
 //Library.include('yo_frankie/');
-Library.include('textures/gk/swarm/');
+//Library.include('library/textures/gk/swarm/');
+Library.include('library/' + Global.LIBRARY_VERSION + '/mapscripts/platformer_textures');
 
 // Map settings
 
