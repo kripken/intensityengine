@@ -85,35 +85,60 @@ CannonHealthPlugin = {
     maxHealth: 30,
     health: 30,
 
+    healthSystem: 'regen',
+
     activate: function() {
-        this.connect('onModify_canAutoTarget', function(value) {
-            if (value === false) {
-                this.disabledEvent = GameManager.getSingleton().eventManager.add({
-                    secondsBefore: 6,
-                    func: bind(function() {
-                        this.health = this.maxHealth;
-                        this.canAutoTarget = true;
-                    }, this),
-                    entity: this,
-                }, this.disabledEvent);
-            }
-        });
+        if (this.healthSystem === 'regen') {
+            this.connect('onModify_canAutoTarget', function(value) {
+                if (value === false) {
+                    this.disabledEvent = GameManager.getSingleton().eventManager.add({
+                        secondsBefore: 6,
+                        func: bind(function() {
+                            this.health = this.maxHealth;
+                            this.canAutoTarget = true;
+                        }, this),
+                        entity: this,
+                    }, this.disabledEvent);
+                }
+            });
+        }
     },
 
     clientActivate: function() {
         this.connect('client_onModify_canAutoTarget', function(value) {
             if (value === false) {
-                this.disabledVisualEvent = GameManager.getSingleton().eventManager.add({
-                    secondsBefore: 0,
-                    secondsBetween: 0,
-                    func: bind(function() {
-                        if (this.canAutoTarget) {
-                            return false; // We are done
+                if (this.healthSystem === 'regen') {
+                    this.disabledVisualEvent = GameManager.getSingleton().eventManager.add({
+                        secondsBefore: 0,
+                        secondsBetween: 0,
+                        func: bind(function() {
+                            if (this.canAutoTarget) {
+                                return false; // We are done
+                            }
+                            Effect.flame(PARTICLE.SMOKE, this.getCenter(), 3.5, 1.5, 0x000000, 1, 7.0, 100, Math.max(Global.currTimeDelta*50, 0.5), -15);
+                        }, this),
+                        entity: this,
+                    }, this.disabledVisualEvent);
+                } else {
+                     if (this.canAutoTarget === true) { // Did we just switch to false
+                        this.renderDynamic = function() { };
+                        this.collisionRadiusWidth = 0.1;
+                        this.collisionRadiusHeight = 0.1;
+
+                        Effect.fireball(PARTICLE.EXPLOSION_NO_GLARE, this.center, 30, 1.0, 0xFF775F, 5);
+                        Sound.play("yo_frankie/DeathFlash.wav", this.center);
+                        Effect.addDecal(DECAL.SCORCH, this.position, new Vector3(0,0,1), 7, 0x000000);
+
+                        var num = 5 + Math.ceil(Math.random()*7);
+                        for (var i = 0; i < num; i++) {
+                            GameManager.getSingleton().projectileManager.add(new Projectiles.debris(
+                                this.center.addNew(Random.normalizedVector3().mul(10)),
+                                Random.normalizedVector3().mul(Math.random()*60).add(new Vector3(0, 0, 40)),
+                                this
+                            ));
                         }
-                        Effect.flame(PARTICLE.SMOKE, this.getCenter(), 3.5, 1.5, 0x000000, 1, 7.0, 100, Math.max(Global.currTimeDelta*50, 0.5), -15);
-                    }, this),
-                    entity: this,
-                }, this.disabledVisualEvent);
+                    }
+                }
             } else {
                 this.health = this.maxHealth;
             }

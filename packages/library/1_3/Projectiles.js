@@ -264,4 +264,33 @@ SmallShot = Projectiles.Projectile.extend({
     speed: 50.0
 });
 
+Projectiles.debris = Projectiles.Projectile.extend({
+    radius: 2,
+    color: 0xDCBBAA,
+    timeLeft: 2.5,
+    gravity: 1.0,
+    elasticity: 0.5,
+    friction: 0.6,
+
+    create: function(position, velocity, kwargs) {
+        this._super.apply(this, arguments);
+
+        this.bounceFunc = partial(World.bounce, this, this.elasticity, this.friction);
+    },
+
+    render: function() {
+        Effect.splash(PARTICLE.SMOKE, 1, 0.25, this.position, 0x000000, 1, 2, -20);
+    },
+
+    renderDynamic: function() {
+        var o = this.position;
+        var flags = MODEL.LIGHT | MODEL.CULL_VFC | MODEL.CULL_DIST | MODEL.DYNSHADOW;
+        var args = [GameManager.getSingleton(), 'debris', ANIM_IDLE, o.x, o.y, o.z, 0, 0, 0, flags, 0];
+        CAPI.renderModel2.apply(null, args);
+    },
+
+    onExplode: function() {
+        return false;
+    },
+});
 
