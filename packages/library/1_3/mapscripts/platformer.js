@@ -59,6 +59,7 @@ makeCannon('RocketCannon', RocketGun.extend({
     }),
 }), [Projectiles.plugin, {
     firingRadius: 10,
+    healthSystem: 'destructible',
 }]);
 
 //// Player class
