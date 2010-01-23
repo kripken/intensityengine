@@ -67,5 +67,5 @@ def signal_text_message(client_number, text):
 # Generic way to signal components. WARNING: Can be called from untrusted code! Check these messages before acting on them
 signal_component = Signal(providing_args=['component_id', 'data'])
 def signal_signal_component(component_id, data):
-    return str( signal_component.send(None, component_id=component_id, data=data) )
+    return str( multiple_send(signal_component, None, component_id=component_id, data=data) )
 
