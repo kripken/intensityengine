@@ -61,6 +61,7 @@ makeCannon('RocketCannon', RocketGun.extend({
 }), [Projectiles.plugin, {
     firingRadius: 10,
     healthSystem: 'destructible',
+    maxHealth: 100,
 }]);
 
 //// Player class
@@ -93,8 +94,10 @@ GamePlayer = registerEntityClass(
                 },
 
                 clientActivate: function() {
-                    this.gunAmmos[playerRocketLauncher] = 20;
-                    this.gunAmmos[playerChaingun] = null;
+                    this.connect('clientRespawn', function() {
+                        this.gunAmmos[playerRocketLauncher] = 20;
+                        this.gunAmmos[playerChaingun] = null;
+                    });
                 },
 
                 clientAct: function() {

@@ -83,11 +83,12 @@ CannonGunPlugin = {
 //! Plugin to make the cannon shootable
 CannonHealthPlugin = {
     maxHealth: 30,
-    health: 30,
 
     healthSystem: 'regen',
 
     activate: function() {
+        this.health = this.maxHealth;
+
         if (this.healthSystem === 'regen') {
             this.connect('onModify_canAutoTarget', function(value) {
                 if (value === false) {
@@ -105,6 +106,8 @@ CannonHealthPlugin = {
     },
 
     clientActivate: function() {
+        this.health = this.maxHealth;
+
         this.connect('client_onModify_canAutoTarget', function(value) {
             if (value === false) {
                 if (this.healthSystem === 'regen') {
