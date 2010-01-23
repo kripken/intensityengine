@@ -1,44 +1,30 @@
 // (C) 2009 Alon 'Kripken' Zakai
 
-Library.include('library/1_2/__CorePatches');
-Library.include('library/1_2/Plugins');
-Library.include('library/1_2/Firing');
-Library.include('library/1_2/Health');
-Library.include('library/1_2/GameManager');
-Library.include('library/1_2/modes/CTF');
-Library.include('library/1_2/AutoTargeting');
-Library.include('library/1_2/MultipartRendering');
-Library.include('library/1_2/guns/Insta');
-Library.include('library/1_2/guns/Stunball');
-Library.include('library/1_2/guns/Rocket');
-Library.include('library/1_2/guns/Shotgun');
-Library.include('library/1_2/mapelements/JumpPads');
-Library.include('library/1_2/mapelements/Cannons');
+Library.include('library/1_3/');
+
+Library.include('library/' + Global.LIBRARY_VERSION + '/__CorePatches');
+Library.include('library/' + Global.LIBRARY_VERSION + '/Plugins');
+Library.include('library/' + Global.LIBRARY_VERSION + '/Firing');
+Library.include('library/' + Global.LIBRARY_VERSION + '/Chat');
+Library.include('library/' + Global.LIBRARY_VERSION + '/Health');
+Library.include('library/' + Global.LIBRARY_VERSION + '/World');
+Library.include('library/' + Global.LIBRARY_VERSION + '/GameManager');
+Library.include('library/' + Global.LIBRARY_VERSION + '/modes/CTF');
+Library.include('library/' + Global.LIBRARY_VERSION + '/AutoTargeting');
+Library.include('library/' + Global.LIBRARY_VERSION + '/MultipartRendering');
+Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Insta');
+Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Stunball');
+Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Rocket');
+Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Shotgun');
+Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Chaingun');
+Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/JumpPads');
+Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/Cannons');
 
 // Default materials, etc.
 
-Library.include('library/MapDefaults');
+Library.include('library/' + Global.LIBRARY_VERSION + '/MapDefaults');
 
 // Textures
-
-/*
-Library.include('yo_frankie/');
-
-Library.include('textures/gk/brick2/');
-Library.include('textures/gk/concrete2/');
-Library.include('textures/gk/deco2/');
-Library.include('textures/gk/ground2/');
-Library.include('textures/gk/maya2/');
-Library.include('textures/gk/metal2/');
-Library.include('textures/gk/morter2/');
-Library.include('textures/gk/rock2/');
-Library.include('textures/gk/roof2/');
-Library.include('textures/gk/stone2/');
-Library.include('textures/gk/wall2/');
-Library.include('textures/gk/walls2/');
-Library.include('textures/gk/wood2/');
-*/
-
 
 Library.include('textures/gk/brick3/');
 Library.include('textures/gk/concrete3/');
@@ -73,15 +59,17 @@ PowerfulRocketGun = RocketGun.extend({
     projectileClass: PowerfulRocket,
 });
 
+playerChaingun = Firing.registerGun(new Chaingun(), 'Chaingun', 'packages/hud/gui_gk_Icon_w01.png');
 playerSniperGun = Firing.registerGun(new InstaGun(), 'Sniper Rifle', 'packages/hud/gui_gk_Icon_w03.png');
 playerShotgun = Firing.registerGun(new Shotgun(), 'Shotgun', 'packages/hud/gui_gk_Icon_w04.png');
 playerRocketLauncher = Firing.registerGun(new PowerfulRocketGun(), 'Rocket Launcher', 'packages/hud/gui_gk_Icon_w02.png');
-playerSeekingRocketLauncher = Firing.registerGun(new SeekingRocketGun(), 'Seeking Rocket Launcher', 'packages/hud/gui_gk_Icon_w01.png');
+playerSeekingRocketLauncher = Firing.registerGun(new SeekingRocketGun(), 'Seeking Rocket Launcher', 'packages/hud/gui_gk_Icon_w02b.png');
 
 registerEntityClass(
     bakePlugins(
         Player,
         [
+            Chat.playerPlugin,
             Firing.plugins.protocol,
             Firing.plugins.player,
             Health.plugin,
@@ -91,6 +79,8 @@ registerEntityClass(
             StunballVictimPlugin,
             TargetLockingPlugin,
             HeadshotPlugin,
+            Chaingun.plugin,
+            Character.plugins.effectiveCameraHeight,
             {
                 _class: "GamePlayer",
 
@@ -103,7 +93,8 @@ registerEntityClass(
 
                 activate: function() {
                     this.movementSpeed = 95; // Almost the same as sauer (100)
-                    this.currGunIndex = playerSniperGun;
+                    this.gunIndexes = [playerChaingun, playerSniperGun, playerShotgun, playerRocketLauncher, playerSeekingRocketLauncher];
+                    this.currGunIndex = playerChaingun;
                 },
 
                 clientActivate: function() {
@@ -117,24 +108,31 @@ registerEntityClass(
     )
 );
 
-Health.maxHealth = function(entity) { return 250; }; // Three insta shots to kill (or 1 headshot)
-
 // Autocannons
 
-function makeCannon(_name, gunClass, additionalPlugins) {
-    additionalPlugins = defaultValue(additionalPlugins, []);
+makeCannon('InstaCannon', RocketGun.extend({
+    projectileClass: Rocket.extend({
+        explosionPower: 50,
+        speed: 250,
+        timeLeft: 8.0,
+        gravityFactor: 0,
+    }),
+}), [Projectiles.plugin, {
+    healthSystem: 'regen',
+    maxHealth: 30,
+}]);
 
-    var CannonGun = bakePlugins(gunClass, [CannonGunPlugin]);
-    var cannonGun = new CannonGun();
-    Firing.registerGun(cannonGun);
-    var plugins = [AutoTargetingPlugin, MultipartRenderingPlugin, MultipartRenderingAutotargetingPlugin, CannonPlugin, Firing.plugins.protocol, BotFiringPlugin, CannonHealthPlugin, { _class: _name, gun: cannonGun }];
-    return registerEntityClass( bakePlugins(Mapmodel, plugins.concat(additionalPlugins)) );
-}
-
-makeCannon('InstaCannon', InstaGun);
-
-makeCannon('StunCannon', StunballGun, [Projectiles.plugin, StunballBotPlugin]);
-
+makeCannon('StunCannon', RocketGun.extend({
+    projectileClass: Rocket.extend({
+        explosionPower: 15,
+        speed: 150,
+        timeLeft: 8.0,
+        gravityFactor: 0,
+    }),
+}), [Projectiles.plugin, {
+    healthSystem: 'regen',
+    maxHealth: 30,
+}]);
 
 //// Application
 
@@ -155,8 +153,8 @@ ApplicationManager.setApplicationClass(Application.extend({
     actionKey: function(index, down) {
         if (!down) return;
         if (index === 0) { // action key 0: Help
-            UserInterface.showMessage("1-4: Select weapon. Middle mouse: Cycle weapons");
-        } else if (index >= 1 && index <= 4) { // Or: bind MOUSE2 actionkey1
+            UserInterface.showMessage("1-5: Select weapon. Middle mouse: Cycle weapons");
+        } else if (index >= 1 && index <= 5) { // Or: bind MOUSE2 actionkey1
             var gunIndexes = getPlayerEntity().gunIndexes.asArray();
             if (findIdentical(gunIndexes, index-1) >= 0) {
                 getPlayerEntity().currGunIndex = index-1;
@@ -170,6 +168,8 @@ ApplicationManager.setApplicationClass(Application.extend({
 
 //// Load permanent entities
 
+Projectiles.serverside = false;
+
 GameManager.setup([
     CTFMode.managerPlugin,
     merge(GameManager.managerPlugins.limitGameTime, { MAX_TIME: 10*60 }),
@@ -178,6 +178,9 @@ GameManager.setup([
     GameManager.managerPlugins.messages,
     GameManager.managerPlugins.balancer,
     AutoTargeting.managerPlugin,
+    GameManager.managerPlugins.eventList,
+    ParallelActionsPlugin,
+    Projectiles.plugin,
     {
         clientActivate: function() {
             if (!this.shownWelcome) {
@@ -218,4 +221,10 @@ Map.preloadModel('stromar/blue');
 //Map.preloadModel('stromar/hud/blue'); // (2) you may need only one of these, not both
 Map.preloadModel('flag/red');
 Map.preloadModel('flag/blue');
+
+if (Global.CLIENT) {
+    if (CAPI.setDefaultThirdpersonMode) {
+        CAPI.setDefaultThirdpersonMode(0);
+    }
+}
 
