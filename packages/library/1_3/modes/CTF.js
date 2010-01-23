@@ -374,7 +374,7 @@ CTFMode = {
                     }
 
                     var o = this.getFlagPosition(i);
-                    var flags = MODEL.LIGHT | MODEL.CULL_VFC | MODEL.CULL_OCCLUDED | MODEL.CULL_QUERY | MODEL.FULLBRIGHT | MODEL.CULL_DIST | MODEL.DYNSHADOW;
+                    var flags = MODEL.LIGHT | MODEL.CULL_VFC | MODEL.FULLBRIGHT | MODEL.CULL_DIST | MODEL.DYNSHADOW;
                     var yaw = o.yaw ? o.yaw : 0;
                     this.flagRenderingArgs[i] = [this, flagModelName, ANIM_IDLE|ANIM_LOOP, o.x, o.y, o.z, yaw, 0, flags, 0];
                 }
