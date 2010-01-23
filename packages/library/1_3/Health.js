@@ -243,7 +243,7 @@ Health = {
     },
 
     isValidTarget: function(entity) {
-        return entity && entity !== null && !entity.deactivated && entity.health > 0 && entity.clientState !== CLIENTSTATE.EDITING;
+        return entity && entity !== null && !entity.deactivated && entity.health > 0 && entity.clientState !== CLIENTSTATE.EDITING && (entity.spawnStage === 0 || entity.spawnStage === undefined);
     },
 
     isActiveEntity: function(entity) {
