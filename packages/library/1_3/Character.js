@@ -446,7 +446,7 @@ Character.plugins = {
             isOnFloor: function() {
                 if (floorDistance(this.position, 1024) < 1) return true;
                 if (this.velocity.z < -1 || this.falling.z < -1) return false;
-                return World.isColliding(this.position, 1, this);
+                return World.isColliding(this.position, this.radius+2, this);
             },
         },
     },

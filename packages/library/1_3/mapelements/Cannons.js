@@ -120,23 +120,21 @@ CannonHealthPlugin = {
                         entity: this,
                     }, this.disabledVisualEvent);
                 } else {
-                     if (this.canAutoTarget === true) { // Did we just switch to false
-                        this.renderDynamic = function() { };
-                        this.collisionRadiusWidth = 0.1;
-                        this.collisionRadiusHeight = 0.1;
+                    this.renderDynamic = function() { };
+                    this.collisionRadiusWidth = 0.1;
+                    this.collisionRadiusHeight = 0.1;
 
-                        Effect.fireball(PARTICLE.EXPLOSION_NO_GLARE, this.center, 30, 1.0, 0xFF775F, 5);
-                        Sound.play("yo_frankie/DeathFlash.wav", this.center);
-                        Effect.addDecal(DECAL.SCORCH, this.position, new Vector3(0,0,1), 7, 0x000000);
+                    Effect.fireball(PARTICLE.EXPLOSION_NO_GLARE, this.center, 30, 1.0, 0xFF775F, 5);
+                    Sound.play("yo_frankie/DeathFlash.wav", this.center);
+                    Effect.addDecal(DECAL.SCORCH, this.position, new Vector3(0,0,1), 7, 0x000000);
 
-                        var num = 5 + Math.ceil(Math.random()*7);
-                        for (var i = 0; i < num; i++) {
-                            GameManager.getSingleton().projectileManager.add(new Projectiles.debris(
-                                this.center.addNew(Random.normalizedVector3().mul(10)),
-                                Random.normalizedVector3().mul(Math.random()*60).add(new Vector3(0, 0, 40)),
-                                this
-                            ));
-                        }
+                    var num = 5 + Math.ceil(Math.random()*7);
+                    for (var i = 0; i < num; i++) {
+                        GameManager.getSingleton().projectileManager.add(new Projectiles.debris(
+                            this.center.addNew(Random.normalizedVector3().mul(10)),
+                            Random.normalizedVector3().mul(Math.random()*60).add(new Vector3(0, 0, 40)),
+                            this
+                        ));
                     }
                 }
             } else {

@@ -267,7 +267,7 @@ SmallShot = Projectiles.Projectile.extend({
 Projectiles.debris = Projectiles.Projectile.extend({
     radius: 2,
     color: 0xDCBBAA,
-    timeLeft: 2.5,
+    timeLeft: 5,
     gravity: 1.0,
     elasticity: 0.5,
     friction: 0.6,
