@@ -129,7 +129,7 @@ Some specific comments:
 
   * If you get 'undefined reference' link errors to forkpty and openpty, then you
     need to link with libutil.so, by adding -lutil to the linker. This seems to
-    occur for unknown reasons on 64-bit Slackware. One way to solve this there is
+    occur for unknown reasons on Slackware. One way to solve this there is
     to add
 
         target_link_libraries(util)
@@ -137,6 +137,8 @@ Some specific comments:
     to the end of src/client/CMakeLists.txt. See also more details in
 
         http://github.com/kripken/intensityengine/issues#issue/7
+
+    Slackware gurus, can you help us understand why this happens?
 
 
 OS X
