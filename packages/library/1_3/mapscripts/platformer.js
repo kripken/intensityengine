@@ -15,6 +15,7 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/Firing');
 Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Rocket');
 Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Chaingun');
 Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/Cannons');
+Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/PlotTriggers');
 
 // Default materials, etc.
 
