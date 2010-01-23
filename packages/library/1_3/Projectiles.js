@@ -265,7 +265,7 @@ SmallShot = Projectiles.Projectile.extend({
 });
 
 Projectiles.debris = Projectiles.Projectile.extend({
-    radius: 2,
+    radius: 0.5,
     color: 0xDCBBAA,
     timeLeft: 5,
     gravity: 1.0,
