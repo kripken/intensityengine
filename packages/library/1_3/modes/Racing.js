@@ -62,7 +62,7 @@ RacingMode = {
                 });
 
                 GameManager.getSingleton().eventManager.add({
-                    secondsBefore: 5,
+                    secondsBefore: 10,
                     func: function() {
                         player.respawn();
                     },
@@ -180,7 +180,7 @@ RacingMode = {
                 this.highScoreData = {
                     biggerScoresAreBetter: false, // lower seconds - better race
                     maxScores: 5,
-                    scores: [],
+                    scores: (this.highScoreData && this.highScoreData.scores) ? this.highScoreData.scores : [],
                     unit: 'seconds',
                     oneScorePerPlayer: true,
                 };

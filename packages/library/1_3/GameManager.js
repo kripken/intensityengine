@@ -429,10 +429,12 @@ GameManager = {
                 highScoreData: new StateJSON(),
 
                 init: function() {
+                    var scores = CAPI.signalComponent('LocalStorage', 'read|highscores');
+                    scores = evalJSON(scores)[0]; // Assume just one component responded
                     this.highScoreData = {
                         biggerScoresAreBetter: true,
                         maxScores: 6,
-                        scores: [],
+                        scores: (scores ? evalJSON(scores) : []),
                         unit: 'points',
                         oneScorePerPlayer: true,
                     };
@@ -480,6 +482,7 @@ GameManager = {
                     var data = this.highScoreData;
                     data.scores = scores;
                     this.highScoreData = data;
+                    CAPI.signalComponent('LocalStorage', 'write|highscores|' + serializeJSON(scores));
 
                     return true;
                 },
@@ -489,7 +492,6 @@ GameManager = {
                         CAPI.showHUDRect(0.5, 0.5, -0.8, -0.8, 0x225899);
                         CAPI.showHUDRect(0.5, 0.5, -0.75, -0.75, 0x000000);
                         CAPI.showHUDText('High Scores', 0.5, 0.19, 0.75, 0xFFEEDD);
-
                         var y = 0.3;
                         var spacing = Math.min(0.5/(this.highScoreData.maxScores-1), 0.1);
                         forEach(this.highScoreData.scores, function(item) {
