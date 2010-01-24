@@ -1,19 +1,20 @@
 // (C) 2009 Alon 'Kripken' Zakai
 
-Library.include('library/1_2/__CorePatches');
+Library.include('library/1_3/');
 
-Library.include('library/1_2/Plugins');
-Library.include('library/1_2/Health');
-Library.include('library/1_2/GameManager');
-Library.include('library/1_2/Vehicles');
-Library.include('library/1_2/Chat');
-Library.include('library/1_2/WorldSignals');
-Library.include('library/1_2/mapelements/WorldSequences');
+Library.include('library/' + Global.LIBRARY_VERSION + '/__CorePatches');
 
+Library.include('library/' + Global.LIBRARY_VERSION + '/Plugins');
+Library.include('library/' + Global.LIBRARY_VERSION + '/Health');
+Library.include('library/' + Global.LIBRARY_VERSION + '/GameManager');
+Library.include('library/' + Global.LIBRARY_VERSION + '/Vehicles');
+Library.include('library/' + Global.LIBRARY_VERSION + '/Chat');
+Library.include('library/' + Global.LIBRARY_VERSION + '/World');
+Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/WorldSequences');
 
 // Default materials, etc.
 
-Library.include('library/MapDefaults');
+Library.include('library/' + Global.LIBRARY_VERSION + '/MapDefaults');
 
 // Textures
 
