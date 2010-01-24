@@ -10,7 +10,9 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/GameManager');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Vehicles');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Chat');
 Library.include('library/' + Global.LIBRARY_VERSION + '/World');
+Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/PlotTriggers');
 Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/WorldSequences');
+Library.include('library/' + Global.LIBRARY_VERSION + '/modes/Racing');
 
 // Default materials, etc.
 
@@ -56,6 +58,7 @@ GamePlayer = registerEntityClass(
             GameManager.playerPlugin,
             Chat.playerPlugin,
             WorldSequences.plugins.player,
+            RacingMode.playerPlugin,
             {
                 _class: "GamePlayer",
                 HUDModelName: '',
@@ -74,30 +77,7 @@ GamePlayer = registerEntityClass(
                     }, this);
                 },
 
-                prepareRace: function() {
-                    this.resetWorldSequence('racetrack');
-                    this.racingTimer = -1;
-                },
-
-                endRace: function() {
-                    var finalTime = twoDigitFloat(this.racingTimer);
-                    if (GameManager.getSingleton().addPossibleHighScore(this._name, finalTime)) {
-                        GameManager.getSingleton().addHUDMessage("New high score! " + finalTime + ' seconds', 0xFFDD99, 10.0, 0.8);
-                        Sound.play('0ad/alarmvictory_1.ogg');
-                    } else {
-                        GameManager.getSingleton().addHUDMessage('You finished in ' + finalTime + ' seconds', 0xFFFFFF, 10.0, 0.8);
-                        Sound.play('0ad/alarmcreatemiltaryfoot_1.ogg');
-                    }
-                    this.prepareRace();
-                },
-
                 clientActivate: function() {
-                    this.prepareRace();
-
-                    this.connect('clientRespawn', function() {
-                        this.prepareRace();
-                    });
-
                     this.renderDynamic = function(HUDPass, needHUD) {
                         if (!this.initialized) return;
 
@@ -189,20 +169,14 @@ GamePlayer = registerEntityClass(
                        Effect.splash(PARTICLE.SMOKE, 4, 0.5, this.position.copy(), 0x101010, 10, 100, -25);
                     }
 
-                    if (this === getPlayerEntity()) {
+                    if (this === getPlayerEntity() && this.raceStatus === RacingMode.STATUS.inProgress) {
                         // Racing timer
-                        if (this.racingTimer >= 0) {
-                            this.racingTimer += seconds;
-                            CAPI.showHUDText("Time: " + integer(this.racingTimer) + " seconds", 0.5, 0.1, 0.75, 0xFFCC33);
-                        }
+                        var time = decimal2(Global.time - this.raceStartTime);
+                        CAPI.showHUDText("Time: " + time + " seconds", 0.5, 0.1, 0.75, 0xFFCC33);
 
-/*
-//log(ERROR, this.velocity.z + ' : ' + this.falling.z);
-                        if (this.velocity.z > 0 && this.oldVelocityZ < 0) {
-                            this.velocity.z /= 4;
+                        if (time > 12 && this.worldSequences['racetrack'] < 0) {
+                            this.health = 0;
                         }
-                        this.oldVelocityZ = this.velocity.z + this.falling.z;
-*/
                     }
                 },
             },
@@ -250,18 +224,15 @@ registerEntityClass(bakePlugins(AreaTrigger, [WorldSequences.plugins.areaTrigger
 
 registerEntityClass(bakePlugins(AreaTrigger, [WorldSequences.plugins.areaTrigger, RacetrackSequencePlugin, {
     _class: 'RacetrackSequenceStart',
-
-    onSequenceArrival: function(entity) {
-        Sound.play('0ad/alarmcreatemiltaryfoot_1.ogg');
-        entity.racingTimer = 0;
-    },
 }]));
 
 registerEntityClass(bakePlugins(AreaTrigger, [WorldSequences.plugins.areaTrigger, RacetrackSequencePlugin, {
     _class: 'RacetrackSequenceFinish',
 
     onSequenceArrival: function(entity) {
-        entity.endRace();
+        if (entity === getPlayerEntity()) {
+            GameManager.getSingleton().playerFinishedRace = entity.uniqueId;
+        }
     },
 }]));
 
@@ -297,16 +268,13 @@ ApplicationManager.setApplicationClass(Application.extend({
 
 GameManager.setup([
     GameManager.managerPlugins.messages,
+    GameManager.managerPlugins.eventList,
     GameManager.managerPlugins.highScoreTable.plugin,
+    RacingMode.managerPlugin,
+    RacingMode.highScores.managerPlugin,
     {
-        activate: function() {
-            this.highScoreData = {
-                biggerScoresAreBetter: false, // lower seconds - better race
-                maxScores: 5,
-                scores: [],
-                unit: 'seconds',
-                oneScorePerPlayer: true,
-            };
+        racingMode: {
+            maxTime: 3*60,
         },
 
         clientActivate: function() {
@@ -316,6 +284,21 @@ GameManager.setup([
                 duration: 4.0,
                 size: 0.8,
                 y: 0.25,
+            });
+        },
+
+        startRace: function() {
+            forEach(getEntitiesByTag('start_door'), function(entity) {
+                entity.state = 'open';
+            });
+
+            GameManager.getSingleton().eventManager.add({
+                secondsBefore: 10,
+                func: function() {
+                    forEach(getEntitiesByTag('start_door'), function(entity) {
+                        entity.state = 'closed';
+                    });
+                },
             });
         },
     },

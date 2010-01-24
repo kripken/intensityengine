@@ -33,7 +33,7 @@ RacingMode = {
     managerPlugin: {
         playerFinishedRace: new StateInteger({ hasHistory: false }),
 
-        raceMode: {
+        racingMode: {
             maxTime: 1*60,
         },
 
@@ -136,7 +136,7 @@ RacingMode = {
             } else {
                 // Race in progress, check for expiration. Frag players that are too tardy
                 // For fragged players, restart their status to ready
-                if (Global.time - this.raceStartTime > this.raceMode.maxTime || statuses[RacingMode.STATUS.inProgress] === 0) {
+                if (Global.time - this.raceStartTime > this.racingMode.maxTime || statuses[RacingMode.STATUS.inProgress] === 0) {
                     forEach(getClientEntities(), function(player) {
                         if (player.raceStatus === RacingMode.STATUS.inProgress && Health.isValidTarget(player)) player.health = 0;
                     });
@@ -165,6 +165,40 @@ RacingMode = {
                 this.raceStatus = RacingMode.STATUS.ready;
                 if (this.resetWorldSequence) this.resetWorldSequence('racetrack');
             });
+
+            this.connect('client_onModify_raceStatus', function(status) {
+                if (status === RacingMode.STATUS.inProgress) {
+                    this.raceStartTime = Global.time;
+                }
+            });
+        },
+    },
+
+    highScores: {
+        managerPlugin: {
+            activate: function() {
+                this.highScoreData = {
+                    biggerScoresAreBetter: false, // lower seconds - better race
+                    maxScores: 5,
+                    scores: [],
+                    unit: 'seconds',
+                    oneScorePerPlayer: true,
+                };
+
+                this.connect('onModify_playerFinishedRace', function(uniqueId) {
+                    var player = getEntity(uniqueId);
+                    if (!player) return;
+
+                    var finalTime = decimal2(Global.time - this.raceStartTime);
+                    if (GameManager.getSingleton().addPossibleHighScore(player._name, finalTime)) {
+                        GameManager.getSingleton().addHUDMessage("New high score! " + finalTime + ' seconds', 0xFFDD99, 10.0, 0.8, 0, 0, player);
+                        Sound.play('0ad/alarmvictory_1.ogg');
+                    } else {
+                        GameManager.getSingleton().addHUDMessage('You finished in ' + finalTime + ' seconds', 0xFFFFFF, 10.0, 0.8, 0, 0, player);
+                        Sound.play('0ad/alarmcreatemiltaryfoot_1.ogg');
+                    }
+                });
+            },
         },
     },
 };
