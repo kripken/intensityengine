@@ -21,6 +21,26 @@
 #=============================================================================
 
 
+'''
+Technical details and notes:
+
+* Add intensity.components.local_storage to the proper place ([Components]
+    list) in your settings.cfg, so the plugin will be loaded.
+* In your scripts, do CAPI.signalComponent('LocalStorage', 'read|KEY'); to
+    read the value for KEY. You will get in response a string (all output
+    from signalComponent is in string form), so do eval() on that. The result
+    will be a list of responses from components. Normally you will have only
+    one storage component, so just get the value at index [0].
+* To write values, do CAPI.signalComponent('LocalStorage', 'write|KEY|VALUE');
+    to write that KEY-VALUE pair.
+* This is blocking (scripts will stop until the read/write finishes), so you
+    might not want to do a lot of updates each frame
+* Note also that if this component is not installed, and you call
+    CAPI.signalComponent('LocalStorage', 'read...') then you will get an empty
+    string in response (graceful, silent failure). Writes will likewise raise
+    no error and nothing will happen.
+'''
+
 import os
 import sqlite3
 
