@@ -66,6 +66,7 @@ RacingMode = {
                     func: function() {
                         player.respawn();
                     },
+                    entity: player,
                 });
             });
         },
