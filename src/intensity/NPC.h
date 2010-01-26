@@ -33,7 +33,7 @@ namespace NPC
     //! @return The newly created NPC entity
     ScriptValuePtr add(std::string _class);
 
-    //! Removes a single NPC
+    //! Removes a single NPC XXX - should not be used
     void remove(int clientNumber);
 };
 
