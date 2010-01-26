@@ -217,19 +217,35 @@ World = merge(World, {
 
     //!
     isPlayerCollidingEntity: function(player, entity) {
-        // z
-        if (player.position.z >= entity.position.z + 2*entity.collisionRadiusHeight ||
-            player.position.z + player.eyeHeight + player.aboveEye <= entity.position.z) return false;
+        if (entity.collisionRadiusWidth) {
+            // z
+            if (player.position.z >= entity.position.z + 2*entity.collisionRadiusHeight ||
+                player.position.z + player.eyeHeight + player.aboveEye <= entity.position.z) return false;
 
-        // x
-        if (player.position.x - player.radius >= entity.position.x + entity.collisionRadiusWidth ||
-            player.position.x + player.radius <= entity.position.x - entity.collisionRadiusWidth) return false;
+            // x
+            if (player.position.x - player.radius >= entity.position.x + entity.collisionRadiusWidth ||
+                player.position.x + player.radius <= entity.position.x - entity.collisionRadiusWidth) return false;
 
-        // y
-        if (player.position.y - player.radius >= entity.position.y + entity.collisionRadiusWidth ||
-            player.position.y + player.radius <= entity.position.y - entity.collisionRadiusWidth) return false;
+            // y
+            if (player.position.y - player.radius >= entity.position.y + entity.collisionRadiusWidth ||
+                player.position.y + player.radius <= entity.position.y - entity.collisionRadiusWidth) return false;
 
-        return true;
+            return true;
+        } else {
+            // z
+            if (player.position.z >= entity.position.z + entity.eyeHeight + entity.aboveEye ||
+                player.position.z + player.eyeHeight + player.aboveEye <= entity.position.z) return false;
+
+            // x
+            if (player.position.x - player.radius >= entity.position.x + entity.radius ||
+                player.position.x + player.radius <= entity.position.x - entity.radius) return false;
+
+            // y
+            if (player.position.y - player.radius >= entity.position.y + entity.radius ||
+                player.position.y + player.radius <= entity.position.y - entity.radius) return false;
+
+            return true;
+        }
     },
 });
 
