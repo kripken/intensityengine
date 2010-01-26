@@ -112,6 +112,64 @@ GamePlayer = registerEntityClass(
     )
 );
 
+Tools.replaceFunction('Model.scale', function(amount) {
+    if (amount === '45') { amount = 100; Model.yaw(180); }
+    arguments.callee._super.call(this, amount);
+}, false);
+
+Enemy = registerEntityClass(
+    bakePlugins(
+        Character,
+        [
+            {
+                _class: "Enemy",
+
+                alive: new StateInteger(),
+
+                init: function() {
+                    this.modelName = 'gk/botter/0';
+                    this.eyeHeight = 10;
+                    this.aboveEye = 4;
+                    this.radius = 10;
+
+                    this.alive = 1;
+                    this.movementSpeed = 25;
+                },
+
+                activate: function() {
+                    this.connect('onModify_alive', function(value) {
+                        if (!value) {
+                            removeEntity(this.uniqueId);
+                        }
+                    });
+                },
+
+                act: function() {
+                    // Mario style
+                    if (this.velocity.magnitude() < 1) {
+                        this.yaw *= -1;
+                    }
+                    this.move = +1;
+                },
+
+                clientAct: function() {
+                    var player = getPlayerEntity();
+                    if (!player) return;
+                    if (World.isPlayerCollidingEntity(player, this)) {
+                        player.health = 0;
+                    }
+                },
+
+                sufferDamage: function(data) {
+                    if (data.damage) {
+                        this.alive = 0;
+                    }
+                },
+            },
+        ]
+    )
+);
+
 //// Application
 
 ApplicationManager.setApplicationClass(Application.extend({
@@ -172,6 +230,11 @@ if (Global.SERVER) { // Run this only on the server - not the clients
             },
         },
     ]);
+
+    forEach(getEntitiesByTag('start_enemy'), function(marker) {
+        var enemy = newNPC("Enemy");
+        enemy.position = marker.position;
+    });
 }
 
 if (Global.CLIENT) {
