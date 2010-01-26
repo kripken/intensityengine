@@ -217,6 +217,7 @@ EMBED_CAPI_FUNC("getMaterial", __script__getMaterial, 3);
 
 #ifdef SERVER
     EMBED_CAPI_FUNC("addNPC", __script__addNPC, 1);
+    EMBED_CAPI_FUNC("removeNPC", __script__removeNPC, 1);
 #endif
 
 // Rendering

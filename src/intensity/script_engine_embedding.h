@@ -920,6 +920,11 @@ V8_FUNC_ddd(__script__getMaterial, {
         ScriptValuePtr ret = NPC::add(arg1);
         V8_RETURN_VALUE(ret);
     });
+
+    V8_FUNC_T(__script__removeNPC, , {
+        fpsent* fpsEntity = (fpsent*)self->dynamicEntity;
+        NPC::remove(fpsEntity->clientnum);
+    });
 #endif
 
 // Rendering
