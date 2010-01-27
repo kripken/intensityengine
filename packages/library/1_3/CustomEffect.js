@@ -76,5 +76,20 @@ CustomEffect = {
             return this.kwargs.shots.length === 0;
         },
     }),
+
+    explosion: function(center, position, radius, color, debrises, entity) {
+        Effect.fireball(PARTICLE.EXPLOSION_NO_GLARE, center, radius, 1.0, color, 5);
+        Sound.play("yo_frankie/DeathFlash.wav", center);
+        Effect.addDecal(DECAL.SCORCH, position, new Vector3(0,0,1), 7, 0x000000);
+
+        var num = debrises/2 + Math.ceil(Math.random()*debrises*2);
+        for (var i = 0; i < num; i++) {
+            GameManager.getSingleton().projectileManager.add(new Projectiles.debris(
+                center.addNew(Random.normalizedVector3().mul(radius/3)),
+                Random.normalizedVector3().mul(Math.random()*radius*2).add(new Vector3(0, 0, radius*1.333)),
+                entity
+            ));
+        }
+    },
 };
 

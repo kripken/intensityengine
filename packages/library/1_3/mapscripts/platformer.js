@@ -12,6 +12,7 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/Chat');
 Library.include('library/' + Global.LIBRARY_VERSION + '/World');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Platformer');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Firing');
+Library.include('library/' + Global.LIBRARY_VERSION + '/CustomEffect');
 Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Rocket');
 Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Chaingun');
 Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/Cannons');
@@ -124,7 +125,7 @@ Enemy = registerEntityClass(
             {
                 _class: "Enemy",
 
-                alive: new StateInteger(),
+                alive: new StateInteger({ clientSet: true }),
 
                 init: function() {
                     this.modelName = 'gk/botter/0';
@@ -146,17 +147,39 @@ Enemy = registerEntityClass(
 
                 act: function() {
                     // Mario style
-                    if (this.velocity.magnitude() < 1) {
+                    if (this.velocity.magnitude() < 2) {
                         this.yaw *= -1;
                     }
                     this.move = +1;
                 },
 
-                clientAct: function() {
+                clientActivate: function() {
+                    this.canHarmPlayer = true;
+
+                    this.connect('client_onModify_alive', function(value) {
+                        if (!value) {
+                            CustomEffect.explosion(this.center, this.position, 35, 0xFF775F, 10, this);
+                        }
+                    });
+                },
+
+                clientAct: function(seconds) {
                     var player = getPlayerEntity();
-                    if (!player) return;
+                    if (!Health.isValidTarget(player)) return;
                     if (World.isPlayerCollidingEntity(player, this)) {
-                        player.health = 0;
+                        if (this.canHarmPlayer) {
+                            player.health = Math.max(player.health - 25, 0);
+
+                            this.canHarmPlayer = false;
+                            var that = this;
+                            GameManager.getSingleton().eventManager.add({
+                                secondsBefore: 3,
+                                func: function() { that.canHarmPlayer = true; },
+                                entity: this,
+                            });
+                        }
+
+                        player.position.add(player.position.subNew(this.position).normalize().mul(50*seconds));
                     }
                 },
 
