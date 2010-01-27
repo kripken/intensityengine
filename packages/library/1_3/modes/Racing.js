@@ -90,7 +90,9 @@ RacingMode = {
             var statuses = {};
             forEach(values(RacingMode.STATUS), function(value) { statuses[value] = 0; });
             forEach(players, function(player) {
-                statuses[player.raceStatus] += 1;
+                if (Health.isActiveEntity(player)) {
+                    statuses[player.raceStatus] += 1;
+                }
             });
 
             if (statuses[RacingMode.STATUS.inProgress] === 0 && this.raceStatus === 0) {
