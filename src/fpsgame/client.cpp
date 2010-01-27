@@ -86,12 +86,14 @@ namespace game
 //        loopv(players) if(players[i]) clientdisconnected(i, false); Kripken: When we disconnect, we should shut down anyhow...
         Logging::log(Logging::WARNING, "Not doing normal Sauer disconnecting of other clients\r\n");
 
-
         #ifdef CLIENT
             ClientSystem::onDisconnect();
         #else
             assert(0); // What to do...?
         #endif
+
+        if (player->ragdoll)
+            cleanragdoll(player);
     }
 
 
