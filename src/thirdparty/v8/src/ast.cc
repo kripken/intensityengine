@@ -28,6 +28,7 @@
 #include "v8.h"
 
 #include "ast.h"
+#include "parser.h"
 #include "scopes.h"
 #include "string-stream.h"
 
@@ -40,7 +41,6 @@ VariableProxySentinel VariableProxySentinel::identifier_proxy_(false);
 ValidLeftHandSideSentinel ValidLeftHandSideSentinel::instance_;
 Property Property::this_property_(VariableProxySentinel::this_proxy(), NULL, 0);
 Call Call::sentinel_(NULL, NULL, 0);
-CallEval CallEval::sentinel_(NULL, NULL, 0);
 
 
 // ----------------------------------------------------------------------------
@@ -92,20 +92,6 @@ void VariableProxy::BindTo(Variable* var) {
 }
 
 
-#ifdef DEBUG
-
-const char* LoopStatement::OperatorString() const {
-  switch (type()) {
-    case DO_LOOP: return "DO";
-    case FOR_LOOP: return "FOR";
-    case WHILE_LOOP: return "WHILE";
-  }
-  return NULL;
-}
-
-#endif  // DEBUG
-
-
 Token::Value Assignment::binary_op() const {
   switch (op_) {
     case Token::ASSIGN_BIT_OR: return Token::BIT_OR;
@@ -153,6 +139,13 @@ ObjectLiteral::Property::Property(bool is_getter, FunctionLiteral* value) {
 }
 
 
+bool ObjectLiteral::Property::IsCompileTimeValue() {
+  return kind_ == CONSTANT ||
+      (kind_ == MATERIALIZED_LITERAL &&
+       CompileTimeValue::IsCompileTimeValue(value_));
+}
+
+
 bool ObjectLiteral::IsValidJSON() {
   int length = properties()->length();
   for (int i = 0; i < length; i++) {
@@ -186,6 +179,13 @@ void TargetCollector::AddTarget(BreakTarget* target) {
 
 // ----------------------------------------------------------------------------
 // Implementation of AstVisitor
+
+
+void AstVisitor::VisitDeclarations(ZoneList<Declaration*>* declarations) {
+  for (int i = 0; i < declarations->length(); i++) {
+    Visit(declarations->at(i));
+  }
+}
 
 
 void AstVisitor::VisitStatements(ZoneList<Statement*>* statements) {
@@ -433,7 +433,7 @@ void* RegExpUnparser::VisitQuantifier(RegExpQuantifier* that, void* data) {
   } else {
     stream()->Add("%i ", that->max());
   }
-  stream()->Add(that->is_greedy() ? "g " : "n ");
+  stream()->Add(that->is_greedy() ? "g " : that->is_possessive() ? "p " : "n ");
   that->body()->Accept(this, data);
   stream()->Add(")");
   return NULL;

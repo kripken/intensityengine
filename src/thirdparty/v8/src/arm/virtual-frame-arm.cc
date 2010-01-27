@@ -127,6 +127,10 @@ void VirtualFrame::Enter() {
 
 void VirtualFrame::Exit() {
   Comment cmnt(masm(), "[ Exit JS frame");
+  // Record the location of the JS exit code for patching when setting
+  // break point.
+  __ RecordJSReturn();
+
   // Drop the execution stack down to the frame pointer and restore the caller
   // frame pointer and return address.
   __ mov(sp, fp);
@@ -139,30 +143,41 @@ void VirtualFrame::AllocateStackSlots() {
   if (count > 0) {
     Comment cmnt(masm(), "[ Allocate space for locals");
     Adjust(count);
-      // Initialize stack slots with 'undefined' value.
+    // Initialize stack slots with 'undefined' value.
     __ LoadRoot(ip, Heap::kUndefinedValueRootIndex);
-  }
-  if (FLAG_check_stack) {
+    __ LoadRoot(r2, Heap::kStackLimitRootIndex);
+    if (count < kLocalVarBound) {
+      // For less locals the unrolled loop is more compact.
+      for (int i = 0; i < count; i++) {
+        __ push(ip);
+      }
+    } else {
+      // For more locals a loop in generated code is more compact.
+      Label alloc_locals_loop;
+      __ mov(r1, Operand(count));
+      __ bind(&alloc_locals_loop);
+      __ push(ip);
+      __ sub(r1, r1, Operand(1), SetCC);
+      __ b(ne, &alloc_locals_loop);
+    }
+  } else {
     __ LoadRoot(r2, Heap::kStackLimitRootIndex);
   }
-  for (int i = 0; i < count; i++) {
-    __ push(ip);
-  }
-  if (FLAG_check_stack) {
-    // Put the lr setup instruction in the delay slot.  The 'sizeof(Instr)' is
-    // added to the implicit 8 byte offset that always applies to operations
-    // with pc and gives a return address 12 bytes down.
-    masm()->add(lr, pc, Operand(sizeof(Instr)));
-    masm()->cmp(sp, Operand(r2));
-    StackCheckStub stub;
-    // Call the stub if lower.
-    masm()->mov(pc,
-                Operand(reinterpret_cast<intptr_t>(stub.GetCode().location()),
-                        RelocInfo::CODE_TARGET),
-                LeaveCC,
-                lo);
-  }
+  // Check the stack for overflow or a break request.
+  // Put the lr setup instruction in the delay slot.  The kInstrSize is added
+  // to the implicit 8 byte offset that always applies to operations with pc
+  // and gives a return address 12 bytes down.
+  masm()->add(lr, pc, Operand(Assembler::kInstrSize));
+  masm()->cmp(sp, Operand(r2));
+  StackCheckStub stub;
+  // Call the stub if lower.
+  masm()->mov(pc,
+              Operand(reinterpret_cast<intptr_t>(stub.GetCode().location()),
+                      RelocInfo::CODE_TARGET),
+              LeaveCC,
+              lo);
 }
+
 
 
 void VirtualFrame::SaveContextRegister() {
@@ -241,17 +256,14 @@ void VirtualFrame::CallRuntime(Runtime::FunctionId id, int arg_count) {
 
 void VirtualFrame::InvokeBuiltin(Builtins::JavaScript id,
                                  InvokeJSFlags flags,
-                                 Result* arg_count_register,
                                  int arg_count) {
-  ASSERT(arg_count_register->reg().is(r0));
   PrepareForCall(arg_count, arg_count);
-  arg_count_register->Unuse();
   __ InvokeBuiltin(id, flags);
 }
 
 
 void VirtualFrame::RawCallCodeObject(Handle<Code> code,
-                                       RelocInfo::Mode rmode) {
+                                     RelocInfo::Mode rmode) {
   ASSERT(cgen()->HasValidEntryRegisters());
   __ Call(code, rmode);
 }
@@ -385,6 +397,13 @@ void VirtualFrame::EmitPush(Register reg) {
   elements_.Add(FrameElement::MemoryElement());
   stack_pointer_++;
   __ push(reg);
+}
+
+
+void VirtualFrame::EmitPushMultiple(int count, int src_regs) {
+  ASSERT(stack_pointer_ == element_count() - 1);
+  Adjust(count);
+  __ stm(db_w, sp, src_regs);
 }
 
 

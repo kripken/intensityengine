@@ -28,6 +28,40 @@
 #ifndef V8_MACRO_ASSEMBLER_H_
 #define V8_MACRO_ASSEMBLER_H_
 
+
+// Helper types to make boolean flag easier to read at call-site.
+enum InvokeFlag {
+  CALL_FUNCTION,
+  JUMP_FUNCTION
+};
+
+
+enum CodeLocation {
+  IN_JAVASCRIPT,
+  IN_JS_ENTRY,
+  IN_C_ENTRY
+};
+
+
+enum HandlerType {
+  TRY_CATCH_HANDLER,
+  TRY_FINALLY_HANDLER,
+  JS_ENTRY_HANDLER
+};
+
+
+// Flags used for the AllocateInNewSpace functions.
+enum AllocationFlags {
+  // No special flags.
+  NO_ALLOCATION_FLAGS = 0,
+  // Return the pointer to the allocated already tagged as a heap object.
+  TAG_OBJECT = 1 << 0,
+  // The content of the result register already contains the allocation top in
+  // new space.
+  RESULT_CONTAINS_TOP = 1 << 1
+};
+
+
 #if V8_TARGET_ARCH_IA32
 #include "assembler.h"
 #include "ia32/assembler-ia32.h"
@@ -43,8 +77,13 @@
 #elif V8_TARGET_ARCH_ARM
 #include "arm/constants-arm.h"
 #include "assembler.h"
+#ifdef V8_ARM_VARIANT_THUMB
+#include "arm/assembler-thumb2.h"
+#include "arm/assembler-thumb2-inl.h"
+#else
 #include "arm/assembler-arm.h"
 #include "arm/assembler-arm-inl.h"
+#endif
 #include "code.h"  // must be after assembler_*.h
 #include "arm/macro-assembler-arm.h"
 #else

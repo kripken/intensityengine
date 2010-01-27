@@ -1,3 +1,253 @@
+2010-01-14: Version 2.0.6
+
+        Added ES5 Object.getPrototypeOf, GetOwnPropertyDescriptor,
+        GetOwnProperty, FromPropertyDescriptor.
+
+        Fixed Mac x64 build errors.
+
+        Improved performance of some math and string operations.
+
+        Improved performance of some regexp operations.
+
+        Improved performance of context creation.
+
+        Improved performance of hash tables.
+
+
+2009-12-18: Version 2.0.5
+
+        Extended to upper limit of map space to allow for 7 times as many map
+        to be allocated (issue 524).
+
+        Improved performance of code using closures.
+
+        Improved performance of some binary operations involving doubles.
+
+
+2009-12-16: Version 2.0.4
+
+        Added ECMAScript 5 Object.create.
+
+        Improved performance of Math.max and Math.min.
+
+        Optimized adding of strings on 64-bit platforms.
+
+        Improved handling of external strings by using a separate table
+        instead of weak handles.  This improves garbage collection
+        performance and uses less memory.
+
+        Changed code generation for object and array literals in toplevel
+        code to be more compact by doing more work in the runtime.
+
+        Fixed a crash bug triggered when garbage collection happened during
+        generation of a callback load inline cache stub.
+
+        Fixed crash bug sometimes triggered when local variables shadowed
+        parameters in functions that used the arguments object.
+
+
+2009-12-03: Version 2.0.3
+
+        Optimized handling and adding of strings, for-in and Array.join.
+
+        Heap serialization is now non-destructive.
+
+        Improved profiler support with information on time spend in C++
+        callbacks registered through the API.
+
+        Added commands to the debugger protocol for starting/stopping
+        profiling.
+
+        Enabled the non-optimizing compiler for top-level code.
+
+        Changed the API to only allow strings to be set as data objects on
+        Contexts and scripts to avoid potentially keeping global objects
+        around for too long (issue 528).
+
+        OpenBSD support patch by Peter Valchev <pvalchev@gmail.com>.
+
+        Fixed bugs.
+
+
+2009-11-24: Version 2.0.2
+
+        Improved profiler support.
+
+        Fixed bug that broke compilation of d8 with readline support.
+
+
+2009-11-20: Version 2.0.1
+
+        Fixed crash bug in String.prototype.replace.
+
+        Reverted a change which caused Chromium interactive ui test
+        failures.
+
+
+2009-11-18: Version 2.0.0
+
+        Added support for VFP on ARM.
+
+        Added TryCatch::ReThrow method to the API.
+
+        Reduced the size of snapshots and improved the snapshot load time.
+
+        Improved heap profiler support.
+
+        64-bit version now supported on Windows.
+
+        Fixed a number of debugger issues.
+
+        Fixed bugs.
+
+
+2009-10-29: Version 1.3.18
+
+        Reverted a change which caused crashes in RegExp replace.
+
+        Reverted a change which caused Chromium ui_tests failure.
+
+
+2009-10-28: Version 1.3.17
+
+        Added API method to get simple heap statistics.
+
+        Improved heap profiler support.
+
+        Fixed the implementation of the resource constraint API so it
+        works when using snapshots.
+
+        Fixed a number of issues in the Windows 64-bit version.
+
+        Optimized calls to API getters.
+
+        Added valgrind notification on code modification to the 64-bit version.
+
+        Fixed issue where we logged shared library addresses on Windows at
+        startup and never used them.
+
+
+2009-10-16: Version 1.3.16
+
+        X64: Convert smis to holding 32 bits of payload.
+
+        Introduce v8::Integer::NewFromUnsigned method.
+
+        Add missing null check in Context::GetCurrent.
+
+        Add trim, trimLeft and trimRight methods to String
+        Patch by Jan de Mooij <jandemooij@gmail.com>
+
+        Implement ES5 Array.isArray
+        Patch by Jan de Mooij <jandemooij@gmail.com>
+
+        Skip access checks for hidden properties.
+
+        Add String::Concat(Handle<String> left, Handle<String> right) to the V8 API.
+
+        Fix GYP-based builds of V8.
+
+
+2009-10-07: Version 1.3.15
+
+        Expand the maximum size of the code space to 512MB for 64-bit mode.
+
+        Fixed a crash bug happening when starting profiling (issue
+        http://crbug.com/23768).
+
+
+2009-10-07: Version 1.3.14
+
+        Added GetRealNamedProperty to the API to lookup real properties
+        located on the object or in the prototype chain skipping any
+        interceptors.
+
+        Fix the stack limits setting API to work correctly with threads. The
+        stack limit now needs to be set to each thread thich is used with V8.
+
+        Remove the high-priority flag from IdleNotification()
+
+        Ensure V8 is initialized before locking and unlocking threads.
+
+        Implemented a new JavaScript minifier for compressing the source of
+        the built-in JavaScript. This removes non-Open Source code from Douglas
+        Crockford from the project.
+
+        Added a missing optimization in StringCharAt.
+
+        Fixed some flaky socket tests.
+
+        Change by Alexander Botero-Lowry to fix profiler sampling on FreeBSD
+        in 64-bit mode.
+
+        Fixed memory leaks in the thread management code.
+
+        Fixed the result of assignment to a pixel array. The assigned value
+        is now the result.
+
+        Error reporting for invalid left-hand sides in for-in statements, pre-
+        and postfix count expressions, and assignments now matches the JSC
+        behavior in Safari 4.
+
+        Follow the spec in disallowing function declarations without a name.
+
+        Always allocate code objects within a 2 GB range. On x64 architecture
+        this is used to use near calls (32-bit displacement) in Code objects.
+
+        Optimized array construction ported to x64 and ARM architectures.
+
+        [ES5] Changed Object.keys to return strings for element indices.
+
+
+2009-09-23: Version 1.3.13
+
+        Fixed uninitialized memory problem.
+
+        Improved heap profiler support.
+
+
+2009-09-22: Version 1.3.12
+
+        Changed behavior of |function|.toString() on built-in functions to
+        be compatible with other implementations.  Patch by Jan de Mooij.
+
+        Added Object::IsDirty in the API.
+
+        Optimized array construction; it is now handled purely in native
+        code.
+
+        [ES5] Made properties of the arguments array enumerable.
+
+        [ES5] Added test suite adapter for the es5conform test suite.
+
+        [ES5] Added Object.keys function.
+
+
+2009-09-15: Version 1.3.11
+
+        Fixed crash in error reporting during bootstrapping.
+
+        Optimized generated IA32 math code by using SSE2 instructions when
+        available.
+
+        Implemented missing pieces of debugger infrastructure on ARM.  The
+        debugger is now fully functional on ARM.
+
+        Make 'hidden' the default visibility for gcc.
+
+
+2009-09-09: Version 1.3.10
+
+        Fixed profiler on Mac in 64-bit mode.
+
+        Optimized creation of objects from simple constructor functions on
+        ARM.
+
+        Fixed a number of debugger issues.
+
+        Reduced the amount of memory consumed by V8.
+
+
 2009-09-02: Version 1.3.9
 
         Optimized stack guard checks on ARM.
@@ -23,7 +273,7 @@
         notifications when V8 has not yet been initialized.
 
         Fixed ARM simulator compilation problem on Windows.
-        
+
 
 2009-08-25: Version 1.3.7
 
@@ -138,9 +388,9 @@
         function is a built-in.
 
         Initial implementation of constructor heap profile for JS objects.
-                  
+
         More fine grained control of profiling aspects through the API.
-                    
+
         Optimized the called as constructor check for API calls.
 
 
@@ -165,8 +415,8 @@
         Added an external allocation limit to avoid issues where small V8
         objects would hold on to large amounts of external memory without
         causing garbage collections.
- 
-        Finished more of the inline caching stubs for x64 targets. 
+
+        Finished more of the inline caching stubs for x64 targets.
 
 
 2009-07-13: Version 1.2.14
@@ -246,9 +496,9 @@
         Fixed a bug in the string type inference.
 
         Fixed a bug in the handling of 'constant function' properties.
-        
+
         Improved overall performance.
-        
+
 
 2009-06-16: Version 1.2.8
 

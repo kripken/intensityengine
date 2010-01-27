@@ -177,8 +177,8 @@ class Parser {
   Statement* ParseWithStatement(ZoneStringList* labels, bool* ok);
   CaseClause* ParseCaseClause(bool* default_seen_ptr, bool* ok);
   SwitchStatement* ParseSwitchStatement(ZoneStringList* labels, bool* ok);
-  LoopStatement* ParseDoStatement(ZoneStringList* labels, bool* ok);
-  LoopStatement* ParseWhileStatement(ZoneStringList* labels, bool* ok);
+  DoWhileStatement* ParseDoWhileStatement(ZoneStringList* labels, bool* ok);
+  WhileStatement* ParseWhileStatement(ZoneStringList* labels, bool* ok);
   Statement* ParseForStatement(ZoneStringList* labels, bool* ok);
   Statement* ParseThrowStatement(bool* ok);
   Expression* MakeCatchContext(Handle<String> id, VariableProxy* value);
@@ -371,7 +371,7 @@ class RegExpBuilder: public ZoneObject {
   void AddAtom(RegExpTree* tree);
   void AddAssertion(RegExpTree* tree);
   void NewAlternative();  // '|'
-  void AddQuantifierToAtom(int min, int max, bool is_greedy);
+  void AddQuantifierToAtom(int min, int max, RegExpQuantifier::Type type);
   RegExpTree* ToRegExp();
  private:
   void FlushCharacters();
@@ -503,7 +503,9 @@ RegExpTree* RegExpBuilder::ToRegExp() {
 }
 
 
-void RegExpBuilder::AddQuantifierToAtom(int min, int max, bool is_greedy) {
+void RegExpBuilder::AddQuantifierToAtom(int min,
+                                        int max,
+                                        RegExpQuantifier::Type type) {
   if (pending_empty_) {
     pending_empty_ = false;
     return;
@@ -543,7 +545,7 @@ void RegExpBuilder::AddQuantifierToAtom(int min, int max, bool is_greedy) {
     UNREACHABLE();
     return;
   }
-  terms_.Add(new RegExpQuantifier(min, max, is_greedy, atom));
+  terms_.Add(new RegExpQuantifier(min, max, type, atom));
   LAST(ADD_TERM);
 }
 
@@ -675,20 +677,12 @@ class TemporaryScope BASE_EMBEDDED {
   }
   int materialized_literal_count() { return materialized_literal_count_; }
 
-  void set_contains_array_literal() { contains_array_literal_ = true; }
-  bool contains_array_literal() { return contains_array_literal_; }
-
   void SetThisPropertyAssignmentInfo(
-      bool only_this_property_assignments,
       bool only_simple_this_property_assignments,
       Handle<FixedArray> this_property_assignments) {
-    only_this_property_assignments_ = only_this_property_assignments;
     only_simple_this_property_assignments_ =
         only_simple_this_property_assignments;
     this_property_assignments_ = this_property_assignments;
-  }
-  bool only_this_property_assignments() {
-    return only_this_property_assignments_;
   }
   bool only_simple_this_property_assignments() {
     return only_simple_this_property_assignments_;
@@ -700,21 +694,14 @@ class TemporaryScope BASE_EMBEDDED {
   void AddProperty() { expected_property_count_++; }
   int expected_property_count() { return expected_property_count_; }
  private:
-  // Captures the number of nodes that need materialization in the
-  // function.  regexp literals, and boilerplate for object literals.
+  // Captures the number of literals that need materialization in the
+  // function.  Includes regexp literals, and boilerplate for object
+  // and array literals.
   int materialized_literal_count_;
-
-  // Captures whether or not the function contains array literals.  If
-  // the function contains array literals, we have to allocate space
-  // for the array constructor in the literals array of the function.
-  // This array constructor is used when creating the actual array
-  // literals.
-  bool contains_array_literal_;
 
   // Properties count estimation.
   int expected_property_count_;
 
-  bool only_this_property_assignments_;
   bool only_simple_this_property_assignments_;
   Handle<FixedArray> this_property_assignments_;
 
@@ -728,9 +715,7 @@ class TemporaryScope BASE_EMBEDDED {
 
 TemporaryScope::TemporaryScope(Parser* parser)
   : materialized_literal_count_(0),
-    contains_array_literal_(false),
     expected_property_count_(0),
-    only_this_property_assignments_(false),
     only_simple_this_property_assignments_(false),
     this_property_assignments_(Factory::empty_fixed_array()),
     parser_(parser),
@@ -798,12 +783,6 @@ class ParserFactory BASE_EMBEDDED {
     return Call::sentinel();
   }
 
-  virtual Expression* NewCallEval(Expression* expression,
-                                  ZoneList<Expression*>* arguments,
-                                  int pos) {
-    return CallEval::sentinel();
-  }
-
   virtual Statement* EmptyStatement() {
     return NULL;
   }
@@ -852,12 +831,6 @@ class AstBuildingParserFactory : public ParserFactory {
                               ZoneList<Expression*>* arguments,
                               int pos) {
     return new Call(expression, arguments, pos);
-  }
-
-  virtual Expression* NewCallEval(Expression* expression,
-                                  ZoneList<Expression*>* arguments,
-                                  int pos) {
-    return new CallEval(expression, arguments, pos);
   }
 
   virtual Statement* EmptyStatement();
@@ -1196,7 +1169,6 @@ Parser::Parser(Handle<Script> script,
 bool Parser::PreParseProgram(Handle<String> source,
                              unibrow::CharacterStream* stream) {
   HistogramTimerScope timer(&Counters::pre_parse);
-  StackGuard guard;
   AssertNoZoneAllocation assert_no_zone_allocation;
   AssertNoAllocation assert_no_allocation;
   NoHandleAllocation no_handle_allocation;
@@ -1249,9 +1221,7 @@ FunctionLiteral* Parser::ParseProgram(Handle<String> source,
           top_scope_,
           body.elements(),
           temp_scope.materialized_literal_count(),
-          temp_scope.contains_array_literal(),
           temp_scope.expected_property_count(),
-          temp_scope.only_this_property_assignments(),
           temp_scope.only_simple_this_property_assignments(),
           temp_scope.this_property_assignments(),
           0,
@@ -1363,7 +1333,7 @@ class ParserFinder {
 
 
 // An InitializationBlockFinder finds and marks sequences of statements of the
-// form x.y.z.a = ...; x.y.z.b = ...; etc.
+// form expr.a = ...; expr.b = ...; etc.
 class InitializationBlockFinder : public ParserFinder {
  public:
   InitializationBlockFinder()
@@ -1391,7 +1361,7 @@ class InitializationBlockFinder : public ParserFinder {
  private:
   // Returns true if the expressions appear to denote the same object.
   // In the context of initialization blocks, we only consider expressions
-  // of the form 'x.y.z'.
+  // of the form 'expr.x' or expr["x"].
   static bool SameObject(Expression* e1, Expression* e2) {
     VariableProxy* v1 = e1->AsVariableProxy();
     VariableProxy* v2 = e2->AsVariableProxy();
@@ -1465,16 +1435,15 @@ class InitializationBlockFinder : public ParserFinder {
 class ThisNamedPropertyAssigmentFinder : public ParserFinder {
  public:
   ThisNamedPropertyAssigmentFinder()
-      : only_this_property_assignments_(true),
-        only_simple_this_property_assignments_(true),
+      : only_simple_this_property_assignments_(true),
         names_(NULL),
         assigned_arguments_(NULL),
         assigned_constants_(NULL) {}
 
   void Update(Scope* scope, Statement* stat) {
-    // Bail out if function already has non this property assignment
-    // statements.
-    if (!only_this_property_assignments_) {
+    // Bail out if function already has property assignment that are
+    // not simple this property assignments.
+    if (!only_simple_this_property_assignments_) {
       return;
     }
 
@@ -1483,14 +1452,8 @@ class ThisNamedPropertyAssigmentFinder : public ParserFinder {
     if (IsThisPropertyAssignment(assignment)) {
       HandleThisPropertyAssignment(scope, assignment);
     } else {
-      only_this_property_assignments_ = false;
       only_simple_this_property_assignments_ = false;
     }
-  }
-
-  // Returns whether only statements of the form this.x = ...; was encountered.
-  bool only_this_property_assignments() {
-    return only_this_property_assignments_;
   }
 
   // Returns whether only statements of the form this.x = y; where y is either a
@@ -1548,28 +1511,24 @@ class ThisNamedPropertyAssigmentFinder : public ParserFinder {
         // Constant assigned.
         Literal* literal = assignment->value()->AsLiteral();
         AssignmentFromConstant(key, literal->handle());
+        return;
       } else if (assignment->value()->AsVariableProxy() != NULL) {
         // Variable assigned.
         Handle<String> name =
             assignment->value()->AsVariableProxy()->name();
         // Check whether the variable assigned matches an argument name.
-        int index = -1;
         for (int i = 0; i < scope->num_parameters(); i++) {
           if (*scope->parameter(i)->name() == *name) {
             // Assigned from function argument.
-            index = i;
-            break;
+            AssignmentFromParameter(key, i);
+            return;
           }
         }
-        if (index != -1) {
-          AssignmentFromParameter(key, index);
-        } else {
-          AssignmentFromSomethingElse(key);
-        }
-      } else {
-        AssignmentFromSomethingElse(key);
       }
     }
+    // It is not a simple "this.x = value;" assignment with a constant
+    // or parameter value.
+    AssignmentFromSomethingElse();
   }
 
   void AssignmentFromParameter(Handle<String> name, int index) {
@@ -1586,12 +1545,7 @@ class ThisNamedPropertyAssigmentFinder : public ParserFinder {
     assigned_constants_->Add(value);
   }
 
-  void AssignmentFromSomethingElse(Handle<String> name) {
-    EnsureAllocation();
-    names_->Add(name);
-    assigned_arguments_->Add(-1);
-    assigned_constants_->Add(Factory::undefined_value());
-
+  void AssignmentFromSomethingElse() {
     // The this assignment is not a simple one.
     only_simple_this_property_assignments_ = false;
   }
@@ -1606,7 +1560,6 @@ class ThisNamedPropertyAssigmentFinder : public ParserFinder {
     }
   }
 
-  bool only_this_property_assignments_;
   bool only_simple_this_property_assignments_;
   ZoneStringList* names_;
   ZoneList<int>* assigned_arguments_;
@@ -1647,11 +1600,11 @@ void* Parser::ParseSourceElements(ZoneListWrapper<Statement>* processor,
 
   // Propagate the collected information on this property assignments.
   if (top_scope_->is_function_scope()) {
-    if (this_property_assignment_finder.only_this_property_assignments()) {
+    bool only_simple_this_property_assignments =
+        this_property_assignment_finder.only_simple_this_property_assignments();
+    if (only_simple_this_property_assignments) {
       temp_scope_->SetThisPropertyAssignmentInfo(
-          this_property_assignment_finder.only_this_property_assignments(),
-          this_property_assignment_finder.
-              only_simple_this_property_assignments(),
+          only_simple_this_property_assignments,
           this_property_assignment_finder.GetThisPropertyAssignments());
     }
   }
@@ -1705,7 +1658,7 @@ Statement* Parser::ParseStatement(ZoneStringList* labels, bool* ok) {
       break;
 
     case Token::DO:
-      stmt = ParseDoStatement(labels, ok);
+      stmt = ParseDoWhileStatement(labels, ok);
       break;
 
     case Token::WHILE:
@@ -1916,7 +1869,7 @@ Statement* Parser::ParseNativeDeclaration(bool* ok) {
   const int literals = fun->NumberOfLiterals();
   Handle<Code> code = Handle<Code>(fun->shared()->code());
   Handle<JSFunction> boilerplate =
-      Factory::NewFunctionBoilerplate(name, literals, false, code);
+      Factory::NewFunctionBoilerplate(name, literals, code);
 
   // Copy the function data to the boilerplate. Used by
   // builtins.cc:HandleApiCall to perform argument type checks and to
@@ -1937,31 +1890,20 @@ Statement* Parser::ParseNativeDeclaration(bool* ok) {
 
 
 Statement* Parser::ParseFunctionDeclaration(bool* ok) {
-  // Parse a function literal. We may or may not have a function name.
-  // If we have a name we use it as the variable name for the function
-  // (a function declaration) and not as the function name of a function
-  // expression.
-
+  // FunctionDeclaration ::
+  //   'function' Identifier '(' FormalParameterListopt ')' '{' FunctionBody '}'
   Expect(Token::FUNCTION, CHECK_OK);
   int function_token_position = scanner().location().beg_pos;
-
-  Handle<String> name;
-  if (peek() == Token::IDENTIFIER) name = ParseIdentifier(CHECK_OK);
-  FunctionLiteral* fun = ParseFunctionLiteral(name, function_token_position,
-                                              DECLARATION, CHECK_OK);
-
-  if (name.is_null()) {
-    // We don't have a name - it is always an anonymous function
-    // expression.
-    return NEW(ExpressionStatement(fun));
-  } else {
-    // We have a name so even if we're not at the top-level of the
-    // global or a function scope, we treat is as such and introduce
-    // the function with it's initial value upon entering the
-    // corresponding scope.
-    Declare(name, Variable::VAR, fun, true, CHECK_OK);
-    return factory()->EmptyStatement();
-  }
+  Handle<String> name = ParseIdentifier(CHECK_OK);
+  FunctionLiteral* fun = ParseFunctionLiteral(name,
+                                              function_token_position,
+                                              DECLARATION,
+                                              CHECK_OK);
+  // Even if we're not at the top-level of the global or a function
+  // scope, we treat is as such and introduce the function with it's
+  // initial value upon entering the corresponding scope.
+  Declare(name, Variable::VAR, fun, true, CHECK_OK);
+  return factory()->EmptyStatement();
 }
 
 
@@ -2385,7 +2327,7 @@ Block* Parser::WithHelper(Expression* obj,
     exit->AddStatement(NEW(WithExitStatement()));
 
     // Return a try-finally statement.
-    TryFinally* wrapper = NEW(TryFinally(body, exit));
+    TryFinallyStatement* wrapper = NEW(TryFinallyStatement(body, exit));
     wrapper->set_escaping_targets(collector.targets());
     result->AddStatement(wrapper);
   }
@@ -2561,7 +2503,8 @@ TryStatement* Parser::ParseTryStatement(bool* ok) {
   //   'try { try { } catch { } } finally { }'
 
   if (!is_pre_parsing_ && catch_block != NULL && finally_block != NULL) {
-    TryCatch* statement = NEW(TryCatch(try_block, catch_var, catch_block));
+    TryCatchStatement* statement =
+        NEW(TryCatchStatement(try_block, catch_var, catch_block));
     statement->set_escaping_targets(collector.targets());
     try_block = NEW(Block(NULL, 1, false));
     try_block->AddStatement(statement);
@@ -2572,11 +2515,11 @@ TryStatement* Parser::ParseTryStatement(bool* ok) {
   if (!is_pre_parsing_) {
     if (catch_block != NULL) {
       ASSERT(finally_block == NULL);
-      result = NEW(TryCatch(try_block, catch_var, catch_block));
+      result = NEW(TryCatchStatement(try_block, catch_var, catch_block));
       result->set_escaping_targets(collector.targets());
     } else {
       ASSERT(finally_block != NULL);
-      result = NEW(TryFinally(try_block, finally_block));
+      result = NEW(TryFinallyStatement(try_block, finally_block));
       // Add the jump targets of the try block and the catch block.
       for (int i = 0; i < collector.targets()->length(); i++) {
         catch_collector.AddTarget(collector.targets()->at(i));
@@ -2589,17 +2532,24 @@ TryStatement* Parser::ParseTryStatement(bool* ok) {
 }
 
 
-LoopStatement* Parser::ParseDoStatement(ZoneStringList* labels, bool* ok) {
+DoWhileStatement* Parser::ParseDoWhileStatement(ZoneStringList* labels,
+                                                bool* ok) {
   // DoStatement ::
   //   'do' Statement 'while' '(' Expression ')' ';'
 
-  LoopStatement* loop = NEW(LoopStatement(labels, LoopStatement::DO_LOOP));
+  DoWhileStatement* loop = NEW(DoWhileStatement(labels));
   Target target(this, loop);
 
   Expect(Token::DO, CHECK_OK);
   Statement* body = ParseStatement(NULL, CHECK_OK);
   Expect(Token::WHILE, CHECK_OK);
   Expect(Token::LPAREN, CHECK_OK);
+
+  if (loop != NULL) {
+    int position = scanner().location().beg_pos;
+    loop->set_condition_position(position);
+  }
+
   Expression* cond = ParseExpression(true, CHECK_OK);
   Expect(Token::RPAREN, CHECK_OK);
 
@@ -2609,16 +2559,16 @@ LoopStatement* Parser::ParseDoStatement(ZoneStringList* labels, bool* ok) {
   // ExpectSemicolon() functionality here.
   if (peek() == Token::SEMICOLON) Consume(Token::SEMICOLON);
 
-  if (loop) loop->Initialize(NULL, cond, NULL, body);
+  if (loop != NULL) loop->Initialize(cond, body);
   return loop;
 }
 
 
-LoopStatement* Parser::ParseWhileStatement(ZoneStringList* labels, bool* ok) {
+WhileStatement* Parser::ParseWhileStatement(ZoneStringList* labels, bool* ok) {
   // WhileStatement ::
   //   'while' '(' Expression ')' Statement
 
-  LoopStatement* loop = NEW(LoopStatement(labels, LoopStatement::WHILE_LOOP));
+  WhileStatement* loop = NEW(WhileStatement(labels));
   Target target(this, loop);
 
   Expect(Token::WHILE, CHECK_OK);
@@ -2627,7 +2577,7 @@ LoopStatement* Parser::ParseWhileStatement(ZoneStringList* labels, bool* ok) {
   Expect(Token::RPAREN, CHECK_OK);
   Statement* body = ParseStatement(NULL, CHECK_OK);
 
-  if (loop) loop->Initialize(NULL, cond, NULL, body);
+  if (loop != NULL) loop->Initialize(cond, body);
   return loop;
 }
 
@@ -2672,25 +2622,13 @@ Statement* Parser::ParseForStatement(ZoneStringList* labels, bool* ok) {
     } else {
       Expression* expression = ParseExpression(false, CHECK_OK);
       if (peek() == Token::IN) {
-        // Report syntax error if the expression is an invalid
-        // left-hand side expression.
+        // Signal a reference error if the expression is an invalid
+        // left-hand side expression.  We could report this as a syntax
+        // error here but for compatibility with JSC we choose to report
+        // the error at runtime.
         if (expression == NULL || !expression->IsValidLeftHandSide()) {
-          if (expression != NULL && expression->AsCall() != NULL) {
-            // According to ECMA-262 host function calls are permitted to
-            // return references.  This cannot happen in our system so we
-            // will always get an error.  We could report this as a syntax
-            // error here but for compatibility with KJS and SpiderMonkey we
-            // choose to report the error at runtime.
-            Handle<String> type = Factory::invalid_lhs_in_for_in_symbol();
-            expression = NewThrowReferenceError(type);
-          } else {
-            // Invalid left hand side expressions that are not function
-            // calls are reported as syntax errors at compile time.
-            ReportMessage("invalid_lhs_in_for_in",
-                          Vector<const char*>::empty());
-            *ok = false;
-            return NULL;
-          }
+          Handle<String> type = Factory::invalid_lhs_in_for_in_symbol();
+          expression = NewThrowReferenceError(type);
         }
         ForInStatement* loop = NEW(ForInStatement(labels));
         Target target(this, loop);
@@ -2712,7 +2650,7 @@ Statement* Parser::ParseForStatement(ZoneStringList* labels, bool* ok) {
   }
 
   // Standard 'for' loop
-  LoopStatement* loop = NEW(LoopStatement(labels, LoopStatement::FOR_LOOP));
+  ForStatement* loop = NEW(ForStatement(labels));
   Target target(this, loop);
 
   // Parsed initializer at this point.
@@ -2721,6 +2659,9 @@ Statement* Parser::ParseForStatement(ZoneStringList* labels, bool* ok) {
   Expression* cond = NULL;
   if (peek() != Token::SEMICOLON) {
     cond = ParseExpression(true, CHECK_OK);
+    if (cond && cond->AsCompareOperation()) {
+      cond->AsCompareOperation()->set_is_for_loop_condition();
+    }
   }
   Expect(Token::SEMICOLON, CHECK_OK);
 
@@ -2767,29 +2708,14 @@ Expression* Parser::ParseAssignmentExpression(bool accept_IN, bool* ok) {
     return expression;
   }
 
+  // Signal a reference error if the expression is an invalid left-hand
+  // side expression.  We could report this as a syntax error here but
+  // for compatibility with JSC we choose to report the error at
+  // runtime.
   if (expression == NULL || !expression->IsValidLeftHandSide()) {
-    if (expression != NULL && expression->AsCall() != NULL) {
-      // According to ECMA-262 host function calls are permitted to
-      // return references.  This cannot happen in our system so we
-      // will always get an error.  We could report this as a syntax
-      // error here but for compatibility with KJS and SpiderMonkey we
-      // choose to report the error at runtime.
-      Handle<String> type = Factory::invalid_lhs_in_assignment_symbol();
-      expression = NewThrowReferenceError(type);
-    } else {
-      // Invalid left hand side expressions that are not function
-      // calls are reported as syntax errors at compile time.
-      //
-      // NOTE: KJS sometimes delay the error reporting to runtime. If
-      // we want to be completely compatible we should do the same.
-      // For example: "(x++) = 42" gives a reference error at runtime
-      // with KJS whereas we report a syntax error at compile time.
-      ReportMessage("invalid_lhs_in_assignment", Vector<const char*>::empty());
-      *ok = false;
-      return NULL;
-    }
+    Handle<String> type = Factory::invalid_lhs_in_assignment_symbol();
+    expression = NewThrowReferenceError(type);
   }
-
 
   Token::Value op = Next();  // Get assignment operator.
   int pos = scanner().location().beg_pos;
@@ -2963,45 +2889,37 @@ Expression* Parser::ParseUnaryExpression(bool* ok) {
   Token::Value op = peek();
   if (Token::IsUnaryOp(op)) {
     op = Next();
-    Expression* x = ParseUnaryExpression(CHECK_OK);
+    Expression* expression = ParseUnaryExpression(CHECK_OK);
 
     // Compute some expressions involving only number literals.
-    if (x && x->AsLiteral() && x->AsLiteral()->handle()->IsNumber()) {
-      double x_val = x->AsLiteral()->handle()->Number();
+    if (expression != NULL && expression->AsLiteral() &&
+        expression->AsLiteral()->handle()->IsNumber()) {
+      double value = expression->AsLiteral()->handle()->Number();
       switch (op) {
         case Token::ADD:
-          return x;
+          return expression;
         case Token::SUB:
-          return NewNumberLiteral(-x_val);
+          return NewNumberLiteral(-value);
         case Token::BIT_NOT:
-          return NewNumberLiteral(~DoubleToInt32(x_val));
+          return NewNumberLiteral(~DoubleToInt32(value));
         default: break;
       }
     }
 
-    return NEW(UnaryOperation(op, x));
+    return NEW(UnaryOperation(op, expression));
 
   } else if (Token::IsCountOp(op)) {
     op = Next();
-    Expression* x = ParseUnaryExpression(CHECK_OK);
-    if (x == NULL || !x->IsValidLeftHandSide()) {
-      if (x != NULL && x->AsCall() != NULL) {
-        // According to ECMA-262 host function calls are permitted to
-        // return references.  This cannot happen in our system so we
-        // will always get an error.  We could report this as a syntax
-        // error here but for compatibility with KJS and SpiderMonkey we
-        // choose to report the error at runtime.
-        Handle<String> type = Factory::invalid_lhs_in_prefix_op_symbol();
-        x = NewThrowReferenceError(type);
-      } else {
-        // Invalid left hand side expressions that are not function
-        // calls are reported as syntax errors at compile time.
-        ReportMessage("invalid_lhs_in_prefix_op", Vector<const char*>::empty());
-        *ok = false;
-        return NULL;
-      }
+    Expression* expression = ParseUnaryExpression(CHECK_OK);
+    // Signal a reference error if the expression is an invalid
+    // left-hand side expression.  We could report this as a syntax
+    // error here but for compatibility with JSC we choose to report the
+    // error at runtime.
+    if (expression == NULL || !expression->IsValidLeftHandSide()) {
+      Handle<String> type = Factory::invalid_lhs_in_prefix_op_symbol();
+      expression = NewThrowReferenceError(type);
     }
-    return NEW(CountOperation(true /* prefix */, op, x));
+    return NEW(CountOperation(true /* prefix */, op, expression));
 
   } else {
     return ParsePostfixExpression(ok);
@@ -3013,30 +2931,20 @@ Expression* Parser::ParsePostfixExpression(bool* ok) {
   // PostfixExpression ::
   //   LeftHandSideExpression ('++' | '--')?
 
-  Expression* result = ParseLeftHandSideExpression(CHECK_OK);
+  Expression* expression = ParseLeftHandSideExpression(CHECK_OK);
   if (!scanner_.has_line_terminator_before_next() && Token::IsCountOp(peek())) {
-    if (result == NULL || !result->IsValidLeftHandSide()) {
-      if (result != NULL && result->AsCall() != NULL) {
-        // According to ECMA-262 host function calls are permitted to
-        // return references.  This cannot happen in our system so we
-        // will always get an error.  We could report this as a syntax
-        // error here but for compatibility with KJS and SpiderMonkey we
-        // choose to report the error at runtime.
-        Handle<String> type = Factory::invalid_lhs_in_postfix_op_symbol();
-        result = NewThrowReferenceError(type);
-      } else {
-        // Invalid left hand side expressions that are not function
-        // calls are reported as syntax errors at compile time.
-        ReportMessage("invalid_lhs_in_postfix_op",
-                      Vector<const char*>::empty());
-        *ok = false;
-        return NULL;
-      }
+    // Signal a reference error if the expression is an invalid
+    // left-hand side expression.  We could report this as a syntax
+    // error here but for compatibility with JSC we choose to report the
+    // error at runtime.
+    if (expression == NULL || !expression->IsValidLeftHandSide()) {
+      Handle<String> type = Factory::invalid_lhs_in_postfix_op_symbol();
+      expression = NewThrowReferenceError(type);
     }
     Token::Value next = Next();
-    result = NEW(CountOperation(false /* postfix */, next, result));
+    expression = NEW(CountOperation(false /* postfix */, next, expression));
   }
-  return result;
+  return expression;
 }
 
 
@@ -3074,8 +2982,6 @@ Expression* Parser::ParseLeftHandSideExpression(bool* ok) {
         // declared in the current scope chain. These calls are marked as
         // potentially direct eval calls. Whether they are actually direct calls
         // to eval is determined at run time.
-
-        bool is_potentially_direct_eval = false;
         if (!is_pre_parsing_) {
           VariableProxy* callee = result->AsVariableProxy();
           if (callee != NULL && callee->IsVariable(Factory::eval_symbol())) {
@@ -3083,16 +2989,10 @@ Expression* Parser::ParseLeftHandSideExpression(bool* ok) {
             Variable* var = top_scope_->Lookup(name);
             if (var == NULL) {
               top_scope_->RecordEvalCall();
-              is_potentially_direct_eval = true;
             }
           }
         }
-
-        if (is_potentially_direct_eval) {
-          result = factory()->NewCallEval(result, args, pos);
-        } else {
-          result = factory()->NewCall(result, args, pos);
-        }
+        result = factory()->NewCall(result, args, pos);
         break;
       }
 
@@ -3381,7 +3281,6 @@ Expression* Parser::ParseArrayLiteral(bool* ok) {
   Expect(Token::RBRACK, CHECK_OK);
 
   // Update the scope information before the pre-parsing bailout.
-  temp_scope_->set_contains_array_literal();
   int literal_index = temp_scope_->NextMaterializedLiteralIndex();
 
   if (is_pre_parsing_) return NULL;
@@ -3435,7 +3334,7 @@ Handle<FixedArray> CompileTimeValue::GetValue(Expression* expression) {
     ArrayLiteral* array_literal = expression->AsArrayLiteral();
     ASSERT(array_literal != NULL && array_literal->is_simple());
     result->set(kTypeSlot, Smi::FromInt(ARRAY_LITERAL));
-    result->set(kElementsSlot, *array_literal->literals());
+    result->set(kElementsSlot, *array_literal->constant_elements());
   }
   return result;
 }
@@ -3699,7 +3598,7 @@ FunctionLiteral* Parser::ParseFunctionLiteral(Handle<String> var_name,
           top_scope_->NewUnresolved(function_name, inside_with());
       fproxy->BindTo(fvar);
       body.Add(new ExpressionStatement(
-                   new Assignment(Token::INIT_VAR, fproxy,
+                   new Assignment(Token::INIT_CONST, fproxy,
                                   NEW(ThisFunction()),
                                   RelocInfo::kNoPosition)));
     }
@@ -3711,8 +3610,6 @@ FunctionLiteral* Parser::ParseFunctionLiteral(Handle<String> var_name,
 
     int materialized_literal_count;
     int expected_property_count;
-    bool contains_array_literal;
-    bool only_this_property_assignments;
     bool only_simple_this_property_assignments;
     Handle<FixedArray> this_property_assignments;
     if (is_lazily_compiled && pre_data() != NULL) {
@@ -3722,17 +3619,12 @@ FunctionLiteral* Parser::ParseFunctionLiteral(Handle<String> var_name,
       scanner_.SeekForward(end_pos);
       materialized_literal_count = entry.literal_count();
       expected_property_count = entry.property_count();
-      only_this_property_assignments = false;
       only_simple_this_property_assignments = false;
       this_property_assignments = Factory::empty_fixed_array();
-      contains_array_literal = entry.contains_array_literal();
     } else {
       ParseSourceElements(&body, Token::RBRACE, CHECK_OK);
       materialized_literal_count = temp_scope.materialized_literal_count();
       expected_property_count = temp_scope.expected_property_count();
-      contains_array_literal = temp_scope.contains_array_literal();
-      only_this_property_assignments =
-          temp_scope.only_this_property_assignments();
       only_simple_this_property_assignments =
           temp_scope.only_simple_this_property_assignments();
       this_property_assignments = temp_scope.this_property_assignments();
@@ -3746,7 +3638,6 @@ FunctionLiteral* Parser::ParseFunctionLiteral(Handle<String> var_name,
       entry.set_end_pos(end_pos);
       entry.set_literal_count(materialized_literal_count);
       entry.set_property_count(expected_property_count);
-      entry.set_contains_array_literal(contains_array_literal);
     }
 
     FunctionLiteral* function_literal =
@@ -3754,9 +3645,7 @@ FunctionLiteral* Parser::ParseFunctionLiteral(Handle<String> var_name,
                             top_scope_,
                             body.elements(),
                             materialized_literal_count,
-                            contains_array_literal,
                             expected_property_count,
-                            only_this_property_assignments,
                             only_simple_this_property_assignments,
                             this_property_assignments,
                             num_parameters,
@@ -4391,12 +4280,16 @@ RegExpTree* RegExpParser::ParseDisjunction() {
     default:
       continue;
     }
-    bool is_greedy = true;
+    RegExpQuantifier::Type type = RegExpQuantifier::GREEDY;
     if (current() == '?') {
-      is_greedy = false;
+      type = RegExpQuantifier::NON_GREEDY;
+      Advance();
+    } else if (FLAG_regexp_possessive_quantifier && current() == '+') {
+      // FLAG_regexp_possessive_quantifier is a debug-only flag.
+      type = RegExpQuantifier::POSSESSIVE;
       Advance();
     }
-    builder->AddQuantifierToAtom(min, max, is_greedy);
+    builder->AddQuantifierToAtom(min, max, type);
   }
 }
 
@@ -4818,6 +4711,11 @@ unsigned* ScriptDataImpl::Data() {
 }
 
 
+bool ScriptDataImpl::HasError() {
+  return has_error();
+}
+
+
 ScriptDataImpl* PreParse(Handle<String> source,
                          unibrow::CharacterStream* stream,
                          v8::Extension* extension) {
@@ -4840,8 +4738,6 @@ bool ParseRegExp(FlatStringReader* input,
                  bool multiline,
                  RegExpCompileData* result) {
   ASSERT(result != NULL);
-  // Make sure we have a stack guard.
-  StackGuard guard;
   RegExpParser parser(input, &result->error, multiline);
   RegExpTree* tree = parser.ParsePattern();
   if (parser.failed()) {

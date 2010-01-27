@@ -33,6 +33,11 @@
 namespace v8 {
 namespace internal {
 
+// Flag indicating whether an IC stub needs to check that a backing
+// store is in dictionary case.
+enum DictionaryCheck { CHECK_DICTIONARY, DICTIONARY_CHECK_DONE };
+
+
 // IC_UTIL_LIST defines all utility functions called from generated
 // inline caching code. The argument for the macro, ICU, is the function name.
 #define IC_UTIL_LIST(ICU)                             \
@@ -99,7 +104,16 @@ class IC {
 
   // Returns if this IC is for contextual (no explicit receiver)
   // access to properties.
-  bool is_contextual() {
+  bool IsContextual(Handle<Object> receiver) {
+    if (receiver->IsGlobalObject()) {
+      return SlowIsContextual();
+    } else {
+      ASSERT(!SlowIsContextual());
+      return false;
+    }
+  }
+
+  bool SlowIsContextual() {
     return ComputeMode() == RelocInfo::CODE_TARGET_CONTEXT;
   }
 
@@ -175,16 +189,14 @@ class CallIC: public IC {
 
 
   // Code generator routines.
-  static void GenerateInitialize(MacroAssembler* masm, int argc);
+  static void GenerateInitialize(MacroAssembler* masm, int argc) {
+    GenerateMiss(masm, argc);
+  }
   static void GenerateMiss(MacroAssembler* masm, int argc);
   static void GenerateMegamorphic(MacroAssembler* masm, int argc);
   static void GenerateNormal(MacroAssembler* masm, int argc);
 
  private:
-  static void Generate(MacroAssembler* masm,
-                       int argc,
-                       const ExternalReference& f);
-
   // Update the inline cache and the global stub cache based on the
   // lookup result.
   void UpdateCaches(LookupResult* lookup,
@@ -268,11 +280,26 @@ class KeyedLoadIC: public IC {
   static void GenerateInitialize(MacroAssembler* masm);
   static void GeneratePreMonomorphic(MacroAssembler* masm);
   static void GenerateGeneric(MacroAssembler* masm);
+  static void GenerateString(MacroAssembler* masm);
+
+  // Generators for external array types. See objects.h.
+  // These are similar to the generic IC; they optimize the case of
+  // operating upon external array types but fall back to the runtime
+  // for all other types.
+  static void GenerateExternalArray(MacroAssembler* masm,
+                                    ExternalArrayType array_type);
 
   // Clear the use of the inlined version.
   static void ClearInlinedVersion(Address address);
 
  private:
+  // Bit mask to be tested against bit field for the cases when
+  // generic stub should go into slow case.
+  // Access check is necessary explicitly since generic stub does not perform
+  // map checks.
+  static const int kSlowCaseBitFieldMask =
+      (1 << Map::kIsAccessCheckNeeded) | (1 << Map::kHasIndexedInterceptor);
+
   static void Generate(MacroAssembler* masm, const ExternalReference& f);
 
   // Update the inline cache.
@@ -294,6 +321,10 @@ class KeyedLoadIC: public IC {
   static Code* pre_monomorphic_stub() {
     return Builtins::builtin(Builtins::KeyedLoadIC_PreMonomorphic);
   }
+  static Code* string_stub() {
+    return Builtins::builtin(Builtins::KeyedLoadIC_String);
+  }
+  static Code* external_array_stub(JSObject::ElementsKind elements_kind);
 
   static void Clear(Address address, Code* target);
 
@@ -358,6 +389,13 @@ class KeyedStoreIC: public IC {
   static void GenerateGeneric(MacroAssembler* masm);
   static void GenerateExtendStorage(MacroAssembler* masm);
 
+  // Generators for external array types. See objects.h.
+  // These are similar to the generic IC; they optimize the case of
+  // operating upon external array types but fall back to the runtime
+  // for all other types.
+  static void GenerateExternalArray(MacroAssembler* masm,
+                                    ExternalArrayType array_type);
+
   // Clear the inlined version so the IC is always hit.
   static void ClearInlinedVersion(Address address);
 
@@ -384,13 +422,14 @@ class KeyedStoreIC: public IC {
   static Code* generic_stub() {
     return Builtins::builtin(Builtins::KeyedStoreIC_Generic);
   }
+  static Code* external_array_stub(JSObject::ElementsKind elements_kind);
 
   static void Clear(Address address, Code* target);
 
   // Support for patching the map that is checked in an inlined
   // version of keyed store.
   // The address is the patch point for the IC call
-  // (Assembler::kPatchReturnSequenceLength before the end of
+  // (Assembler::kCallTargetAddressOffset before the end of
   // the call/return address).
   // The map is the new map that the inlined code should check against.
   static bool PatchInlinedStore(Address address, Object* map);

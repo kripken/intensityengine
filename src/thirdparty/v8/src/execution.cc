@@ -30,19 +30,10 @@
 #include "v8.h"
 
 #include "api.h"
+#include "bootstrapper.h"
 #include "codegen-inl.h"
-
-#if V8_TARGET_ARCH_IA32
-#include "ia32/simulator-ia32.h"
-#elif V8_TARGET_ARCH_X64
-#include "x64/simulator-x64.h"
-#elif V8_TARGET_ARCH_ARM
-#include "arm/simulator-arm.h"
-#else
-#error Unsupported target architecture.
-#endif
-
 #include "debug.h"
+#include "simulator.h"
 #include "v8threads.h"
 
 namespace v8 {
@@ -60,9 +51,6 @@ static Handle<Object> Invoke(bool construct,
 
   // Entering JavaScript.
   VMState state(JS);
-
-  // Guard the stack against too much recursion.
-  StackGuard guard;
 
   // Placeholder for return value.
   Object* value = reinterpret_cast<Object*>(kZapValue);
@@ -91,6 +79,10 @@ static Handle<Object> Invoke(bool construct,
     receiver = Handle<JSObject>(global->global_receiver());
   }
 
+  // Make sure that the global object of the context we're about to
+  // make the current one is indeed a global object.
+  ASSERT(func->context()->global()->IsGlobalObject());
+
   {
     // Save and restore context around invocation and block the
     // allocation of handles without explicit handle scopes.
@@ -99,8 +91,11 @@ static Handle<Object> Invoke(bool construct,
     JSEntryFunction entry = FUNCTION_CAST<JSEntryFunction>(code->entry());
 
     // Call the function through the right JS entry stub.
-    value = CALL_GENERATED_CODE(entry, func->code()->entry(), *func,
-                                *receiver, argc, args);
+    byte* entry_address= func->code()->entry();
+    JSFunction* function = *func;
+    Object* receiver_pointer = *receiver;
+    value = CALL_GENERATED_CODE(entry, entry_address, function,
+                                receiver_pointer, argc, args);
   }
 
 #ifdef DEBUG
@@ -217,55 +212,6 @@ Handle<Object> Execution::GetConstructorDelegate(Handle<Object> object) {
 StackGuard::ThreadLocal StackGuard::thread_local_;
 
 
-StackGuard::StackGuard() {
-  // NOTE: Overall the StackGuard code assumes that the stack grows towards
-  // lower addresses.
-  ExecutionAccess access;
-  if (thread_local_.nesting_++ == 0) {
-    // Initial StackGuard is being set. We will set the stack limits based on
-    // the current stack pointer allowing the stack to grow kLimitSize from
-    // here.
-
-    // Ensure that either the stack limits are unset (kIllegalLimit) or that
-    // they indicate a pending interruption. The interrupt limit will be
-    // temporarily reset through the code below and reestablished if the
-    // interrupt flags indicate that an interrupt is pending.
-    ASSERT(thread_local_.jslimit_ == kIllegalLimit ||
-           (thread_local_.jslimit_ == kInterruptLimit &&
-            thread_local_.interrupt_flags_ != 0));
-    ASSERT(thread_local_.climit_ == kIllegalLimit ||
-           (thread_local_.climit_ == kInterruptLimit &&
-            thread_local_.interrupt_flags_ != 0));
-
-    uintptr_t limit = GENERATED_CODE_STACK_LIMIT(kLimitSize);
-    thread_local_.initial_jslimit_ = thread_local_.jslimit_ = limit;
-    Heap::SetStackLimit(limit);
-    // NOTE: The check for overflow is not safe as there is no guarantee that
-    // the running thread has its stack in all memory up to address 0x00000000.
-    thread_local_.initial_climit_ = thread_local_.climit_ =
-        reinterpret_cast<uintptr_t>(this) >= kLimitSize ?
-            reinterpret_cast<uintptr_t>(this) - kLimitSize : 0;
-
-    if (thread_local_.interrupt_flags_ != 0) {
-      set_limits(kInterruptLimit, access);
-    }
-  }
-  // Ensure that proper limits have been set.
-  ASSERT(thread_local_.jslimit_ != kIllegalLimit &&
-         thread_local_.climit_ != kIllegalLimit);
-  ASSERT(thread_local_.initial_jslimit_ != kIllegalLimit &&
-         thread_local_.initial_climit_ != kIllegalLimit);
-}
-
-
-StackGuard::~StackGuard() {
-  ExecutionAccess access;
-  if (--thread_local_.nesting_ == 0) {
-    set_limits(kIllegalLimit, access);
-  }
-}
-
-
 bool StackGuard::IsStackOverflow() {
   ExecutionAccess access;
   return (thread_local_.jslimit_ != kInterruptLimit &&
@@ -285,15 +231,15 @@ void StackGuard::SetStackLimit(uintptr_t limit) {
   ExecutionAccess access;
   // If the current limits are special (eg due to a pending interrupt) then
   // leave them alone.
-  if (thread_local_.jslimit_ == thread_local_.initial_jslimit_) {
-    thread_local_.jslimit_ = limit;
-    Heap::SetStackLimit(limit);
+  uintptr_t jslimit = SimulatorStack::JsLimitFromCLimit(limit);
+  if (thread_local_.jslimit_ == thread_local_.real_jslimit_) {
+    thread_local_.jslimit_ = jslimit;
   }
-  if (thread_local_.climit_ == thread_local_.initial_climit_) {
+  if (thread_local_.climit_ == thread_local_.real_climit_) {
     thread_local_.climit_ = limit;
   }
-  thread_local_.initial_climit_ = limit;
-  thread_local_.initial_jslimit_ = limit;
+  thread_local_.real_climit_ = limit;
+  thread_local_.real_jslimit_ = jslimit;
 }
 
 
@@ -402,8 +348,64 @@ char* StackGuard::ArchiveStackGuard(char* to) {
 char* StackGuard::RestoreStackGuard(char* from) {
   ExecutionAccess access;
   memcpy(reinterpret_cast<char*>(&thread_local_), from, sizeof(ThreadLocal));
-  Heap::SetStackLimit(thread_local_.jslimit_);
+  Heap::SetStackLimits();
   return from + sizeof(ThreadLocal);
+}
+
+
+static internal::Thread::LocalStorageKey stack_limit_key =
+    internal::Thread::CreateThreadLocalKey();
+
+
+void StackGuard::FreeThreadResources() {
+  Thread::SetThreadLocal(
+      stack_limit_key,
+      reinterpret_cast<void*>(thread_local_.real_climit_));
+}
+
+
+void StackGuard::ThreadLocal::Clear() {
+  real_jslimit_ = kIllegalLimit;
+  jslimit_ = kIllegalLimit;
+  real_climit_ = kIllegalLimit;
+  climit_ = kIllegalLimit;
+  nesting_ = 0;
+  postpone_interrupts_nesting_ = 0;
+  interrupt_flags_ = 0;
+  Heap::SetStackLimits();
+}
+
+
+void StackGuard::ThreadLocal::Initialize() {
+  if (real_climit_ == kIllegalLimit) {
+    // Takes the address of the limit variable in order to find out where
+    // the top of stack is right now.
+    uintptr_t limit = reinterpret_cast<uintptr_t>(&limit) - kLimitSize;
+    ASSERT(reinterpret_cast<uintptr_t>(&limit) > kLimitSize);
+    real_jslimit_ = SimulatorStack::JsLimitFromCLimit(limit);
+    jslimit_ = SimulatorStack::JsLimitFromCLimit(limit);
+    real_climit_ = limit;
+    climit_ = limit;
+    Heap::SetStackLimits();
+  }
+  nesting_ = 0;
+  postpone_interrupts_nesting_ = 0;
+  interrupt_flags_ = 0;
+}
+
+
+void StackGuard::ClearThread(const ExecutionAccess& lock) {
+  thread_local_.Clear();
+}
+
+
+void StackGuard::InitThread(const ExecutionAccess& lock) {
+  thread_local_.Initialize();
+  void* stored_limit = Thread::GetThreadLocal(stack_limit_key);
+  // You should hold the ExecutionAccess lock when you call this.
+  if (stored_limit != NULL) {
+    StackGuard::SetStackLimit(reinterpret_cast<intptr_t>(stored_limit));
+  }
 }
 
 
@@ -607,6 +609,11 @@ static Object* RuntimePreempt() {
 Object* Execution::DebugBreakHelper() {
   // Just continue if breaks are disabled.
   if (Debug::disable_break()) {
+    return Heap::undefined_value();
+  }
+
+  // Ignore debug break during bootstrapping.
+  if (Bootstrapper::IsActive()) {
     return Heap::undefined_value();
   }
 

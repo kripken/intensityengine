@@ -36,9 +36,11 @@
 // The contract  to the shared code is that the the CodeGenerator is a subclass
 // of Visitor and that the following methods are available publicly:
 //   MakeCode
-//   SetFunctionInfo
+//   MakeCodePrologue
+//   MakeCodeEpilogue
 //   masm
 //   frame
+//   script
 //   has_valid_frame
 //   SetFrame
 //   DeleteFrame
@@ -46,6 +48,7 @@
 //   AddDeferred
 //   in_spilled_code
 //   set_in_spilled_code
+//   RecordPositions
 //
 // These methods are either used privately by the shared code or implemented as
 // shared code:
@@ -53,6 +56,7 @@
 //   ~CodeGenerator
 //   ProcessDeferred
 //   GenCode
+//   ComputeLazyCompile
 //   BuildBoilerplate
 //   ComputeCallInitialize
 //   ComputeCallInitializeInLoop
@@ -61,9 +65,11 @@
 //   FindInlineRuntimeLUT
 //   CheckForInlineRuntimeCall
 //   PatchInlineRuntimeEntry
+//   AnalyzeCondition
 //   CodeForFunctionPosition
 //   CodeForReturnPosition
 //   CodeForStatementPosition
+//   CodeForDoWhileConditionPosition
 //   CodeForSourcePosition
 
 
@@ -227,6 +233,55 @@ class StackCheckStub : public CodeStub {
 };
 
 
+class FastNewClosureStub : public CodeStub {
+ public:
+  void Generate(MacroAssembler* masm);
+
+ private:
+  const char* GetName() { return "FastNewClosureStub"; }
+  Major MajorKey() { return FastNewClosure; }
+  int MinorKey() { return 0; }
+};
+
+
+class FastNewContextStub : public CodeStub {
+ public:
+  static const int kMaximumSlots = 64;
+
+  explicit FastNewContextStub(int slots) : slots_(slots) {
+    ASSERT(slots_ > 0 && slots <= kMaximumSlots);
+  }
+
+  void Generate(MacroAssembler* masm);
+
+ private:
+  int slots_;
+
+  const char* GetName() { return "FastNewContextStub"; }
+  Major MajorKey() { return FastNewContext; }
+  int MinorKey() { return slots_; }
+};
+
+
+class FastCloneShallowArrayStub : public CodeStub {
+ public:
+  static const int kMaximumLength = 8;
+
+  explicit FastCloneShallowArrayStub(int length) : length_(length) {
+    ASSERT(length >= 0 && length <= kMaximumLength);
+  }
+
+  void Generate(MacroAssembler* masm);
+
+ private:
+  int length_;
+
+  const char* GetName() { return "FastCloneShallowArrayStub"; }
+  Major MajorKey() { return FastCloneShallowArray; }
+  int MinorKey() { return length_; }
+};
+
+
 class InstanceofStub: public CodeStub {
  public:
   InstanceofStub() { }
@@ -239,30 +294,53 @@ class InstanceofStub: public CodeStub {
 };
 
 
-class UnarySubStub : public CodeStub {
+class GenericUnaryOpStub : public CodeStub {
  public:
-  explicit UnarySubStub(bool overwrite)
-      : overwrite_(overwrite) { }
+  GenericUnaryOpStub(Token::Value op, bool overwrite)
+      : op_(op), overwrite_(overwrite) { }
 
  private:
+  Token::Value op_;
   bool overwrite_;
-  Major MajorKey() { return UnarySub; }
-  int MinorKey() { return overwrite_ ? 1 : 0; }
+
+  class OverwriteField: public BitField<int, 0, 1> {};
+  class OpField: public BitField<Token::Value, 1, kMinorBits - 1> {};
+
+  Major MajorKey() { return GenericUnaryOp; }
+  int MinorKey() {
+    return OpField::encode(op_) | OverwriteField::encode(overwrite_);
+  }
+
   void Generate(MacroAssembler* masm);
 
-  const char* GetName() { return "UnarySubStub"; }
+  const char* GetName();
+};
+
+
+enum NaNInformation {
+  kBothCouldBeNaN,
+  kCantBothBeNaN
 };
 
 
 class CompareStub: public CodeStub {
  public:
-  CompareStub(Condition cc, bool strict) : cc_(cc), strict_(strict) { }
+  CompareStub(Condition cc,
+              bool strict,
+              NaNInformation nan_info = kBothCouldBeNaN) :
+      cc_(cc), strict_(strict), never_nan_nan_(nan_info == kCantBothBeNaN) { }
 
   void Generate(MacroAssembler* masm);
 
  private:
   Condition cc_;
   bool strict_;
+  // Only used for 'equal' comparisons.  Tells the stub that we already know
+  // that at least one side of the comparison is not NaN.  This allows the
+  // stub to use object identity in the positive case.  We ignore it when
+  // generating the minor key for other comparisons to avoid creating more
+  // stubs.
+  bool never_nan_nan_;
 
   Major MajorKey() { return Compare; }
 
@@ -274,6 +352,9 @@ class CompareStub: public CodeStub {
                          Register object,
                          Register scratch);
 
+  // Unfortunately you have to run without snapshots to see most of these
+  // names in the profile since most compare stubs end up in the snapshot.
+  const char* GetName();
 #ifdef DEBUG
   void Print() {
     PrintF("CompareStub (cc %d), (strict %s)\n",
@@ -286,7 +367,7 @@ class CompareStub: public CodeStub {
 
 class CEntryStub : public CodeStub {
  public:
-  CEntryStub() { }
+  explicit CEntryStub(int result_size) : result_size_(result_size) { }
 
   void Generate(MacroAssembler* masm) { GenerateBody(masm, false); }
 
@@ -296,24 +377,54 @@ class CEntryStub : public CodeStub {
                     Label* throw_normal_exception,
                     Label* throw_termination_exception,
                     Label* throw_out_of_memory_exception,
-                    StackFrame::Type frame_type,
+                    ExitFrame::Mode mode,
                     bool do_gc,
                     bool always_allocate_scope);
   void GenerateThrowTOS(MacroAssembler* masm);
   void GenerateThrowUncatchable(MacroAssembler* masm,
                                 UncatchableExceptionType type);
-
  private:
+  // Number of pointers/values returned.
+  int result_size_;
+
   Major MajorKey() { return CEntry; }
-  int MinorKey() { return 0; }
+  // Minor key must differ if different result_size_ values means different
+  // code is generated.
+  int MinorKey();
 
   const char* GetName() { return "CEntryStub"; }
 };
 
 
+class ApiGetterEntryStub : public CodeStub {
+ public:
+  ApiGetterEntryStub(Handle<AccessorInfo> info,
+                     ApiFunction* fun)
+      : info_(info),
+        fun_(fun) { }
+  void Generate(MacroAssembler* masm);
+  virtual bool has_custom_cache() { return true; }
+  virtual bool GetCustomCache(Code** code_out);
+  virtual void SetCustomCache(Code* value);
+
+  static const int kStackSpace = 6;
+  static const int kArgc = 4;
+ private:
+  Handle<AccessorInfo> info() { return info_; }
+  ApiFunction* fun() { return fun_; }
+  Major MajorKey() { return NoCache; }
+  int MinorKey() { return 0; }
+  const char* GetName() { return "ApiEntryStub"; }
+  // The accessor info associated with the function.
+  Handle<AccessorInfo> info_;
+  // The function to be called.
+  ApiFunction* fun_;
+};
+
+
 class CEntryDebugBreakStub : public CEntryStub {
  public:
-  CEntryDebugBreakStub() { }
+  CEntryDebugBreakStub() : CEntryStub(1) { }
 
   void Generate(MacroAssembler* masm) { GenerateBody(masm, true); }
 
@@ -380,6 +491,26 @@ class ArgumentsAccessStub: public CodeStub {
 #ifdef DEBUG
   void Print() {
     PrintF("ArgumentsAccessStub (type %d)\n", type_);
+  }
+#endif
+};
+
+
+class RegExpExecStub: public CodeStub {
+ public:
+  RegExpExecStub() { }
+
+ private:
+  Major MajorKey() { return RegExpExec; }
+  int MinorKey() { return 0; }
+
+  void Generate(MacroAssembler* masm);
+
+  const char* GetName() { return "RegExpExecStub"; }
+
+#ifdef DEBUG
+  void Print() {
+    PrintF("RegExpExecStub\n");
   }
 #endif
 };

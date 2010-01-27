@@ -106,10 +106,10 @@ Handle<String> Factory::NewConsString(Handle<String> first,
 }
 
 
-Handle<String> Factory::NewStringSlice(Handle<String> str,
-                                       int begin,
-                                       int end) {
-  CALL_HEAP_FUNCTION(str->Slice(begin, end), String);
+Handle<String> Factory::NewSubString(Handle<String> str,
+                                     int begin,
+                                     int end) {
+  CALL_HEAP_FUNCTION(str->SubString(begin, end), String);
 }
 
 
@@ -189,7 +189,7 @@ Handle<Script> Factory::NewScript(Handle<String> source) {
   script->set_compilation_type(Smi::FromInt(Script::COMPILATION_TYPE_HOST));
   script->set_wrapper(*wrapper);
   script->set_line_ends(Heap::undefined_value());
-  script->set_eval_from_function(Heap::undefined_value());
+  script->set_eval_from_shared(Heap::undefined_value());
   script->set_eval_from_instructions_offset(Smi::FromInt(0));
 
   return script;
@@ -219,6 +219,18 @@ Handle<PixelArray> Factory::NewPixelArray(int length,
   CALL_HEAP_FUNCTION(Heap::AllocatePixelArray(length,
                                               external_pointer,
                                               pretenure), PixelArray);
+}
+
+
+Handle<ExternalArray> Factory::NewExternalArray(int length,
+                                                ExternalArrayType array_type,
+                                                void* external_pointer,
+                                                PretenureFlag pretenure) {
+  ASSERT(0 <= length);
+  CALL_HEAP_FUNCTION(Heap::AllocateExternalArray(length,
+                                                 array_type,
+                                                 external_pointer,
+                                                 pretenure), ExternalArray);
 }
 
 
@@ -272,7 +284,8 @@ Handle<FixedArray> Factory::CopyFixedArray(Handle<FixedArray> array) {
 
 Handle<JSFunction> Factory::BaseNewFunctionFromBoilerplate(
     Handle<JSFunction> boilerplate,
-    Handle<Map> function_map) {
+    Handle<Map> function_map,
+    PretenureFlag pretenure) {
   ASSERT(boilerplate->IsBoilerplate());
   ASSERT(!boilerplate->has_initial_map());
   ASSERT(!boilerplate->has_prototype());
@@ -280,20 +293,22 @@ Handle<JSFunction> Factory::BaseNewFunctionFromBoilerplate(
   ASSERT(boilerplate->elements() == Heap::empty_fixed_array());
   CALL_HEAP_FUNCTION(Heap::AllocateFunction(*function_map,
                                             boilerplate->shared(),
-                                            Heap::the_hole_value()),
+                                            Heap::the_hole_value(),
+                                            pretenure),
                      JSFunction);
 }
 
 
 Handle<JSFunction> Factory::NewFunctionFromBoilerplate(
     Handle<JSFunction> boilerplate,
-    Handle<Context> context) {
-  Handle<JSFunction> result =
-      BaseNewFunctionFromBoilerplate(boilerplate, Top::function_map());
+    Handle<Context> context,
+    PretenureFlag pretenure) {
+  Handle<JSFunction> result = BaseNewFunctionFromBoilerplate(
+      boilerplate, Top::function_map(), pretenure);
   result->set_context(*context);
   int number_of_literals = boilerplate->NumberOfLiterals();
   Handle<FixedArray> literals =
-      Factory::NewFixedArray(number_of_literals, TENURED);
+      Factory::NewFixedArray(number_of_literals, pretenure);
   if (number_of_literals > 0) {
     // Store the object, regexp and array functions in the literals
     // array prefix.  These functions will be used when creating
@@ -401,10 +416,12 @@ Handle<Object> Factory::NewError(const char* maker,
                                  const char* type,
                                  Handle<JSArray> args) {
   Handle<String> make_str = Factory::LookupAsciiSymbol(maker);
-  Handle<JSFunction> fun =
-      Handle<JSFunction>(
-          JSFunction::cast(
-              Top::builtins()->GetProperty(*make_str)));
+  Handle<Object> fun_obj(Top::builtins()->GetProperty(*make_str));
+  // If the builtins haven't been properly configured yet this error
+  // constructor may not have been defined.  Bail out.
+  if (!fun_obj->IsJSFunction())
+    return Factory::undefined_value();
+  Handle<JSFunction> fun = Handle<JSFunction>::cast(fun_obj);
   Handle<Object> type_obj = Factory::LookupAsciiSymbol(type);
   Object** argv[2] = { type_obj.location(),
                        Handle<Object>::cast(args).location() };
@@ -475,7 +492,6 @@ Handle<JSFunction> Factory::NewFunction(Handle<String> name,
 
 Handle<JSFunction> Factory::NewFunctionBoilerplate(Handle<String> name,
                                                    int number_of_literals,
-                                                   bool contains_array_literal,
                                                    Handle<Code> code) {
   Handle<JSFunction> function = NewFunctionBoilerplate(name);
   function->set_code(*code);
@@ -483,7 +499,7 @@ Handle<JSFunction> Factory::NewFunctionBoilerplate(Handle<String> name,
   // If the function contains object, regexp or array literals,
   // allocate extra space for a literals array prefix containing the
   // object, regexp and array constructor functions.
-  if (number_of_literals > 0 || contains_array_literal) {
+  if (number_of_literals > 0) {
     literals_array_size += JSFunction::kLiteralsPrefixSize;
   }
   Handle<FixedArray> literals =
@@ -668,6 +684,11 @@ Handle<JSArray> Factory::NewJSArrayWithElements(Handle<FixedArray> elements,
 Handle<SharedFunctionInfo> Factory::NewSharedFunctionInfo(Handle<String> name) {
   CALL_HEAP_FUNCTION(Heap::AllocateSharedFunctionInfo(*name),
                      SharedFunctionInfo);
+}
+
+
+Handle<String> Factory::NumberToString(Handle<Object> number) {
+  CALL_HEAP_FUNCTION(Heap::NumberToString(*number), String);
 }
 
 

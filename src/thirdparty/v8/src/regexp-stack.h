@@ -68,9 +68,12 @@ class RegExpStack {
   static Address EnsureCapacity(size_t size);
 
   // Thread local archiving.
-  static size_t ArchiveSpacePerThread() { return sizeof(thread_local_); }
+  static int ArchiveSpacePerThread() {
+    return static_cast<int>(sizeof(thread_local_));
+  }
   static char* ArchiveStack(char* to);
   static char* RestoreStack(char* from);
+  static void FreeThreadResources() { thread_local_.Free(); }
 
  private:
   // Artificial limit used when no memory has been allocated.
@@ -92,7 +95,18 @@ class RegExpStack {
     Address memory_;
     size_t memory_size_;
     Address limit_;
+    void Free();
   };
+
+  // Address of allocated memory.
+  static Address memory_address() {
+    return reinterpret_cast<Address>(&thread_local_.memory_);
+  }
+
+  // Address of size of allocated memory.
+  static Address memory_size_address() {
+    return reinterpret_cast<Address>(&thread_local_.memory_size_);
+  }
 
   // Resets the buffer if it has grown beyond the default/minimum size.
   // After this, the buffer is either the default size, or it is empty, so
@@ -100,6 +114,8 @@ class RegExpStack {
   static void Reset();
 
   static ThreadLocal thread_local_;
+
+  friend class ExternalReference;
 };
 
 }}  // namespace v8::internal

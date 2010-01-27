@@ -44,6 +44,10 @@ class GlobalHandles::Node : public Malloced {
     callback_ = NULL;
   }
 
+  Node() {
+    state_ = DESTROYED;
+  }
+
   explicit Node(Object* object) {
     Initialize(object);
     // Initialize link structure.
@@ -161,6 +165,15 @@ class GlobalHandles::Node : public Malloced {
       // It's fine though to reuse nodes that were destroyed in weak callback
       // as those cannot be deallocated until we are back from the callback.
       set_first_free(NULL);
+      if (first_deallocated()) {
+        first_deallocated()->set_next(head());
+      }
+      // Check that we are not passing a finalized external string to
+      // the callback.
+      ASSERT(!object_->IsExternalAsciiString() ||
+             ExternalAsciiString::cast(object_)->resource() != NULL);
+      ASSERT(!object_->IsExternalTwoByteString() ||
+             ExternalTwoByteString::cast(object_)->resource() != NULL);
       // Leaving V8.
       VMState state(EXTERNAL);
       func(object, par);
@@ -200,20 +213,81 @@ class GlobalHandles::Node : public Malloced {
 };
 
 
+class GlobalHandles::Pool BASE_EMBEDDED {
+  public:
+    Pool() {
+      current_ = new Chunk();
+      current_->previous = NULL;
+      next_ = current_->nodes;
+      limit_ = current_->nodes + kNodesPerChunk;
+    }
+
+    Node* Allocate() {
+      if (next_ < limit_) {
+        return next_++;
+      }
+      return SlowAllocate();
+    }
+
+    void Release() {
+      Chunk* current = current_;
+      ASSERT(current != NULL);  // At least a single block must by allocated
+      do {
+        Chunk* previous = current->previous;
+        delete current;
+        current = previous;
+      } while (current != NULL);
+      current_ = NULL;
+      next_ = limit_ = NULL;
+    }
+
+  private:
+    static const int kNodesPerChunk = (1 << 12) - 1;
+    struct Chunk : public Malloced {
+      Chunk* previous;
+      Node nodes[kNodesPerChunk];
+    };
+
+    Node* SlowAllocate() {
+      Chunk* chunk = new Chunk();
+      chunk->previous = current_;
+      current_ = chunk;
+
+      Node* new_nodes = current_->nodes;
+      next_ = new_nodes + 1;
+      limit_ = new_nodes + kNodesPerChunk;
+      return new_nodes;
+    }
+
+    Chunk* current_;
+    Node* next_;
+    Node* limit_;
+};
+
+
+static GlobalHandles::Pool pool_;
+
+
 Handle<Object> GlobalHandles::Create(Object* value) {
   Counters::global_handles.Increment();
   Node* result;
-  if (first_free() == NULL) {
-    // Allocate a new node.
-    result = new Node(value);
-    result->set_next(head());
-    set_head(result);
-  } else {
+  if (first_free()) {
     // Take the first node in the free list.
     result = first_free();
     set_first_free(result->next_free());
-    result->Initialize(value);
+  } else if (first_deallocated()) {
+    // Next try deallocated list
+    result = first_deallocated();
+    set_first_deallocated(result->next_free());
+    ASSERT(result->next() == head());
+    set_head(result);
+  } else {
+    // Allocate a new node.
+    result = pool_.Allocate();
+    result->set_next(head());
+    set_head(result);
   }
+  result->Initialize(value);
   return result->handle();
 }
 
@@ -264,6 +338,16 @@ void GlobalHandles::IterateWeakRoots(ObjectVisitor* v) {
 }
 
 
+void GlobalHandles::IterateWeakRoots(WeakReferenceGuest f,
+                                     WeakReferenceCallback callback) {
+  for (Node* current = head_; current != NULL; current = current->next()) {
+    if (current->IsWeak() && current->callback() == callback) {
+      f(current->object_, current->parameter());
+    }
+  }
+}
+
+
 void GlobalHandles::IdentifyWeakHandles(WeakSlotCallback f) {
   for (Node* current = head_; current != NULL; current = current->next()) {
     if (current->state_ == Node::WEAK) {
@@ -282,7 +366,7 @@ void GlobalHandles::PostGarbageCollectionProcessing() {
   // Process weak global handle callbacks. This must be done after the
   // GC is completely done, because the callbacks may invoke arbitrary
   // API functions.
-  // At the same time deallocate all DESTROYED nodes
+  // At the same time deallocate all DESTROYED nodes.
   ASSERT(Heap::gc_state() == Heap::NOT_IN_GC);
   const int initial_post_gc_processing_count = ++post_gc_processing_count;
   Node** p = &head_;
@@ -300,17 +384,24 @@ void GlobalHandles::PostGarbageCollectionProcessing() {
       // Delete the link.
       Node* node = *p;
       *p = node->next();  // Update the link.
-      delete node;
+      if (first_deallocated()) {
+        first_deallocated()->set_next(node);
+      }
+      node->set_next_free(first_deallocated());
+      set_first_deallocated(node);
     } else {
       p = (*p)->next_addr();
     }
   }
   set_first_free(NULL);
+  if (first_deallocated()) {
+    first_deallocated()->set_next(head());
+  }
 }
 
 
-void GlobalHandles::IterateRoots(ObjectVisitor* v) {
-  // Traversal of global handles marked as NORMAL or NEAR_DEATH.
+void GlobalHandles::IterateStrongRoots(ObjectVisitor* v) {
+  // Traversal of global handles marked as NORMAL.
   for (Node* current = head_; current != NULL; current = current->next()) {
     if (current->state_ == Node::NORMAL) {
       v->VisitPointer(&current->object_);
@@ -318,17 +409,22 @@ void GlobalHandles::IterateRoots(ObjectVisitor* v) {
   }
 }
 
-void GlobalHandles::TearDown() {
-  // Delete all the nodes in the linked list.
-  Node* current = head_;
-  while (current != NULL) {
-    Node* n = current;
-    current = current->next();
-    delete n;
+
+void GlobalHandles::IterateAllRoots(ObjectVisitor* v) {
+  for (Node* current = head_; current != NULL; current = current->next()) {
+    if (current->state_ != Node::DESTROYED) {
+      v->VisitPointer(&current->object_);
+    }
   }
-  // Reset the head and free_list.
+}
+
+
+void GlobalHandles::TearDown() {
+  // Reset all the lists.
   set_head(NULL);
   set_first_free(NULL);
+  set_first_deallocated(NULL);
+  pool_.Release();
 }
 
 
@@ -337,6 +433,27 @@ int GlobalHandles::number_of_global_object_weak_handles_ = 0;
 
 GlobalHandles::Node* GlobalHandles::head_ = NULL;
 GlobalHandles::Node* GlobalHandles::first_free_ = NULL;
+GlobalHandles::Node* GlobalHandles::first_deallocated_ = NULL;
+
+void GlobalHandles::RecordStats(HeapStats* stats) {
+  *stats->global_handle_count = 0;
+  *stats->weak_global_handle_count = 0;
+  *stats->pending_global_handle_count = 0;
+  *stats->near_death_global_handle_count = 0;
+  *stats->destroyed_global_handle_count = 0;
+  for (Node* current = head_; current != NULL; current = current->next()) {
+    *stats->global_handle_count += 1;
+    if (current->state_ == Node::WEAK) {
+      *stats->weak_global_handle_count += 1;
+    } else if (current->state_ == Node::PENDING) {
+      *stats->pending_global_handle_count += 1;
+    } else if (current->state_ == Node::NEAR_DEATH) {
+      *stats->near_death_global_handle_count += 1;
+    } else if (current->state_ == Node::DESTROYED) {
+      *stats->destroyed_global_handle_count += 1;
+    }
+  }
+}
 
 #ifdef DEBUG
 
@@ -395,6 +512,5 @@ void GlobalHandles::RemoveObjectGroups() {
   }
   object_groups->Clear();
 }
-
 
 } }  // namespace v8::internal

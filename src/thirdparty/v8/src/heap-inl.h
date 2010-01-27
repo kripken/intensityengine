@@ -41,10 +41,10 @@ int Heap::MaxObjectSizeInPagedSpace() {
 
 Object* Heap::AllocateSymbol(Vector<const char> str,
                              int chars,
-                             uint32_t length_field) {
+                             uint32_t hash_field) {
   unibrow::Utf8InputBuffer<> buffer(str.start(),
                                     static_cast<unsigned>(str.length()));
-  return AllocateInternalSymbol(&buffer, chars, length_field);
+  return AllocateInternalSymbol(&buffer, chars, hash_field);
 }
 
 
@@ -54,7 +54,8 @@ Object* Heap::AllocateRaw(int size_in_bytes,
   ASSERT(allocation_allowed_ && gc_state_ == NOT_IN_GC);
   ASSERT(space != NEW_SPACE ||
          retry_space == OLD_POINTER_SPACE ||
-         retry_space == OLD_DATA_SPACE);
+         retry_space == OLD_DATA_SPACE ||
+         retry_space == LO_SPACE);
 #ifdef DEBUG
   if (FLAG_gc_interval >= 0 &&
       !disallow_allocation_failure_ &&
@@ -109,6 +110,19 @@ Object* Heap::NumberFromUint32(uint32_t value) {
 }
 
 
+void Heap::FinalizeExternalString(String* string) {
+  ASSERT(string->IsExternalString());
+  v8::String::ExternalStringResourceBase** resource_addr =
+      reinterpret_cast<v8::String::ExternalStringResourceBase**>(
+          reinterpret_cast<byte*>(string) +
+          ExternalString::kResourceOffset -
+          kHeapObjectTag);
+  delete *resource_addr;
+  // Clear the resource pointer in the string.
+  *resource_addr = NULL;
+}
+
+
 Object* Heap::AllocateRawMap() {
 #ifdef DEBUG
   Counters::objs_since_last_full.Increment();
@@ -116,6 +130,12 @@ Object* Heap::AllocateRawMap() {
 #endif
   Object* result = map_space_->AllocateRaw(Map::kSize);
   if (result->IsFailure()) old_gen_exhausted_ = true;
+#ifdef DEBUG
+  if (!result->IsFailure()) {
+    // Maps have their own alignment.
+    CHECK((OffsetFrom(result) & kMapAlignmentMask) == kHeapObjectTag);
+  }
+#endif
   return result;
 }
 
@@ -177,12 +197,23 @@ AllocationSpace Heap::TargetSpaceId(InstanceType type) {
   // other object types are promoted to old pointer space.  We do not use
   // object->IsHeapNumber() and object->IsSeqString() because we already
   // know that object has the heap object tag.
-  ASSERT((type != CODE_TYPE) && (type != MAP_TYPE));
-  bool has_pointers =
-      type != HEAP_NUMBER_TYPE &&
-      (type >= FIRST_NONSTRING_TYPE ||
-       (type & kStringRepresentationMask) != kSeqStringTag);
-  return has_pointers ? OLD_POINTER_SPACE : OLD_DATA_SPACE;
+
+  // These objects are never allocated in new space.
+  ASSERT(type != MAP_TYPE);
+  ASSERT(type != CODE_TYPE);
+  ASSERT(type != ODDBALL_TYPE);
+  ASSERT(type != JS_GLOBAL_PROPERTY_CELL_TYPE);
+
+  if (type < FIRST_NONSTRING_TYPE) {
+    // There are three string representations: sequential strings, cons
+    // strings, and external strings.  Only cons strings contain
+    // non-map-word pointers to heap objects.
+    return ((type & kStringRepresentationMask) == kConsStringTag)
+        ? OLD_POINTER_SPACE
+        : OLD_DATA_SPACE;
+  } else {
+    return (type <= LAST_DATA_TYPE) ? OLD_DATA_SPACE : OLD_POINTER_SPACE;
+  }
 }
 
 
@@ -320,6 +351,56 @@ inline bool Heap::allow_allocation(bool new_state) {
 
 #endif
 
+
+void ExternalStringTable::AddString(String* string) {
+  ASSERT(string->IsExternalString());
+  if (Heap::InNewSpace(string)) {
+    new_space_strings_.Add(string);
+  } else {
+    old_space_strings_.Add(string);
+  }
+}
+
+
+void ExternalStringTable::Iterate(ObjectVisitor* v) {
+  if (!new_space_strings_.is_empty()) {
+    Object** start = &new_space_strings_[0];
+    v->VisitPointers(start, start + new_space_strings_.length());
+  }
+  if (!old_space_strings_.is_empty()) {
+    Object** start = &old_space_strings_[0];
+    v->VisitPointers(start, start + old_space_strings_.length());
+  }
+}
+
+
+// Verify() is inline to avoid ifdef-s around its calls in release
+// mode.
+void ExternalStringTable::Verify() {
+#ifdef DEBUG
+  for (int i = 0; i < new_space_strings_.length(); ++i) {
+    ASSERT(Heap::InNewSpace(new_space_strings_[i]));
+    ASSERT(new_space_strings_[i] != Heap::raw_unchecked_null_value());
+  }
+  for (int i = 0; i < old_space_strings_.length(); ++i) {
+    ASSERT(!Heap::InNewSpace(old_space_strings_[i]));
+    ASSERT(old_space_strings_[i] != Heap::raw_unchecked_null_value());
+  }
+#endif
+}
+
+
+void ExternalStringTable::AddOldString(String* string) {
+  ASSERT(string->IsExternalString());
+  ASSERT(!Heap::InNewSpace(string));
+  old_space_strings_.Add(string);
+}
+
+
+void ExternalStringTable::ShrinkNewStrings(int position) {
+  new_space_strings_.Rewind(position);
+  Verify();
+}
 
 } }  // namespace v8::internal
 

@@ -30,12 +30,10 @@
 #include "bootstrapper.h"
 #include "debug.h"
 #include "serialize.h"
+#include "simulator.h"
 #include "stub-cache.h"
 #include "oprofile-agent.h"
-
-#if V8_TARGET_ARCH_ARM
-#include "arm/simulator-arm.h"
-#endif
+#include "log.h"
 
 namespace v8 {
 namespace internal {
@@ -61,7 +59,6 @@ bool V8::Initialize(Deserializer *des) {
 
   // Enable logging before setting up the heap
   Logger::Setup();
-  if (des) des->GetLog();
 
   // Setup the platform OS support.
   OS::Setup();
@@ -70,6 +67,14 @@ bool V8::Initialize(Deserializer *des) {
 #if !V8_HOST_ARCH_ARM && V8_TARGET_ARCH_ARM
   ::assembler::arm::Simulator::Initialize();
 #endif
+
+  { // NOLINT
+    // Ensure that the thread has a valid stack guard.  The v8::Locker object
+    // will ensure this too, but we don't have to use lockers if we are only
+    // using one thread.
+    ExecutionAccess lock;
+    StackGuard::InitThread(lock);
+  }
 
   // Setup the object heap
   ASSERT(!Heap::HasBeenSetup());
@@ -100,7 +105,7 @@ bool V8::Initialize(Deserializer *des) {
 
   // Deserializing may put strange things in the root array's copy of the
   // stack guard.
-  Heap::SetStackLimit(StackGuard::jslimit());
+  Heap::SetStackLimits();
 
   // Setup the CPU support. Must be done after heap setup and after
   // any deserialization because we have to have the initial heap
@@ -108,6 +113,11 @@ bool V8::Initialize(Deserializer *des) {
   CPU::Setup();
 
   OProfileAgent::Initialize();
+
+  if (FLAG_log_code) {
+    HandleScope scope;
+    LOG(LogCompiledFunctions());
+  }
 
   return true;
 }
@@ -161,20 +171,23 @@ uint32_t V8::Random() {
 }
 
 
-bool V8::IdleNotification(bool is_high_priority) {
-  if (!FLAG_use_idle_notification) return false;
-  // Ignore high priority instances of V8.
-  if (is_high_priority) return false;
+bool V8::IdleNotification() {
+  // Returning true tells the caller that there is no need to call
+  // IdleNotification again.
+  if (!FLAG_use_idle_notification) return true;
 
   // Tell the heap that it may want to adjust.
   return Heap::IdleNotification();
 }
 
+static const uint32_t kRandomPositiveSmiMax = 0x3fffffff;
 
 Smi* V8::RandomPositiveSmi() {
   uint32_t random = Random();
-  ASSERT(IsPowerOf2(Smi::kMaxValue + 1));
-  return Smi::FromInt(random & Smi::kMaxValue);
+  ASSERT(static_cast<uint32_t>(Smi::kMaxValue) >= kRandomPositiveSmiMax);
+  // kRandomPositiveSmiMax must match the value being divided
+  // by in math.js.
+  return Smi::FromInt(random & kRandomPositiveSmiMax);
 }
 
 } }  // namespace v8::internal

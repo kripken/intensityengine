@@ -37,6 +37,8 @@
 #ifndef V8_IA32_ASSEMBLER_IA32_H_
 #define V8_IA32_ASSEMBLER_IA32_H_
 
+#include "serialize.h"
+
 namespace v8 {
 namespace internal {
 
@@ -358,41 +360,44 @@ class Displacement BASE_EMBEDDED {
 //   }
 class CpuFeatures : public AllStatic {
  public:
-  // Feature flags bit positions. They are mostly based on the CPUID spec.
-  // (We assign CPUID itself to one of the currently reserved bits --
-  // feel free to change this if needed.)
-  enum Feature { SSE3 = 32, SSE2 = 26, CMOV = 15, RDTSC = 4, CPUID = 10 };
   // Detect features of the target CPU. Set safe defaults if the serializer
   // is enabled (snapshots must be portable).
   static void Probe();
   // Check whether a feature is supported by the target CPU.
-  static bool IsSupported(Feature f) {
+  static bool IsSupported(CpuFeature f) {
+    if (f == SSE2 && !FLAG_enable_sse2) return false;
+    if (f == SSE3 && !FLAG_enable_sse3) return false;
+    if (f == CMOV && !FLAG_enable_cmov) return false;
+    if (f == RDTSC && !FLAG_enable_rdtsc) return false;
     return (supported_ & (static_cast<uint64_t>(1) << f)) != 0;
   }
   // Check whether a feature is currently enabled.
-  static bool IsEnabled(Feature f) {
+  static bool IsEnabled(CpuFeature f) {
     return (enabled_ & (static_cast<uint64_t>(1) << f)) != 0;
   }
   // Enable a specified feature within a scope.
   class Scope BASE_EMBEDDED {
 #ifdef DEBUG
    public:
-    explicit Scope(Feature f) {
+    explicit Scope(CpuFeature f) {
+      uint64_t mask = static_cast<uint64_t>(1) << f;
       ASSERT(CpuFeatures::IsSupported(f));
+      ASSERT(!Serializer::enabled() || (found_by_runtime_probing_ & mask) == 0);
       old_enabled_ = CpuFeatures::enabled_;
-      CpuFeatures::enabled_ |= (static_cast<uint64_t>(1) << f);
+      CpuFeatures::enabled_ |= mask;
     }
     ~Scope() { CpuFeatures::enabled_ = old_enabled_; }
    private:
     uint64_t old_enabled_;
 #else
    public:
-    explicit Scope(Feature f) {}
+    explicit Scope(CpuFeature f) {}
 #endif
   };
  private:
   static uint64_t supported_;
   static uint64_t enabled_;
+  static uint64_t found_by_runtime_probing_;
 };
 
 
@@ -435,13 +440,32 @@ class Assembler : public Malloced {
   inline static Address target_address_at(Address pc);
   inline static void set_target_address_at(Address pc, Address target);
 
+  // This sets the branch destination (which is in the instruction on x86).
+  // This is for calls and branches within generated code.
+  inline static void set_target_at(Address instruction_payload,
+                                   Address target) {
+    set_target_address_at(instruction_payload, target);
+  }
+
+  // This sets the branch destination (which is in the instruction on x86).
+  // This is for calls and branches to runtime code.
+  inline static void set_external_target_at(Address instruction_payload,
+                                            Address target) {
+    set_target_address_at(instruction_payload, target);
+  }
+
+  static const int kCallTargetSize = kPointerSize;
+  static const int kExternalTargetSize = kPointerSize;
+
   // Distance between the address of the code target in the call instruction
   // and the return address
-  static const int kPatchReturnSequenceLength = kPointerSize;
+  static const int kCallTargetAddressOffset = kPointerSize;
   // Distance between start of patched return sequence and the emitted address
   // to jump to.
   static const int kPatchReturnSequenceAddressOffset = 1;  // JMP imm32.
 
+  static const int kCallInstructionLength = 5;
+  static const int kJSReturnSequenceLength = 6;
 
   // ---------------------------------------------------------------------------
   // Code generation
@@ -516,6 +540,9 @@ class Assembler : public Malloced {
   void cmov(Condition cc, Register dst, Handle<Object> handle);
   void cmov(Condition cc, Register dst, const Operand& src);
 
+  // Repetitive string instructions.
+  void rep_movs();
+
   // Exchange two registers
   void xchg(Register dst, Register src);
 
@@ -539,6 +566,7 @@ class Assembler : public Malloced {
   void cmp(Register reg, Handle<Object> handle);
   void cmp(Register reg, const Operand& op);
   void cmp(const Operand& op, const Immediate& imm);
+  void cmp(const Operand& op, Handle<Object> handle);
 
   void dec_b(Register dst);
 
@@ -574,21 +602,22 @@ class Assembler : public Malloced {
   void rcl(Register dst, uint8_t imm8);
 
   void sar(Register dst, uint8_t imm8);
-  void sar(Register dst);
+  void sar_cl(Register dst);
 
   void sbb(Register dst, const Operand& src);
 
   void shld(Register dst, const Operand& src);
 
   void shl(Register dst, uint8_t imm8);
-  void shl(Register dst);
+  void shl_cl(Register dst);
 
   void shrd(Register dst, const Operand& src);
 
   void shr(Register dst, uint8_t imm8);
-  void shr(Register dst);
   void shr_cl(Register dst);
 
+  void subb(const Operand& dst, int8_t imm8);
+  void subb(Register dst, const Operand& src);
   void sub(const Operand& dst, const Immediate& x);
   void sub(Register dst, const Operand& src);
   void sub(const Operand& dst, Register src);
@@ -668,6 +697,7 @@ class Assembler : public Malloced {
   void fistp_d(const Operand& adr);
 
   void fisttp_s(const Operand& adr);
+  void fisttp_d(const Operand& adr);
 
   void fabs();
   void fchs();
@@ -696,6 +726,8 @@ class Assembler : public Malloced {
   void ftst();
   void fucomp(int i);
   void fucompp();
+  void fucomi(int i);
+  void fucomip();
   void fcompp();
   void fnstsw_ax();
   void fwait();
@@ -718,6 +750,14 @@ class Assembler : public Malloced {
   void subsd(XMMRegister dst, XMMRegister src);
   void mulsd(XMMRegister dst, XMMRegister src);
   void divsd(XMMRegister dst, XMMRegister src);
+  void xorpd(XMMRegister dst, XMMRegister src);
+
+  void comisd(XMMRegister dst, XMMRegister src);
+
+  void movdqa(XMMRegister dst, const Operand& src);
+  void movdqa(const Operand& dst, XMMRegister src);
+  void movdqu(XMMRegister dst, const Operand& src);
+  void movdqu(const Operand& dst, XMMRegister src);
 
   // Use either movsd or movlpd.
   void movdbl(XMMRegister dst, const Operand& src);

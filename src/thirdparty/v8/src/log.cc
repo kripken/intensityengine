@@ -30,6 +30,7 @@
 #include "v8.h"
 
 #include "bootstrapper.h"
+#include "global-handles.h"
 #include "log.h"
 #include "macro-assembler.h"
 #include "serialize.h"
@@ -125,6 +126,9 @@ class Profiler: public Thread {
   bool overflow_;  // Tell whether a buffer overflow has occurred.
   Semaphore* buffer_semaphore_;  // Sempahore used for buffer synchronization.
 
+  // Tells whether profiler is engaged, that is, processing thread is stated.
+  bool engaged_;
+
   // Tells whether worker thread should continue running.
   bool running_;
 
@@ -151,12 +155,18 @@ void StackTracer::Trace(TickSample* sample) {
     return;
   }
 
+  int i = 0;
+  const Address callback = Logger::current_state_ != NULL ?
+      Logger::current_state_->external_callback() : NULL;
+  if (callback != NULL) {
+    sample->stack[i++] = callback;
+  }
+
   SafeStackTraceFrameIterator it(
       reinterpret_cast<Address>(sample->fp),
       reinterpret_cast<Address>(sample->sp),
       reinterpret_cast<Address>(sample->sp),
       js_entry_sp);
-  int i = 0;
   while (!it.done() && i < TickSample::kMaxFramesCount) {
     sample->stack[i++] = it.frame()->pc();
     it.Advance();
@@ -243,17 +253,25 @@ void SlidingStateWindow::AddState(StateTag state) {
 //
 // Profiler implementation.
 //
-Profiler::Profiler() {
-  buffer_semaphore_ = OS::CreateSemaphore(0);
-  head_ = 0;
-  tail_ = 0;
-  overflow_ = false;
-  running_ = false;
+Profiler::Profiler()
+    : head_(0),
+      tail_(0),
+      overflow_(false),
+      buffer_semaphore_(OS::CreateSemaphore(0)),
+      engaged_(false),
+      running_(false) {
 }
 
 
 void Profiler::Engage() {
-  OS::LogSharedLibraryAddresses();
+  if (engaged_) return;
+  engaged_ = true;
+
+  // TODO(mnaganov): This is actually "Chromium" mode. Flags need to be revised.
+  // http://code.google.com/p/v8/issues/detail?id=487
+  if (!FLAG_prof_lazy) {
+    OS::LogSharedLibraryAddresses();
+  }
 
   // Start thread processing the profiler buffer.
   running_ = true;
@@ -268,6 +286,8 @@ void Profiler::Engage() {
 
 
 void Profiler::Disengage() {
+  if (!engaged_) return;
+
   // Stop receiving ticks.
   Logger::ticker_->ClearProfiler();
 
@@ -660,6 +680,55 @@ class CompressionHelper {
 #endif  // ENABLE_LOGGING_AND_PROFILING
 
 
+#ifdef ENABLE_LOGGING_AND_PROFILING
+void Logger::CallbackEventInternal(const char* prefix, const char* name,
+                                   Address entry_point) {
+  if (!Log::IsEnabled() || !FLAG_log_code) return;
+  LogMessageBuilder msg;
+  msg.Append("%s,%s,",
+             log_events_[CODE_CREATION_EVENT], log_events_[CALLBACK_TAG]);
+  msg.AppendAddress(entry_point);
+  msg.Append(",1,\"%s%s\"", prefix, name);
+  if (FLAG_compress_log) {
+    ASSERT(compression_helper_ != NULL);
+    if (!compression_helper_->HandleMessage(&msg)) return;
+  }
+  msg.Append('\n');
+  msg.WriteToLogFile();
+}
+#endif
+
+
+void Logger::CallbackEvent(String* name, Address entry_point) {
+#ifdef ENABLE_LOGGING_AND_PROFILING
+  if (!Log::IsEnabled() || !FLAG_log_code) return;
+  SmartPointer<char> str =
+      name->ToCString(DISALLOW_NULLS, ROBUST_STRING_TRAVERSAL);
+  CallbackEventInternal("", *str, entry_point);
+#endif
+}
+
+
+void Logger::GetterCallbackEvent(String* name, Address entry_point) {
+#ifdef ENABLE_LOGGING_AND_PROFILING
+  if (!Log::IsEnabled() || !FLAG_log_code) return;
+  SmartPointer<char> str =
+      name->ToCString(DISALLOW_NULLS, ROBUST_STRING_TRAVERSAL);
+  CallbackEventInternal("get ", *str, entry_point);
+#endif
+}
+
+
+void Logger::SetterCallbackEvent(String* name, Address entry_point) {
+#ifdef ENABLE_LOGGING_AND_PROFILING
+  if (!Log::IsEnabled() || !FLAG_log_code) return;
+  SmartPointer<char> str =
+      name->ToCString(DISALLOW_NULLS, ROBUST_STRING_TRAVERSAL);
+  CallbackEventInternal("set ", *str, entry_point);
+#endif
+}
+
+
 void Logger::CodeCreateEvent(LogEventsAndTags tag,
                              Code* code,
                              const char* comment) {
@@ -889,11 +958,62 @@ void Logger::HeapSampleJSConstructorEvent(const char* constructor,
 #ifdef ENABLE_LOGGING_AND_PROFILING
   if (!Log::IsEnabled() || !FLAG_log_gc) return;
   LogMessageBuilder msg;
-  msg.Append("heap-js-cons-item,%s,%d,%d\n",
-             constructor != NULL ?
-                 (constructor[0] != '\0' ? constructor : "(anonymous)") :
-                 "(no_constructor)",
-             number, bytes);
+  msg.Append("heap-js-cons-item,%s,%d,%d\n", constructor, number, bytes);
+  msg.WriteToLogFile();
+#endif
+}
+
+
+void Logger::HeapSampleJSRetainersEvent(
+    const char* constructor, const char* event) {
+#ifdef ENABLE_LOGGING_AND_PROFILING
+  if (!Log::IsEnabled() || !FLAG_log_gc) return;
+  // Event starts with comma, so we don't have it in the format string.
+  static const char* event_text = "heap-js-ret-item,%s";
+  // We take placeholder strings into account, but it's OK to be conservative.
+  static const int event_text_len = StrLength(event_text);
+  const int cons_len = StrLength(constructor);
+  const int event_len = StrLength(event);
+  int pos = 0;
+  // Retainer lists can be long. We may need to split them into multiple events.
+  do {
+    LogMessageBuilder msg;
+    msg.Append(event_text, constructor);
+    int to_write = event_len - pos;
+    if (to_write > Log::kMessageBufferSize - (cons_len + event_text_len)) {
+      int cut_pos = pos + Log::kMessageBufferSize - (cons_len + event_text_len);
+      ASSERT(cut_pos < event_len);
+      while (cut_pos > pos && event[cut_pos] != ',') --cut_pos;
+      if (event[cut_pos] != ',') {
+        // Crash in debug mode, skip in release mode.
+        ASSERT(false);
+        return;
+      }
+      // Append a piece of event that fits, without trailing comma.
+      msg.AppendStringPart(event + pos, cut_pos - pos);
+      // Start next piece with comma.
+      pos = cut_pos;
+    } else {
+      msg.Append("%s", event + pos);
+      pos += event_len;
+    }
+    msg.Append('\n');
+    msg.WriteToLogFile();
+  } while (pos < event_len);
+#endif
+}
+
+
+void Logger::HeapSampleJSProducerEvent(const char* constructor,
+                                       Address* stack) {
+#ifdef ENABLE_LOGGING_AND_PROFILING
+  if (!Log::IsEnabled() || !FLAG_log_gc) return;
+  LogMessageBuilder msg;
+  msg.Append("heap-js-prod-item,%s", constructor);
+  while (*stack != NULL) {
+    msg.Append(",0x%" V8PRIxPTR, *stack++);
+  }
+  msg.Append("\n");
   msg.WriteToLogFile();
 #endif
 }
@@ -1003,9 +1123,11 @@ void Logger::ResumeProfiler(int flags) {
   }
   if (modules_to_enable & PROFILER_MODULE_CPU) {
     if (FLAG_prof_lazy) {
+      profiler_->Engage();
       LOG(UncheckedStringEvent("profiler", "resume"));
       FLAG_log_code = true;
       LogCompiledFunctions();
+      LogAccessorCallbacks();
       if (!FLAG_sliding_state_window) ticker_->Start();
     }
     profiler_->resume();
@@ -1035,37 +1157,75 @@ int Logger::GetLogLines(int from_pos, char* dest_buf, int max_size) {
 }
 
 
-void Logger::LogCompiledFunctions() {
-  HandleScope scope;
-  Handle<SharedFunctionInfo>* sfis = NULL;
+static int EnumerateCompiledFunctions(Handle<SharedFunctionInfo>* sfis) {
+  AssertNoAllocation no_alloc;
   int compiled_funcs_count = 0;
-
-  {
-    AssertNoAllocation no_alloc;
-
-    HeapIterator iterator;
-    while (iterator.has_next()) {
-      HeapObject* obj = iterator.next();
-      ASSERT(obj != NULL);
-      if (obj->IsSharedFunctionInfo()
-          && SharedFunctionInfo::cast(obj)->is_compiled()) {
-        ++compiled_funcs_count;
-      }
-    }
-
-    sfis = NewArray< Handle<SharedFunctionInfo> >(compiled_funcs_count);
-    iterator.reset();
-
-    int i = 0;
-    while (iterator.has_next()) {
-      HeapObject* obj = iterator.next();
-      ASSERT(obj != NULL);
-      if (obj->IsSharedFunctionInfo()
-          && SharedFunctionInfo::cast(obj)->is_compiled()) {
-        sfis[i++] = Handle<SharedFunctionInfo>(SharedFunctionInfo::cast(obj));
-      }
+  HeapIterator iterator;
+  while (iterator.has_next()) {
+    HeapObject* obj = iterator.next();
+    ASSERT(obj != NULL);
+    if (!obj->IsSharedFunctionInfo()) continue;
+    SharedFunctionInfo* sfi = SharedFunctionInfo::cast(obj);
+    if (sfi->is_compiled()
+        && (!sfi->script()->IsScript()
+            || Script::cast(sfi->script())->HasValidSource())) {
+      if (sfis != NULL)
+        sfis[compiled_funcs_count] = Handle<SharedFunctionInfo>(sfi);
+      ++compiled_funcs_count;
     }
   }
+  return compiled_funcs_count;
+}
+
+
+void Logger::LogCodeObject(Object* object) {
+  if (FLAG_log_code) {
+    Code* code_object = Code::cast(object);
+    LogEventsAndTags tag = Logger::STUB_TAG;
+    const char* description = "Unknown code from the snapshot";
+    switch (code_object->kind()) {
+      case Code::FUNCTION:
+        return;  // We log this later using LogCompiledFunctions.
+      case Code::STUB:
+        description = CodeStub::MajorName(code_object->major_key());
+        tag = Logger::STUB_TAG;
+        break;
+      case Code::BUILTIN:
+        description = "A builtin from the snapshot";
+        tag = Logger::BUILTIN_TAG;
+        break;
+      case Code::KEYED_LOAD_IC:
+        description = "A keyed load IC from the snapshot";
+        tag = Logger::KEYED_LOAD_IC_TAG;
+        break;
+      case Code::LOAD_IC:
+        description = "A load IC from the snapshot";
+        tag = Logger::LOAD_IC_TAG;
+        break;
+      case Code::STORE_IC:
+        description = "A store IC from the snapshot";
+        tag = Logger::STORE_IC_TAG;
+        break;
+      case Code::KEYED_STORE_IC:
+        description = "A keyed store IC from the snapshot";
+        tag = Logger::KEYED_STORE_IC_TAG;
+        break;
+      case Code::CALL_IC:
+        description = "A call IC from the snapshot";
+        tag = Logger::CALL_IC_TAG;
+        break;
+    }
+    LOG(CodeCreateEvent(tag, code_object, description));
+  }
+}
+
+
+void Logger::LogCompiledFunctions() {
+  HandleScope scope;
+  const int compiled_funcs_count = EnumerateCompiledFunctions(NULL);
+  Handle<SharedFunctionInfo>* sfis =
+      NewArray< Handle<SharedFunctionInfo> >(compiled_funcs_count);
+  EnumerateCompiledFunctions(sfis);
 
   // During iteration, there can be heap allocation due to
   // GetScriptLineNumber call.
@@ -1088,14 +1248,50 @@ void Logger::LogCompiledFunctions() {
           LOG(CodeCreateEvent(Logger::SCRIPT_TAG,
                               shared->code(), *script_name));
         }
-        continue;
+      } else {
+        LOG(CodeCreateEvent(
+            Logger::LAZY_COMPILE_TAG, shared->code(), *func_name));
       }
+    } else if (shared->function_data()->IsFunctionTemplateInfo()) {
+      // API function.
+      FunctionTemplateInfo* fun_data =
+          FunctionTemplateInfo::cast(shared->function_data());
+      Object* raw_call_data = fun_data->call_code();
+      if (!raw_call_data->IsUndefined()) {
+        CallHandlerInfo* call_data = CallHandlerInfo::cast(raw_call_data);
+        Object* callback_obj = call_data->callback();
+        Address entry_point = v8::ToCData<Address>(callback_obj);
+        LOG(CallbackEvent(*func_name, entry_point));
+      }
+    } else {
+      LOG(CodeCreateEvent(
+          Logger::LAZY_COMPILE_TAG, shared->code(), *func_name));
     }
-    // If no script or script has no name.
-    LOG(CodeCreateEvent(Logger::LAZY_COMPILE_TAG, shared->code(), *func_name));
   }
 
   DeleteArray(sfis);
+}
+
+
+void Logger::LogAccessorCallbacks() {
+  AssertNoAllocation no_alloc;
+  HeapIterator iterator;
+  while (iterator.has_next()) {
+    HeapObject* obj = iterator.next();
+    ASSERT(obj != NULL);
+    if (!obj->IsAccessorInfo()) continue;
+    AccessorInfo* ai = AccessorInfo::cast(obj);
+    if (!ai->name()->IsString()) continue;
+    String* name = String::cast(ai->name());
+    Address getter_entry = v8::ToCData<Address>(ai->getter());
+    if (getter_entry != 0) {
+      LOG(GetterCallbackEvent(name, getter_entry));
+    }
+    Address setter_entry = v8::ToCData<Address>(ai->setter());
+    if (setter_entry != 0) {
+      LOG(SetterCallbackEvent(name, setter_entry));
+    }
+  }
 }
 
 #endif
@@ -1199,7 +1395,9 @@ bool Logger::Setup() {
     } else {
       is_logging_ = true;
     }
-    profiler_->Engage();
+    if (!FLAG_prof_lazy) {
+      profiler_->Engage();
+    }
   }
 
   LogMessageBuilder::set_write_failure_handler(StopLoggingAndProfiling);

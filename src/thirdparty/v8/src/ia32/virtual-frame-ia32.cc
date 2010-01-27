@@ -75,10 +75,7 @@ void VirtualFrame::SyncElementBelowStackPointer(int index) {
 
     case FrameElement::CONSTANT:
       if (cgen()->IsUnsafeSmi(element.handle())) {
-        Result temp = cgen()->allocator()->Allocate();
-        ASSERT(temp.is_valid());
-        cgen()->LoadUnsafeSmi(temp.reg(), element.handle());
-        __ mov(Operand(ebp, fp_relative(index)), temp.reg());
+        cgen()->StoreUnsafeSmiToLocal(fp_relative(index), element.handle());
       } else {
         __ Set(Operand(ebp, fp_relative(index)),
                Immediate(element.handle()));
@@ -127,10 +124,7 @@ void VirtualFrame::SyncElementByPushing(int index) {
 
     case FrameElement::CONSTANT:
       if (cgen()->IsUnsafeSmi(element.handle())) {
-        Result temp = cgen()->allocator()->Allocate();
-        ASSERT(temp.is_valid());
-        cgen()->LoadUnsafeSmi(temp.reg(), element.handle());
-        __ push(temp.reg());
+       cgen()->PushUnsafeSmi(element.handle());
       } else {
         __ push(Immediate(element.handle()));
       }
@@ -161,15 +155,16 @@ void VirtualFrame::SyncRange(int begin, int end) {
   // on the stack.
   int start = Min(begin, stack_pointer_ + 1);
 
-  // If positive we have to adjust the stack pointer.
-  int delta = end - stack_pointer_;
-  if (delta > 0) {
-    stack_pointer_ = end;
-    __ sub(Operand(esp), Immediate(delta * kPointerSize));
-  }
-
+  // Emit normal push instructions for elements above stack pointer
+  // and use mov instructions if we are below stack pointer.
   for (int i = start; i <= end; i++) {
-    if (!elements_[i].is_synced()) SyncElementBelowStackPointer(i);
+    if (!elements_[i].is_synced()) {
+      if (i <= stack_pointer_) {
+        SyncElementBelowStackPointer(i);
+      } else {
+        SyncElementByPushing(i);
+      }
+    }
   }
 }
 
@@ -198,7 +193,7 @@ void VirtualFrame::MakeMergable() {
         // Emit a move.
         if (element.is_constant()) {
           if (cgen()->IsUnsafeSmi(element.handle())) {
-            cgen()->LoadUnsafeSmi(fresh.reg(), element.handle());
+            cgen()->MoveUnsafeSmi(fresh.reg(), element.handle());
           } else {
             __ Set(fresh.reg(), Immediate(element.handle()));
           }
@@ -299,7 +294,7 @@ void VirtualFrame::MergeMoveRegistersToMemory(VirtualFrame* expected) {
           if (!source.is_synced()) {
             if (cgen()->IsUnsafeSmi(source.handle())) {
               esi_caches = i;
-              cgen()->LoadUnsafeSmi(esi, source.handle());
+              cgen()->MoveUnsafeSmi(esi, source.handle());
               __ mov(Operand(ebp, fp_relative(i)), esi);
             } else {
               __ Set(Operand(ebp, fp_relative(i)), Immediate(source.handle()));
@@ -407,7 +402,7 @@ void VirtualFrame::MergeMoveMemoryToRegisters(VirtualFrame* expected) {
 
         case FrameElement::CONSTANT:
           if (cgen()->IsUnsafeSmi(source.handle())) {
-            cgen()->LoadUnsafeSmi(target_reg, source.handle());
+            cgen()->MoveUnsafeSmi(target_reg, source.handle());
           } else {
            __ Set(target_reg, Immediate(source.handle()));
           }
@@ -454,14 +449,16 @@ void VirtualFrame::Enter() {
   Comment cmnt(masm(), "[ Enter JS frame");
 
 #ifdef DEBUG
-  // Verify that edi contains a JS function.  The following code
-  // relies on eax being available for use.
-  __ test(edi, Immediate(kSmiTagMask));
-  __ Check(not_zero,
-           "VirtualFrame::Enter - edi is not a function (smi check).");
-  __ CmpObjectType(edi, JS_FUNCTION_TYPE, eax);
-  __ Check(equal,
-           "VirtualFrame::Enter - edi is not a function (map check).");
+  if (FLAG_debug_code) {
+    // Verify that edi contains a JS function.  The following code
+    // relies on eax being available for use.
+    __ test(edi, Immediate(kSmiTagMask));
+    __ Check(not_zero,
+             "VirtualFrame::Enter - edi is not a function (smi check).");
+    __ CmpObjectType(edi, JS_FUNCTION_TYPE, eax);
+    __ Check(equal,
+             "VirtualFrame::Enter - edi is not a function (map check).");
+  }
 #endif
 
   EmitPush(ebp);
@@ -516,13 +513,33 @@ void VirtualFrame::AllocateStackSlots() {
     Handle<Object> undefined = Factory::undefined_value();
     FrameElement initial_value =
         FrameElement::ConstantElement(undefined, FrameElement::SYNCED);
-    Result temp = cgen()->allocator()->Allocate();
-    ASSERT(temp.is_valid());
-    __ Set(temp.reg(), Immediate(undefined));
+    if (count == 1) {
+      __ push(Immediate(undefined));
+    } else if (count < kLocalVarBound) {
+      // For less locals the unrolled loop is more compact.
+      Result temp = cgen()->allocator()->Allocate();
+      ASSERT(temp.is_valid());
+      __ Set(temp.reg(), Immediate(undefined));
+      for (int i = 0; i < count; i++) {
+        __ push(temp.reg());
+      }
+    } else {
+      // For more locals a loop in generated code is more compact.
+      Label alloc_locals_loop;
+      Result cnt = cgen()->allocator()->Allocate();
+      Result tmp = cgen()->allocator()->Allocate();
+      ASSERT(cnt.is_valid());
+      ASSERT(tmp.is_valid());
+      __ mov(cnt.reg(), Immediate(count));
+      __ mov(tmp.reg(), Immediate(undefined));
+      __ bind(&alloc_locals_loop);
+      __ push(tmp.reg());
+      __ dec(cnt.reg());
+      __ j(not_zero, &alloc_locals_loop);
+    }
     for (int i = 0; i < count; i++) {
       elements_.Add(initial_value);
       stack_pointer_++;
-      __ push(temp.reg());
     }
   }
 }
@@ -928,14 +945,17 @@ Result VirtualFrame::CallKeyedStoreIC() {
 Result VirtualFrame::CallCallIC(RelocInfo::Mode mode,
                                 int arg_count,
                                 int loop_nesting) {
-  // Arguments, receiver, and function name are on top of the frame.
-  // The IC expects them on the stack.  It does not drop the function
-  // name slot (but it does drop the rest).
+  // Function name, arguments, and receiver are on top of the frame.
+  // The IC expects the name in ecx and the rest on the stack and
+  // drops them all.
   InLoopFlag in_loop = loop_nesting > 0 ? IN_LOOP : NOT_IN_LOOP;
   Handle<Code> ic = cgen()->ComputeCallInitialize(arg_count, in_loop);
   // Spill args, receiver, and function.  The call will drop args and
   // receiver.
-  PrepareForCall(arg_count + 2, arg_count + 1);
+  Result name = Pop();
+  PrepareForCall(arg_count + 1, arg_count + 1);  // Arguments + receiver.
+  name.ToRegister(ecx);
+  name.Unuse();
   return RawCallCodeObject(ic, mode);
 }
 

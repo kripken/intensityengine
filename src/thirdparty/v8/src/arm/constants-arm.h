@@ -43,14 +43,47 @@
 # define USE_THUMB_INTERWORK 1
 #endif
 
+#if defined(__ARM_ARCH_7A__) || \
+    defined(__ARM_ARCH_7R__) || \
+    defined(__ARM_ARCH_7__)
+# define CAN_USE_ARMV7_INSTRUCTIONS 1
+#endif
+
+#if defined(__ARM_ARCH_6__) ||   \
+    defined(__ARM_ARCH_6J__) ||  \
+    defined(__ARM_ARCH_6K__) ||  \
+    defined(__ARM_ARCH_6Z__) ||  \
+    defined(__ARM_ARCH_6ZK__) || \
+    defined(__ARM_ARCH_6T2__) || \
+    defined(CAN_USE_ARMV7_INSTRUCTIONS)
+# define CAN_USE_ARMV6_INSTRUCTIONS 1
+#endif
+
+#if defined(__ARM_ARCH_5T__)            || \
+    defined(__ARM_ARCH_5TE__)           || \
+    defined(CAN_USE_ARMV6_INSTRUCTIONS)
+# define CAN_USE_ARMV5_INSTRUCTIONS 1
+# define CAN_USE_THUMB_INSTRUCTIONS 1
+#endif
+
 // Simulator should support ARM5 instructions.
 #if !defined(__arm__)
-# define __ARM_ARCH_5__ 1
-# define __ARM_ARCH_5T__ 1
+# define CAN_USE_ARMV5_INSTRUCTIONS 1
+# define CAN_USE_THUMB_INSTRUCTIONS 1
 #endif
 
 namespace assembler {
 namespace arm {
+
+// Number of registers in normal ARM mode.
+static const int kNumRegisters = 16;
+
+// VFP support.
+static const int kNumVFPRegisters = 48;
+
+// PC is register 15.
+static const int kPCRegister = 15;
+static const int kNoRegister = -1;
 
 // Defines constants and accessor classes to assemble, disassemble and
 // simulate ARM instructions.
@@ -204,6 +237,16 @@ class Instr {
   inline int RnField() const { return Bits(19, 16); }
   inline int RdField() const { return Bits(15, 12); }
 
+  // Support for VFP.
+  // Vn(19-16) | Vd(15-12) |  Vm(3-0)
+  inline int VnField() const { return Bits(19, 16); }
+  inline int VmField() const { return Bits(3, 0); }
+  inline int VdField() const { return Bits(15, 12); }
+  inline int NField() const { return Bit(7); }
+  inline int MField() const { return Bit(5); }
+  inline int DField() const { return Bit(22); }
+  inline int RtField() const { return Bits(15, 12); }
+
   // Fields used in Data processing instructions
   inline Opcode OpcodeField() const {
     return static_cast<Opcode>(Bits(24, 21));
@@ -266,6 +309,36 @@ class Instr {
  private:
   // We need to prevent the creation of instances of class Instr.
   DISALLOW_IMPLICIT_CONSTRUCTORS(Instr);
+};
+
+
+// Helper functions for converting between register numbers and names.
+class Registers {
+ public:
+  // Return the name of the register.
+  static const char* Name(int reg);
+
+  // Lookup the register number for the name provided.
+  static int Number(const char* name);
+
+  struct RegisterAlias {
+    int reg;
+    const char* name;
+  };
+
+ private:
+  static const char* names_[kNumRegisters];
+  static const RegisterAlias aliases_[];
+};
+
+// Helper functions for converting between VFP register numbers and names.
+class VFPRegisters {
+ public:
+  // Return the name of the register.
+  static const char* Name(int reg);
+
+ private:
+  static const char* names_[kNumVFPRegisters];
 };
 
 

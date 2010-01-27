@@ -155,7 +155,7 @@ void Log::OpenMemoryBuffer() {
   ASSERT(!IsEnabled());
   output_buffer_ = new LogDynamicBuffer(
       kDynamicBufferBlockSize, kMaxDynamicBufferSize,
-      kDynamicBufferSeal, strlen(kDynamicBufferSeal));
+      kDynamicBufferSeal, StrLength(kDynamicBufferSeal));
   Write = WriteToMemory;
   Init();
 }
@@ -163,7 +163,7 @@ void Log::OpenMemoryBuffer() {
 
 void Log::Close() {
   if (Write == WriteToFile) {
-    fclose(output_handle_);
+    if (output_handle_ != NULL) fclose(output_handle_);
     output_handle_ = NULL;
   } else if (Write == WriteToMemory) {
     delete output_buffer_;
@@ -195,7 +195,7 @@ int Log::GetLogLines(int from_pos, char* dest_buf, int max_size) {
   // Find previous log line boundary.
   char* end_pos = dest_buf + actual_size - 1;
   while (end_pos >= dest_buf && *end_pos != '\n') --end_pos;
-  actual_size = end_pos - dest_buf + 1;
+  actual_size = static_cast<int>(end_pos - dest_buf + 1);
   ASSERT(actual_size <= max_size);
   return actual_size;
 }
@@ -310,6 +310,20 @@ void LogMessageBuilder::AppendDetailed(String* str, bool show_impl_info) {
 }
 
 
+void LogMessageBuilder::AppendStringPart(const char* str, int len) {
+  if (pos_ + len > Log::kMessageBufferSize) {
+    len = Log::kMessageBufferSize - pos_;
+    ASSERT(len >= 0);
+    if (len == 0) return;
+  }
+  Vector<char> buf(Log::message_buffer_ + pos_,
+                   Log::kMessageBufferSize - pos_);
+  OS::StrNCpy(buf, str, len);
+  pos_ += len;
+  ASSERT(pos_ <= Log::kMessageBufferSize);
+}
+
+
 bool LogMessageBuilder::StoreInCompressor(LogRecordCompressor* compressor) {
   return compressor->Store(Vector<const char>(Log::message_buffer_, pos_));
 }
@@ -338,7 +352,7 @@ void LogMessageBuilder::WriteToLogFile() {
 
 
 void LogMessageBuilder::WriteCStringToLogFile(const char* str) {
-  const int len = strlen(str);
+  const int len = StrLength(str);
   const int written = Log::Write(str, len);
   if (written != len && write_failure_handler != NULL) {
     write_failure_handler();
@@ -447,7 +461,7 @@ bool LogRecordCompressor::RetrievePreviousCompressed(
       --data_ptr;
     }
     const intptr_t truncated_len = prev_end - prev_ptr;
-    const int copy_from_pos = data_ptr - data.start();
+    const int copy_from_pos = static_cast<int>(data_ptr - data.start());
     // Check if the length of compressed tail is enough.
     if (truncated_len <= kMaxBackwardReferenceSize
         && truncated_len <= GetBackwardReferenceSize(distance, copy_from_pos)) {
@@ -479,7 +493,7 @@ bool LogRecordCompressor::RetrievePreviousCompressed(
         prev_record->start() + unchanged_len, best.backref_size + 1);
     PrintBackwardReference(backref, best.distance, best.copy_from_pos);
     ASSERT(strlen(backref.start()) - best.backref_size == 0);
-    prev_record->Truncate(unchanged_len + best.backref_size);
+    prev_record->Truncate(static_cast<int>(unchanged_len + best.backref_size));
   }
   return true;
 }

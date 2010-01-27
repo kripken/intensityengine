@@ -29,6 +29,7 @@
 
 #include "accessors.h"
 #include "api.h"
+#include "arguments.h"
 #include "bootstrapper.h"
 #include "compiler.h"
 #include "debug.h"
@@ -36,6 +37,7 @@
 #include "global-handles.h"
 #include "natives.h"
 #include "runtime.h"
+#include "stub-cache.h"
 
 namespace v8 {
 namespace internal {
@@ -46,10 +48,10 @@ v8::ImplementationUtilities::HandleScopeData HandleScope::current_ =
 
 
 int HandleScope::NumberOfHandles() {
-  int n = HandleScopeImplementer::instance()->Blocks()->length();
+  int n = HandleScopeImplementer::instance()->blocks()->length();
   if (n == 0) return 0;
-  return ((n - 1) * kHandleBlockSize) +
-      (current_.next - HandleScopeImplementer::instance()->Blocks()->last());
+  return ((n - 1) * kHandleBlockSize) + static_cast<int>(
+      (current_.next - HandleScopeImplementer::instance()->blocks()->last()));
 }
 
 
@@ -67,8 +69,8 @@ Object** HandleScope::Extend() {
   HandleScopeImplementer* impl = HandleScopeImplementer::instance();
   // If there's more room in the last block, we use that. This is used
   // for fast creation of scopes after scope barriers.
-  if (!impl->Blocks()->is_empty()) {
-    Object** limit = &impl->Blocks()->last()[kHandleBlockSize];
+  if (!impl->blocks()->is_empty()) {
+    Object** limit = &impl->blocks()->last()[kHandleBlockSize];
     if (current_.limit != limit) {
       current_.limit = limit;
     }
@@ -81,7 +83,7 @@ Object** HandleScope::Extend() {
     result = impl->GetSpareOrNewBlock();
     // Add the extension to the global list of blocks, but count the
     // extension as part of the current scope.
-    impl->Blocks()->Add(result);
+    impl->blocks()->Add(result);
     current_.extensions++;
     current_.limit = &result[kHandleBlockSize];
   }
@@ -101,6 +103,21 @@ void HandleScope::ZapRange(Object** start, Object** end) {
   for (Object** p = start; p < end; p++) {
     *reinterpret_cast<Address*>(p) = v8::internal::kHandleZapValue;
   }
+}
+
+
+Address HandleScope::current_extensions_address() {
+  return reinterpret_cast<Address>(&current_.extensions);
+}
+
+
+Address HandleScope::current_next_address() {
+  return reinterpret_cast<Address>(&current_.next);
+}
+
+
+Address HandleScope::current_limit_address() {
+  return reinterpret_cast<Address>(&current_.limit);
 }
 
 
@@ -284,7 +301,9 @@ Handle<Object> GetPrototype(Handle<Object> obj) {
 
 Handle<Object> GetHiddenProperties(Handle<JSObject> obj,
                                    bool create_if_needed) {
-  Handle<String> key = Factory::hidden_symbol();
+  Object* holder = obj->BypassGlobalProxy();
+  if (holder->IsUndefined()) return Factory::undefined_value();
+  obj = Handle<JSObject>(JSObject::cast(holder));
 
   if (obj->HasFastProperties()) {
     // If the object has fast properties, check whether the first slot
@@ -293,7 +312,7 @@ Handle<Object> GetHiddenProperties(Handle<JSObject> obj,
     // code zero) it will always occupy the first entry if present.
     DescriptorArray* descriptors = obj->map()->instance_descriptors();
     if ((descriptors->number_of_descriptors() > 0) &&
-        (descriptors->GetKey(0) == *key) &&
+        (descriptors->GetKey(0) == Heap::hidden_symbol()) &&
         descriptors->IsProperty(0)) {
       ASSERT(descriptors->GetType(0) == FIELD);
       return Handle<Object>(obj->FastPropertyAt(descriptors->GetFieldIndex(0)));
@@ -303,17 +322,17 @@ Handle<Object> GetHiddenProperties(Handle<JSObject> obj,
   // Only attempt to find the hidden properties in the local object and not
   // in the prototype chain.  Note that HasLocalProperty() can cause a GC in
   // the general case in the presence of interceptors.
-  if (!obj->HasLocalProperty(*key)) {
+  if (!obj->HasHiddenPropertiesObject()) {
     // Hidden properties object not found. Allocate a new hidden properties
     // object if requested. Otherwise return the undefined value.
     if (create_if_needed) {
       Handle<Object> hidden_obj = Factory::NewJSObject(Top::object_function());
-      return SetProperty(obj, key, hidden_obj, DONT_ENUM);
+      CALL_HEAP_FUNCTION(obj->SetHiddenPropertiesObject(*hidden_obj), Object);
     } else {
       return Factory::undefined_value();
     }
   }
-  return GetProperty(obj, key);
+  return Handle<Object>(obj->GetHiddenPropertiesObject());
 }
 
 
@@ -337,14 +356,14 @@ Handle<Object> LookupSingleCharacterStringFromCode(uint32_t index) {
 
 
 Handle<String> SubString(Handle<String> str, int start, int end) {
-  CALL_HEAP_FUNCTION(str->Slice(start, end), String);
+  CALL_HEAP_FUNCTION(str->SubString(start, end), String);
 }
 
 
 Handle<Object> SetElement(Handle<JSObject> object,
                           uint32_t index,
                           Handle<Object> value) {
-  if (object->HasPixelElements()) {
+  if (object->HasPixelElements() || object->HasExternalArrayElements()) {
     if (!value->IsSmi() && !value->IsHeapNumber() && !value->IsUndefined()) {
       bool has_exception;
       Handle<Object> number = Execution::ToNumber(value, &has_exception);
@@ -414,8 +433,8 @@ void InitScriptLineEnds(Handle<Script> script) {
 
   if (!script->source()->IsString()) {
     ASSERT(script->source()->IsUndefined());
-    script->set_line_ends(*(Factory::NewJSArray(0)));
-    ASSERT(script->line_ends()->IsJSArray());
+    script->set_line_ends(*(Factory::NewFixedArray(0)));
+    ASSERT(script->line_ends()->IsFixedArray());
     return;
   }
 
@@ -448,9 +467,8 @@ void InitScriptLineEnds(Handle<Script> script) {
   }
   ASSERT(array_index == line_count);
 
-  Handle<JSArray> object = Factory::NewJSArrayWithElements(array);
-  script->set_line_ends(*object);
-  ASSERT(script->line_ends()->IsJSArray());
+  script->set_line_ends(*array);
+  ASSERT(script->line_ends()->IsFixedArray());
 }
 
 
@@ -458,17 +476,18 @@ void InitScriptLineEnds(Handle<Script> script) {
 int GetScriptLineNumber(Handle<Script> script, int code_pos) {
   InitScriptLineEnds(script);
   AssertNoAllocation no_allocation;
-  JSArray* line_ends_array = JSArray::cast(script->line_ends());
-  const int line_ends_len = (Smi::cast(line_ends_array->length()))->value();
+  FixedArray* line_ends_array =
+      FixedArray::cast(script->line_ends());
+  const int line_ends_len = line_ends_array->length();
 
   int line = -1;
   if (line_ends_len > 0 &&
-      code_pos <= (Smi::cast(line_ends_array->GetElement(0)))->value()) {
+      code_pos <= (Smi::cast(line_ends_array->get(0)))->value()) {
     line = 0;
   } else {
     for (int i = 1; i < line_ends_len; ++i) {
-      if ((Smi::cast(line_ends_array->GetElement(i - 1)))->value() < code_pos &&
-          code_pos <= (Smi::cast(line_ends_array->GetElement(i)))->value()) {
+      if ((Smi::cast(line_ends_array->get(i - 1)))->value() < code_pos &&
+          code_pos <= (Smi::cast(line_ends_array->get(i)))->value()) {
         line = i;
         break;
       }
@@ -479,15 +498,17 @@ int GetScriptLineNumber(Handle<Script> script, int code_pos) {
 }
 
 
+void CustomArguments::IterateInstance(ObjectVisitor* v) {
+  v->VisitPointers(values_, values_ + 4);
+}
+
+
 // Compute the property keys from the interceptor.
 v8::Handle<v8::Array> GetKeysForNamedInterceptor(Handle<JSObject> receiver,
                                                  Handle<JSObject> object) {
   Handle<InterceptorInfo> interceptor(object->GetNamedInterceptor());
-  Handle<Object> data(interceptor->data());
-  v8::AccessorInfo info(
-    v8::Utils::ToLocal(receiver),
-    v8::Utils::ToLocal(data),
-    v8::Utils::ToLocal(object));
+  CustomArguments args(interceptor->data(), *receiver, *object);
+  v8::AccessorInfo info(args.end());
   v8::Handle<v8::Array> result;
   if (!interceptor->enumerator()->IsUndefined()) {
     v8::NamedPropertyEnumerator enum_fun =
@@ -507,11 +528,8 @@ v8::Handle<v8::Array> GetKeysForNamedInterceptor(Handle<JSObject> receiver,
 v8::Handle<v8::Array> GetKeysForIndexedInterceptor(Handle<JSObject> receiver,
                                                    Handle<JSObject> object) {
   Handle<InterceptorInfo> interceptor(object->GetIndexedInterceptor());
-  Handle<Object> data(interceptor->data());
-  v8::AccessorInfo info(
-    v8::Utils::ToLocal(receiver),
-    v8::Utils::ToLocal(data),
-    v8::Utils::ToLocal(object));
+  CustomArguments args(interceptor->data(), *receiver, *object);
+  v8::AccessorInfo info(args.end());
   v8::Handle<v8::Array> result;
   if (!interceptor->enumerator()->IsUndefined()) {
     v8::IndexedPropertyEnumerator enum_fun =
@@ -527,55 +545,72 @@ v8::Handle<v8::Array> GetKeysForIndexedInterceptor(Handle<JSObject> receiver,
 }
 
 
-Handle<FixedArray> GetKeysInFixedArrayFor(Handle<JSObject> object) {
+Handle<FixedArray> GetKeysInFixedArrayFor(Handle<JSObject> object,
+                                          KeyCollectionType type) {
   Handle<FixedArray> content = Factory::empty_fixed_array();
-
-  JSObject* arguments_boilerplate =
-      Top::context()->global_context()->arguments_boilerplate();
-  JSFunction* arguments_function =
-      JSFunction::cast(arguments_boilerplate->map()->constructor());
-  bool allow_enumeration = (object->map()->constructor() != arguments_function);
+  Handle<JSObject> arguments_boilerplate =
+      Handle<JSObject>(
+          Top::context()->global_context()->arguments_boilerplate());
+  Handle<JSFunction> arguments_function =
+      Handle<JSFunction>(
+          JSFunction::cast(arguments_boilerplate->map()->constructor()));
 
   // Only collect keys if access is permitted.
-  if (allow_enumeration) {
-    for (Handle<Object> p = object;
-         *p != Heap::null_value();
-         p = Handle<Object>(p->GetPrototype())) {
-      Handle<JSObject> current(JSObject::cast(*p));
+  for (Handle<Object> p = object;
+       *p != Heap::null_value();
+       p = Handle<Object>(p->GetPrototype())) {
+    Handle<JSObject> current(JSObject::cast(*p));
 
-      // Check access rights if required.
-      if (current->IsAccessCheckNeeded() &&
-        !Top::MayNamedAccess(*current, Heap::undefined_value(),
-                             v8::ACCESS_KEYS)) {
-        Top::ReportFailedAccessCheck(*current, v8::ACCESS_KEYS);
-        break;
-      }
-
-      // Compute the element keys.
-      Handle<FixedArray> element_keys =
-          Factory::NewFixedArray(current->NumberOfEnumElements());
-      current->GetEnumElementKeys(*element_keys);
-      content = UnionOfKeys(content, element_keys);
-
-      // Add the element keys from the interceptor.
-      if (current->HasIndexedInterceptor()) {
-        v8::Handle<v8::Array> result =
-            GetKeysForIndexedInterceptor(object, current);
-        if (!result.IsEmpty())
-          content = AddKeysFromJSArray(content, v8::Utils::OpenHandle(*result));
-      }
-
-      // Compute the property keys.
-      content = UnionOfKeys(content, GetEnumPropertyKeys(current));
-
-      // Add the property keys from the interceptor.
-      if (current->HasNamedInterceptor()) {
-        v8::Handle<v8::Array> result =
-            GetKeysForNamedInterceptor(object, current);
-        if (!result.IsEmpty())
-          content = AddKeysFromJSArray(content, v8::Utils::OpenHandle(*result));
-      }
+    // Check access rights if required.
+    if (current->IsAccessCheckNeeded() &&
+      !Top::MayNamedAccess(*current, Heap::undefined_value(),
+                           v8::ACCESS_KEYS)) {
+      Top::ReportFailedAccessCheck(*current, v8::ACCESS_KEYS);
+      break;
     }
+
+    // Compute the element keys.
+    Handle<FixedArray> element_keys =
+        Factory::NewFixedArray(current->NumberOfEnumElements());
+    current->GetEnumElementKeys(*element_keys);
+    content = UnionOfKeys(content, element_keys);
+
+    // Add the element keys from the interceptor.
+    if (current->HasIndexedInterceptor()) {
+      v8::Handle<v8::Array> result =
+          GetKeysForIndexedInterceptor(object, current);
+      if (!result.IsEmpty())
+        content = AddKeysFromJSArray(content, v8::Utils::OpenHandle(*result));
+    }
+
+    // We can cache the computed property keys if access checks are
+    // not needed and no interceptors are involved.
+    //
+    // We do not use the cache if the object has elements and
+    // therefore it does not make sense to cache the property names
+    // for arguments objects.  Arguments objects will always have
+    // elements.
+    bool cache_enum_keys =
+        ((current->map()->constructor() != *arguments_function) &&
+         !current->IsAccessCheckNeeded() &&
+         !current->HasNamedInterceptor() &&
+         !current->HasIndexedInterceptor());
+    // Compute the property keys and cache them if possible.
+    content =
+        UnionOfKeys(content, GetEnumPropertyKeys(current, cache_enum_keys));
+
+    // Add the property keys from the interceptor.
+    if (current->HasNamedInterceptor()) {
+      v8::Handle<v8::Array> result =
+          GetKeysForNamedInterceptor(object, current);
+      if (!result.IsEmpty())
+        content = AddKeysFromJSArray(content, v8::Utils::OpenHandle(*result));
+    }
+
+    // If we only want local properties we bail out after the first
+    // iteration.
+    if (type == LOCAL_ONLY)
+      break;
   }
   return content;
 }
@@ -583,12 +618,14 @@ Handle<FixedArray> GetKeysInFixedArrayFor(Handle<JSObject> object) {
 
 Handle<JSArray> GetKeysFor(Handle<JSObject> object) {
   Counters::for_in.Increment();
-  Handle<FixedArray> elements = GetKeysInFixedArrayFor(object);
+  Handle<FixedArray> elements = GetKeysInFixedArrayFor(object,
+                                                       INCLUDE_PROTOS);
   return Factory::NewJSArrayWithElements(elements);
 }
 
 
-Handle<FixedArray> GetEnumPropertyKeys(Handle<JSObject> object) {
+Handle<FixedArray> GetEnumPropertyKeys(Handle<JSObject> object,
+                                       bool cache_result) {
   int index = 0;
   if (object->HasFastProperties()) {
     if (object->map()->instance_descriptors()->HasEnumCache()) {
@@ -611,10 +648,12 @@ Handle<FixedArray> GetEnumPropertyKeys(Handle<JSObject> object) {
       }
     }
     (*storage)->SortPairs(*sort_array, sort_array->length());
-    Handle<FixedArray> bridge_storage =
-        Factory::NewFixedArray(DescriptorArray::kEnumCacheBridgeLength);
-    DescriptorArray* desc = object->map()->instance_descriptors();
-    desc->SetEnumCache(*bridge_storage, *storage);
+    if (cache_result) {
+      Handle<FixedArray> bridge_storage =
+          Factory::NewFixedArray(DescriptorArray::kEnumCacheBridgeLength);
+      DescriptorArray* desc = object->map()->instance_descriptors();
+      desc->SetEnumCache(*bridge_storage, *storage);
+    }
     ASSERT(storage->length() == index);
     return storage;
   } else {
@@ -670,6 +709,11 @@ OptimizedObjectForAddingMultipleProperties(Handle<JSObject> object,
   } else {
     has_been_transformed_ = false;
   }
+}
+
+
+Handle<Code> ComputeLazyCompile(int argc) {
+  CALL_HEAP_FUNCTION(StubCache::ComputeLazyCompile(argc), Code);
 }
 
 

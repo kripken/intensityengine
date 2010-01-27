@@ -107,12 +107,17 @@ static void GenerateDictionaryLoad(MacroAssembler* masm,
   static const int kProbes = 4;
   for (int i = 0; i < kProbes; i++) {
     // Compute the masked index: (hash + i + i * i) & mask.
-    __ ldr(t1, FieldMemOperand(r2, String::kLengthOffset));
-    __ mov(t1, Operand(t1, LSR, String::kHashShift));
+    __ ldr(t1, FieldMemOperand(r2, String::kHashFieldOffset));
     if (i > 0) {
-      __ add(t1, t1, Operand(StringDictionary::GetProbeOffset(i)));
+      // Add the probe offset (i + i * i) left shifted to avoid right shifting
+      // the hash in a separate instruction. The value hash + i + i * i is right
+      // shifted in the following and instruction.
+      ASSERT(StringDictionary::GetProbeOffset(i) <
+             1 << (32 - String::kHashFieldOffset));
+      __ add(t1, t1, Operand(
+          StringDictionary::GetProbeOffset(i) << String::kHashShift));
     }
-    __ and_(t1, t1, Operand(r3));
+    __ and_(t1, r3, Operand(t1, LSR, String::kHashShift));
 
     // Scale the index by multiplying by the element size.
     ASSERT(StringDictionary::kEntrySize == 3);
@@ -271,7 +276,7 @@ void CallIC::GenerateMegamorphic(MacroAssembler* masm, int argc) {
 
   // Cache miss: Jump to runtime.
   __ bind(&miss);
-  Generate(masm, argc, ExternalReference(IC_Utility(kCallIC_Miss)));
+  GenerateMiss(masm, argc);
 }
 
 
@@ -366,13 +371,11 @@ void CallIC::GenerateNormal(MacroAssembler* masm, int argc) {
 
   // Cache miss: Jump to runtime.
   __ bind(&miss);
-  Generate(masm, argc, ExternalReference(IC_Utility(kCallIC_Miss)));
+  GenerateMiss(masm, argc);
 }
 
 
-void CallIC::Generate(MacroAssembler* masm,
-                      int argc,
-                      const ExternalReference& f) {
+void CallIC::GenerateMiss(MacroAssembler* masm, int argc) {
   // ----------- S t a t e -------------
   //  -- lr: return address
   // -----------------------------------
@@ -389,9 +392,9 @@ void CallIC::Generate(MacroAssembler* masm,
 
   // Call the entry.
   __ mov(r0, Operand(2));
-  __ mov(r1, Operand(f));
+  __ mov(r1, Operand(ExternalReference(IC_Utility(kCallIC_Miss))));
 
-  CEntryStub stub;
+  CEntryStub stub(1);
   __ CallStub(&stub);
 
   // Move result to r1 and leave the internal frame.
@@ -503,7 +506,7 @@ void LoadIC::Generate(MacroAssembler* masm, const ExternalReference& f) {
   __ stm(db_w, sp, r2.bit() | r3.bit());
 
   // Perform tail call to the entry.
-  __ TailCallRuntime(f, 2);
+  __ TailCallRuntime(f, 2, 1);
 }
 
 
@@ -543,7 +546,7 @@ void KeyedLoadIC::Generate(MacroAssembler* masm, const ExternalReference& f) {
   __ ldm(ia, sp, r2.bit() | r3.bit());
   __ stm(db_w, sp, r2.bit() | r3.bit());
 
-  __ TailCallRuntime(f, 2);
+  __ TailCallRuntime(f, 2, 1);
 }
 
 
@@ -566,11 +569,10 @@ void KeyedLoadIC::GenerateGeneric(MacroAssembler* masm) {
 
   // Get the map of the receiver.
   __ ldr(r2, FieldMemOperand(r1, HeapObject::kMapOffset));
-  // Check that the receiver does not require access checks.  We need
-  // to check this explicitly since this generic stub does not perform
-  // map checks.
+
+  // Check bit field.
   __ ldrb(r3, FieldMemOperand(r2, Map::kBitFieldOffset));
-  __ tst(r3, Operand(1 << Map::kIsAccessCheckNeeded));
+  __ tst(r3, Operand(kSlowCaseBitFieldMask));
   __ b(ne, &slow);
   // Check that the object is some kind of JS object EXCEPT JS Value type.
   // In the case that the object is a value-wrapper object,
@@ -599,7 +601,7 @@ void KeyedLoadIC::GenerateGeneric(MacroAssembler* masm) {
   __ ldm(ia, sp, r0.bit() | r1.bit());
   __ stm(db_w, sp, r0.bit() | r1.bit());
   // Do tail-call to runtime routine.
-  __ TailCallRuntime(ExternalReference(Runtime::kGetProperty), 2);
+  __ TailCallRuntime(ExternalReference(Runtime::kGetProperty), 2, 1);
 
   // Fast case: Do the load.
   __ bind(&fast);
@@ -615,6 +617,22 @@ void KeyedLoadIC::GenerateGeneric(MacroAssembler* masm) {
 }
 
 
+void KeyedLoadIC::GenerateString(MacroAssembler* masm) {
+  // ---------- S t a t e --------------
+  //  -- lr     : return address
+  //  -- sp[0]  : key
+  //  -- sp[4]  : receiver
+  GenerateGeneric(masm);
+}
+
+
+void KeyedLoadIC::GenerateExternalArray(MacroAssembler* masm,
+                                        ExternalArrayType array_type) {
+  // TODO(476): port specialized code.
+  GenerateGeneric(masm);
+}
+
+
 void KeyedStoreIC::Generate(MacroAssembler* masm,
                             const ExternalReference& f) {
   // ---------- S t a t e --------------
@@ -626,7 +644,7 @@ void KeyedStoreIC::Generate(MacroAssembler* masm,
   __ ldm(ia, sp, r2.bit() | r3.bit());
   __ stm(db_w, sp, r0.bit() | r2.bit() | r3.bit());
 
-  __ TailCallRuntime(f, 3);
+  __ TailCallRuntime(f, 3, 1);
 }
 
 
@@ -684,7 +702,7 @@ void KeyedStoreIC::GenerateGeneric(MacroAssembler* masm) {
   __ ldm(ia, sp, r1.bit() | r3.bit());  // r0 == value, r1 == key, r3 == object
   __ stm(db_w, sp, r0.bit() | r1.bit() | r3.bit());
   // Do tail-call to runtime routine.
-  __ TailCallRuntime(ExternalReference(Runtime::kSetProperty), 3);
+  __ TailCallRuntime(ExternalReference(Runtime::kSetProperty), 3, 1);
 
   // Extra capacity case: Check if there is extra capacity to
   // perform the store and update the length. Used for adding one
@@ -748,6 +766,13 @@ void KeyedStoreIC::GenerateGeneric(MacroAssembler* masm) {
 }
 
 
+void KeyedStoreIC::GenerateExternalArray(MacroAssembler* masm,
+                                         ExternalArrayType array_type) {
+  // TODO(476): port specialized code.
+  GenerateGeneric(masm);
+}
+
+
 void KeyedStoreIC::GenerateExtendStorage(MacroAssembler* masm) {
   // ---------- S t a t e --------------
   //  -- r0     : value
@@ -761,7 +786,7 @@ void KeyedStoreIC::GenerateExtendStorage(MacroAssembler* masm) {
 
   // Perform tail call to the entry.
   __ TailCallRuntime(
-      ExternalReference(IC_Utility(kSharedStoreIC_ExtendStorage)), 3);
+      ExternalReference(IC_Utility(kSharedStoreIC_ExtendStorage)), 3, 1);
 }
 
 
@@ -798,7 +823,7 @@ void StoreIC::GenerateExtendStorage(MacroAssembler* masm) {
 
   // Perform tail call to the entry.
   __ TailCallRuntime(
-      ExternalReference(IC_Utility(kSharedStoreIC_ExtendStorage)), 3);
+      ExternalReference(IC_Utility(kSharedStoreIC_ExtendStorage)), 3, 1);
 }
 
 
@@ -814,7 +839,7 @@ void StoreIC::Generate(MacroAssembler* masm, const ExternalReference& f) {
   __ stm(db_w, sp, r0.bit() | r2.bit() | r3.bit());
 
   // Perform tail call to the entry.
-  __ TailCallRuntime(f, 3);
+  __ TailCallRuntime(f, 3, 1);
 }
 
 

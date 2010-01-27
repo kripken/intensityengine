@@ -86,6 +86,8 @@ class ThreadManager : public AllStatic {
 
   static void ArchiveThread();
   static bool RestoreThread();
+  static void FreeThreadResources();
+  static bool IsArchived();
 
   static void Iterate(ObjectVisitor* v);
   static void MarkCompactPrologue(bool is_compacting);
@@ -94,6 +96,7 @@ class ThreadManager : public AllStatic {
 
   static int CurrentId();
   static void AssignId();
+  static bool HasId();
 
   static void TerminateExecution(int thread_id);
 
@@ -101,7 +104,7 @@ class ThreadManager : public AllStatic {
  private:
   static void EagerlyArchiveThread();
 
-  static int next_id_;  // V8 threads are identified through an integer.
+  static int last_id_;  // V8 threads are identified through an integer.
   static Mutex* mutex_;
   static ThreadHandle mutex_owner_;
   static ThreadHandle lazily_archived_thread_;

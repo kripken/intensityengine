@@ -29,7 +29,6 @@
 
 #include "disassembler.h"
 #include "disasm.h"
-#include "macro-assembler.h"
 #include "jsregexp.h"
 
 namespace v8 {
@@ -118,6 +117,27 @@ void HeapObject::HeapObjectPrint() {
     case PIXEL_ARRAY_TYPE:
       PixelArray::cast(this)->PixelArrayPrint();
       break;
+    case EXTERNAL_BYTE_ARRAY_TYPE:
+      ExternalByteArray::cast(this)->ExternalByteArrayPrint();
+      break;
+    case EXTERNAL_UNSIGNED_BYTE_ARRAY_TYPE:
+      ExternalUnsignedByteArray::cast(this)->ExternalUnsignedByteArrayPrint();
+      break;
+    case EXTERNAL_SHORT_ARRAY_TYPE:
+      ExternalShortArray::cast(this)->ExternalShortArrayPrint();
+      break;
+    case EXTERNAL_UNSIGNED_SHORT_ARRAY_TYPE:
+      ExternalUnsignedShortArray::cast(this)->ExternalUnsignedShortArrayPrint();
+      break;
+    case EXTERNAL_INT_ARRAY_TYPE:
+      ExternalIntArray::cast(this)->ExternalIntArrayPrint();
+      break;
+    case EXTERNAL_UNSIGNED_INT_ARRAY_TYPE:
+      ExternalUnsignedIntArray::cast(this)->ExternalUnsignedIntArrayPrint();
+      break;
+    case EXTERNAL_FLOAT_ARRAY_TYPE:
+      ExternalFloatArray::cast(this)->ExternalFloatArrayPrint();
+      break;
     case FILLER_TYPE:
       PrintF("filler");
       break;
@@ -197,6 +217,28 @@ void HeapObject::HeapObjectVerify() {
     case PIXEL_ARRAY_TYPE:
       PixelArray::cast(this)->PixelArrayVerify();
       break;
+    case EXTERNAL_BYTE_ARRAY_TYPE:
+      ExternalByteArray::cast(this)->ExternalByteArrayVerify();
+      break;
+    case EXTERNAL_UNSIGNED_BYTE_ARRAY_TYPE:
+      ExternalUnsignedByteArray::cast(this)->ExternalUnsignedByteArrayVerify();
+      break;
+    case EXTERNAL_SHORT_ARRAY_TYPE:
+      ExternalShortArray::cast(this)->ExternalShortArrayVerify();
+      break;
+    case EXTERNAL_UNSIGNED_SHORT_ARRAY_TYPE:
+      ExternalUnsignedShortArray::cast(this)->
+          ExternalUnsignedShortArrayVerify();
+      break;
+    case EXTERNAL_INT_ARRAY_TYPE:
+      ExternalIntArray::cast(this)->ExternalIntArrayVerify();
+      break;
+    case EXTERNAL_UNSIGNED_INT_ARRAY_TYPE:
+      ExternalUnsignedIntArray::cast(this)->ExternalUnsignedIntArrayVerify();
+      break;
+    case EXTERNAL_FLOAT_ARRAY_TYPE:
+      ExternalFloatArray::cast(this)->ExternalFloatArrayVerify();
+      break;
     case CODE_TYPE:
       Code::cast(this)->CodeVerify();
       break;
@@ -275,6 +317,41 @@ void PixelArray::PixelArrayPrint() {
 }
 
 
+void ExternalByteArray::ExternalByteArrayPrint() {
+  PrintF("external byte array");
+}
+
+
+void ExternalUnsignedByteArray::ExternalUnsignedByteArrayPrint() {
+  PrintF("external unsigned byte array");
+}
+
+
+void ExternalShortArray::ExternalShortArrayPrint() {
+  PrintF("external short array");
+}
+
+
+void ExternalUnsignedShortArray::ExternalUnsignedShortArrayPrint() {
+  PrintF("external unsigned short array");
+}
+
+
+void ExternalIntArray::ExternalIntArrayPrint() {
+  PrintF("external int array");
+}
+
+
+void ExternalUnsignedIntArray::ExternalUnsignedIntArrayPrint() {
+  PrintF("external unsigned int array");
+}
+
+
+void ExternalFloatArray::ExternalFloatArrayPrint() {
+  PrintF("external float array");
+}
+
+
 void ByteArray::ByteArrayVerify() {
   ASSERT(IsByteArray());
 }
@@ -282,6 +359,41 @@ void ByteArray::ByteArrayVerify() {
 
 void PixelArray::PixelArrayVerify() {
   ASSERT(IsPixelArray());
+}
+
+
+void ExternalByteArray::ExternalByteArrayVerify() {
+  ASSERT(IsExternalByteArray());
+}
+
+
+void ExternalUnsignedByteArray::ExternalUnsignedByteArrayVerify() {
+  ASSERT(IsExternalUnsignedByteArray());
+}
+
+
+void ExternalShortArray::ExternalShortArrayVerify() {
+  ASSERT(IsExternalShortArray());
+}
+
+
+void ExternalUnsignedShortArray::ExternalUnsignedShortArrayVerify() {
+  ASSERT(IsExternalUnsignedShortArray());
+}
+
+
+void ExternalIntArray::ExternalIntArrayVerify() {
+  ASSERT(IsExternalIntArray());
+}
+
+
+void ExternalUnsignedIntArray::ExternalUnsignedIntArrayVerify() {
+  ASSERT(IsExternalUnsignedIntArray());
+}
+
+
+void ExternalFloatArray::ExternalFloatArrayVerify() {
+  ASSERT(IsExternalFloatArray());
 }
 
 
@@ -346,6 +458,58 @@ void JSObject::PrintElements() {
       }
       break;
     }
+    case EXTERNAL_BYTE_ELEMENTS: {
+      ExternalByteArray* p = ExternalByteArray::cast(elements());
+      for (int i = 0; i < p->length(); i++) {
+        PrintF("   %d: %d\n", i, static_cast<int>(p->get(i)));
+      }
+      break;
+    }
+    case EXTERNAL_UNSIGNED_BYTE_ELEMENTS: {
+      ExternalUnsignedByteArray* p =
+          ExternalUnsignedByteArray::cast(elements());
+      for (int i = 0; i < p->length(); i++) {
+        PrintF("   %d: %d\n", i, static_cast<int>(p->get(i)));
+      }
+      break;
+    }
+    case EXTERNAL_SHORT_ELEMENTS: {
+      ExternalShortArray* p = ExternalShortArray::cast(elements());
+      for (int i = 0; i < p->length(); i++) {
+        PrintF("   %d: %d\n", i, static_cast<int>(p->get(i)));
+      }
+      break;
+    }
+    case EXTERNAL_UNSIGNED_SHORT_ELEMENTS: {
+      ExternalUnsignedShortArray* p =
+          ExternalUnsignedShortArray::cast(elements());
+      for (int i = 0; i < p->length(); i++) {
+        PrintF("   %d: %d\n", i, static_cast<int>(p->get(i)));
+      }
+      break;
+    }
+    case EXTERNAL_INT_ELEMENTS: {
+      ExternalIntArray* p = ExternalIntArray::cast(elements());
+      for (int i = 0; i < p->length(); i++) {
+        PrintF("   %d: %d\n", i, static_cast<int>(p->get(i)));
+      }
+      break;
+    }
+    case EXTERNAL_UNSIGNED_INT_ELEMENTS: {
+      ExternalUnsignedIntArray* p =
+          ExternalUnsignedIntArray::cast(elements());
+      for (int i = 0; i < p->length(); i++) {
+        PrintF("   %d: %d\n", i, static_cast<int>(p->get(i)));
+      }
+      break;
+    }
+    case EXTERNAL_FLOAT_ELEMENTS: {
+      ExternalFloatArray* p = ExternalFloatArray::cast(elements());
+      for (int i = 0; i < p->length(); i++) {
+        PrintF("   %d: %f\n", i, p->get(i));
+      }
+      break;
+    }
     case DICTIONARY_ELEMENTS:
       elements()->Print();
       break;
@@ -383,57 +547,31 @@ static const char* TypeToString(InstanceType type) {
     case INVALID_TYPE: return "INVALID";
     case MAP_TYPE: return "MAP";
     case HEAP_NUMBER_TYPE: return "HEAP_NUMBER";
-    case SHORT_SYMBOL_TYPE:
-    case MEDIUM_SYMBOL_TYPE:
-    case LONG_SYMBOL_TYPE: return "SYMBOL";
-    case SHORT_ASCII_SYMBOL_TYPE:
-    case MEDIUM_ASCII_SYMBOL_TYPE:
-    case LONG_ASCII_SYMBOL_TYPE: return "ASCII_SYMBOL";
-    case SHORT_SLICED_SYMBOL_TYPE:
-    case MEDIUM_SLICED_SYMBOL_TYPE:
-    case LONG_SLICED_SYMBOL_TYPE: return "SLICED_SYMBOL";
-    case SHORT_SLICED_ASCII_SYMBOL_TYPE:
-    case MEDIUM_SLICED_ASCII_SYMBOL_TYPE:
-    case LONG_SLICED_ASCII_SYMBOL_TYPE: return "SLICED_ASCII_SYMBOL";
-    case SHORT_CONS_SYMBOL_TYPE:
-    case MEDIUM_CONS_SYMBOL_TYPE:
-    case LONG_CONS_SYMBOL_TYPE: return "CONS_SYMBOL";
-    case SHORT_CONS_ASCII_SYMBOL_TYPE:
-    case MEDIUM_CONS_ASCII_SYMBOL_TYPE:
-    case LONG_CONS_ASCII_SYMBOL_TYPE: return "CONS_ASCII_SYMBOL";
-    case SHORT_EXTERNAL_ASCII_SYMBOL_TYPE:
-    case MEDIUM_EXTERNAL_ASCII_SYMBOL_TYPE:
-    case LONG_EXTERNAL_ASCII_SYMBOL_TYPE:
-    case SHORT_EXTERNAL_SYMBOL_TYPE:
-    case MEDIUM_EXTERNAL_SYMBOL_TYPE:
-    case LONG_EXTERNAL_SYMBOL_TYPE: return "EXTERNAL_SYMBOL";
-    case SHORT_ASCII_STRING_TYPE:
-    case MEDIUM_ASCII_STRING_TYPE:
-    case LONG_ASCII_STRING_TYPE: return "ASCII_STRING";
-    case SHORT_STRING_TYPE:
-    case MEDIUM_STRING_TYPE:
-    case LONG_STRING_TYPE: return "TWO_BYTE_STRING";
-    case SHORT_CONS_STRING_TYPE:
-    case MEDIUM_CONS_STRING_TYPE:
-    case LONG_CONS_STRING_TYPE:
-    case SHORT_CONS_ASCII_STRING_TYPE:
-    case MEDIUM_CONS_ASCII_STRING_TYPE:
-    case LONG_CONS_ASCII_STRING_TYPE: return "CONS_STRING";
-    case SHORT_SLICED_STRING_TYPE:
-    case MEDIUM_SLICED_STRING_TYPE:
-    case LONG_SLICED_STRING_TYPE:
-    case SHORT_SLICED_ASCII_STRING_TYPE:
-    case MEDIUM_SLICED_ASCII_STRING_TYPE:
-    case LONG_SLICED_ASCII_STRING_TYPE: return "SLICED_STRING";
-    case SHORT_EXTERNAL_ASCII_STRING_TYPE:
-    case MEDIUM_EXTERNAL_ASCII_STRING_TYPE:
-    case LONG_EXTERNAL_ASCII_STRING_TYPE:
-    case SHORT_EXTERNAL_STRING_TYPE:
-    case MEDIUM_EXTERNAL_STRING_TYPE:
-    case LONG_EXTERNAL_STRING_TYPE: return "EXTERNAL_STRING";
+    case SYMBOL_TYPE: return "SYMBOL";
+    case ASCII_SYMBOL_TYPE: return "ASCII_SYMBOL";
+    case CONS_SYMBOL_TYPE: return "CONS_SYMBOL";
+    case CONS_ASCII_SYMBOL_TYPE: return "CONS_ASCII_SYMBOL";
+    case EXTERNAL_ASCII_SYMBOL_TYPE:
+    case EXTERNAL_SYMBOL_TYPE: return "EXTERNAL_SYMBOL";
+    case ASCII_STRING_TYPE: return "ASCII_STRING";
+    case STRING_TYPE: return "TWO_BYTE_STRING";
+    case CONS_STRING_TYPE:
+    case CONS_ASCII_STRING_TYPE: return "CONS_STRING";
+    case EXTERNAL_ASCII_STRING_TYPE:
+    case EXTERNAL_STRING_TYPE: return "EXTERNAL_STRING";
     case FIXED_ARRAY_TYPE: return "FIXED_ARRAY";
     case BYTE_ARRAY_TYPE: return "BYTE_ARRAY";
     case PIXEL_ARRAY_TYPE: return "PIXEL_ARRAY";
+    case EXTERNAL_BYTE_ARRAY_TYPE: return "EXTERNAL_BYTE_ARRAY";
+    case EXTERNAL_UNSIGNED_BYTE_ARRAY_TYPE:
+      return "EXTERNAL_UNSIGNED_BYTE_ARRAY";
+    case EXTERNAL_SHORT_ARRAY_TYPE: return "EXTERNAL_SHORT_ARRAY";
+    case EXTERNAL_UNSIGNED_SHORT_ARRAY_TYPE:
+      return "EXTERNAL_UNSIGNED_SHORT_ARRAY";
+    case EXTERNAL_INT_ARRAY_TYPE: return "EXTERNAL_INT_ARRAY";
+    case EXTERNAL_UNSIGNED_INT_ARRAY_TYPE:
+      return "EXTERNAL_UNSIGNED_INT_ARRAY";
+    case EXTERNAL_FLOAT_ARRAY_TYPE: return "EXTERNAL_FLOAT_ARRAY";
     case FILLER_TYPE: return "FILLER";
     case JS_OBJECT_TYPE: return "JS_OBJECT";
     case JS_CONTEXT_EXTENSION_OBJECT_TYPE: return "JS_CONTEXT_EXTENSION_OBJECT";
@@ -449,7 +587,6 @@ static const char* TypeToString(InstanceType type) {
     case JS_BUILTINS_OBJECT_TYPE: return "JS_BUILTINS_OBJECT";
     case JS_GLOBAL_PROXY_TYPE: return "JS_GLOBAL_PROXY";
     case PROXY_TYPE: return "PROXY";
-    case SMI_TYPE: return "SMI";
 #define MAKE_STRUCT_CASE(NAME, Name, name) case NAME##_TYPE: return #NAME;
   STRUCT_LIST(MAKE_STRUCT_CASE)
 #undef MAKE_STRUCT_CASE
@@ -622,8 +759,6 @@ void SharedFunctionInfo::SharedFunctionInfoPrint() {
   PrintF("\n - debug info = ");
   debug_info()->ShortPrint();
   PrintF("\n - length = %d", length());
-  PrintF("\n - has_only_this_property_assignments = %d",
-         has_only_this_property_assignments());
   PrintF("\n - has_only_simple_this_property_assignments = %d",
          has_only_simple_this_property_assignments());
   PrintF("\n - this_property_assignments = ");
@@ -733,7 +868,6 @@ void Code::CodePrint() {
 
 
 void Code::CodeVerify() {
-  CHECK(ic_flag() == IC_TARGET_IS_ADDRESS);
   CHECK(IsAligned(reinterpret_cast<intptr_t>(instruction_start()),
                   static_cast<intptr_t>(kCodeAlignment)));
   Address last_gc_pc = NULL;
@@ -769,11 +903,14 @@ void JSRegExp::JSRegExpVerify() {
 
       FixedArray* arr = FixedArray::cast(data());
       Object* ascii_data = arr->get(JSRegExp::kIrregexpASCIICodeIndex);
-      ASSERT(ascii_data->IsTheHole()
-          || (is_native ? ascii_data->IsCode() : ascii_data->IsByteArray()));
+      // TheHole : Not compiled yet.
+      // JSObject: Compilation error.
+      // Code/ByteArray: Compiled code.
+      ASSERT(ascii_data->IsTheHole() || ascii_data->IsJSObject() ||
+          (is_native ? ascii_data->IsCode() : ascii_data->IsByteArray()));
       Object* uc16_data = arr->get(JSRegExp::kIrregexpUC16CodeIndex);
-      ASSERT(uc16_data->IsTheHole()
-          || (is_native ? uc16_data->IsCode() : uc16_data->IsByteArray()));
+      ASSERT(uc16_data->IsTheHole() || ascii_data->IsJSObject() ||
+          (is_native ? uc16_data->IsCode() : uc16_data->IsByteArray()));
       ASSERT(arr->get(JSRegExp::kIrregexpCaptureCountIndex)->IsSmi());
       ASSERT(arr->get(JSRegExp::kIrregexpMaxRegisterCountIndex)->IsSmi());
       break;
@@ -803,6 +940,7 @@ void AccessorInfo::AccessorInfoVerify() {
   VerifyPointer(name());
   VerifyPointer(data());
   VerifyPointer(flag());
+  VerifyPointer(load_stub_cache());
 }
 
 void AccessorInfo::AccessorInfoPrint() {
@@ -996,6 +1134,20 @@ void Script::ScriptPrint() {
   type()->ShortPrint();
   PrintF("\n - id: ");
   id()->ShortPrint();
+  PrintF("\n - data: ");
+  data()->ShortPrint();
+  PrintF("\n - context data: ");
+  context_data()->ShortPrint();
+  PrintF("\n - wrapper: ");
+  wrapper()->ShortPrint();
+  PrintF("\n - compilation type: ");
+  compilation_type()->ShortPrint();
+  PrintF("\n - line ends: ");
+  line_ends()->ShortPrint();
+  PrintF("\n - eval from shared: ");
+  eval_from_shared()->ShortPrint();
+  PrintF("\n - eval from instructions offset: ");
+  eval_from_instructions_offset()->ShortPrint();
   PrintF("\n");
 }
 

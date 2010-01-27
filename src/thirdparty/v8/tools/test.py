@@ -326,6 +326,7 @@ class CommandOutput(object):
     self.timed_out = timed_out
     self.stdout = stdout
     self.stderr = stderr
+    self.failed = None
 
 
 class TestCase(object):
@@ -333,7 +334,6 @@ class TestCase(object):
   def __init__(self, context, path):
     self.path = path
     self.context = context
-    self.failed = None
     self.duration = None
 
   def IsNegative(self):
@@ -343,9 +343,9 @@ class TestCase(object):
     return cmp(other.duration, self.duration)
 
   def DidFail(self, output):
-    if self.failed is None:
-      self.failed = self.IsFailureOutput(output)
-    return self.failed
+    if output.failed is None:
+      output.failed = self.IsFailureOutput(output)
+    return output.failed
 
   def IsFailureOutput(self, output):
     return output.exit_code != 0
@@ -359,8 +359,19 @@ class TestCase(object):
     self.Cleanup()
     return TestOutput(self, full_command, output)
 
+  def BeforeRun(self):
+    pass
+
+  def AfterRun(self):
+    pass
+
   def Run(self):
-    return self.RunCommand(self.GetCommand())
+    self.BeforeRun()
+    try:
+      result = self.RunCommand(self.GetCommand())
+    finally:
+      self.AfterRun()
+    return result
 
   def Cleanup(self):
     return
@@ -1084,6 +1095,8 @@ def BuildOptions():
       choices=PROGRESS_INDICATORS.keys(), default="mono")
   result.add_option("--no-build", help="Don't build requirements",
       default=False, action="store_true")
+  result.add_option("--build-only", help="Only build requirements, don't run the tests",
+      default=False, action="store_true")
   result.add_option("--report", help="Print a summary of the tests to be run",
       default=False, action="store_true")
   result.add_option("-s", "--suite", help="A test suite",
@@ -1092,6 +1105,8 @@ def BuildOptions():
       default=60, type="int")
   result.add_option("--arch", help='The architecture to run tests for',
       default='none')
+  result.add_option("--snapshot", help="Run the tests with snapshot turned on",
+      default=False, action="store_true")
   result.add_option("--simulator", help="Run tests with architecture simulator",
       default='none')
   result.add_option("--special-command", default=None)
@@ -1137,6 +1152,8 @@ def ProcessOptions(options):
     if options.arch == 'none':
       options.arch = ARCH_GUESS
     options.scons_flags.append("arch=" + options.arch)
+  if options.snapshot:
+    options.scons_flags.append("snapshot=on")
   return True
 
 
@@ -1261,6 +1278,10 @@ def Main():
       if not BuildRequirements(context, reqs, options.mode, options.scons_flags):
         return 1
 
+  # Just return if we are only building the targets for running the tests.
+  if options.build_only:
+    return 0
+  
   # Get status for tests
   sections = [ ]
   defs = { }

@@ -135,7 +135,9 @@ BUILTIN(EmptyFunction) {
 BUILTIN_END
 
 
-BUILTIN(ArrayCode) {
+BUILTIN(ArrayCodeGeneric) {
+  Counters::array_function_runtime.Increment();
+
   JSArray* array;
   if (CalledAsConstructor()) {
     array = JSArray::cast(*receiver);
@@ -166,11 +168,13 @@ BUILTIN(ArrayCode) {
     // Take the argument as the length.
     obj = array->Initialize(0);
     if (obj->IsFailure()) return obj;
-    if (args.length() == 2) return array->SetElementsLength(args[1]);
+    return array->SetElementsLength(args[1]);
   }
 
   // Optimize the case where there are no parameters passed.
-  if (args.length() == 1) return array->Initialize(4);
+  if (args.length() == 1) {
+    return array->Initialize(JSArray::kPreallocatedArrayElements);
+  }
 
   // Take the arguments as elements.
   int number_of_elements = args.length() - 1;
@@ -376,6 +380,9 @@ BUILTIN(HandleApiCall) {
     {
       // Leaving JavaScript.
       VMState state(EXTERNAL);
+#ifdef ENABLE_LOGGING_AND_PROFILING
+      state.set_external_callback(v8::ToCData<Address>(callback_obj));
+#endif
       value = callback(new_args);
     }
     if (value.IsEmpty()) {
@@ -442,6 +449,9 @@ static Object* HandleApiCallAsFunctionOrConstructor(bool is_construct_call,
     {
       // Leaving JavaScript.
       VMState state(EXTERNAL);
+#ifdef ENABLE_LOGGING_AND_PROFILING
+      state.set_external_callback(v8::ToCData<Address>(callback_obj));
+#endif
       value = callback(new_args);
     }
     if (value.IsEmpty()) {
@@ -534,6 +544,49 @@ static void Generate_KeyedLoadIC_Generic(MacroAssembler* masm) {
 }
 
 
+static void Generate_KeyedLoadIC_String(MacroAssembler* masm) {
+  KeyedLoadIC::GenerateString(masm);
+}
+
+
+static void Generate_KeyedLoadIC_ExternalByteArray(MacroAssembler* masm) {
+  KeyedLoadIC::GenerateExternalArray(masm, kExternalByteArray);
+}
+
+
+static void Generate_KeyedLoadIC_ExternalUnsignedByteArray(
+    MacroAssembler* masm) {
+  KeyedLoadIC::GenerateExternalArray(masm, kExternalUnsignedByteArray);
+}
+
+
+static void Generate_KeyedLoadIC_ExternalShortArray(MacroAssembler* masm) {
+  KeyedLoadIC::GenerateExternalArray(masm, kExternalShortArray);
+}
+
+
+static void Generate_KeyedLoadIC_ExternalUnsignedShortArray(
+    MacroAssembler* masm) {
+  KeyedLoadIC::GenerateExternalArray(masm, kExternalUnsignedShortArray);
+}
+
+
+static void Generate_KeyedLoadIC_ExternalIntArray(MacroAssembler* masm) {
+  KeyedLoadIC::GenerateExternalArray(masm, kExternalIntArray);
+}
+
+
+static void Generate_KeyedLoadIC_ExternalUnsignedIntArray(
+    MacroAssembler* masm) {
+  KeyedLoadIC::GenerateExternalArray(masm, kExternalUnsignedIntArray);
+}
+
+
+static void Generate_KeyedLoadIC_ExternalFloatArray(MacroAssembler* masm) {
+  KeyedLoadIC::GenerateExternalArray(masm, kExternalFloatArray);
+}
+
+
 static void Generate_KeyedLoadIC_PreMonomorphic(MacroAssembler* masm) {
   KeyedLoadIC::GeneratePreMonomorphic(masm);
 }
@@ -560,6 +613,44 @@ static void Generate_StoreIC_Megamorphic(MacroAssembler* masm) {
 
 static void Generate_KeyedStoreIC_Generic(MacroAssembler* masm) {
   KeyedStoreIC::GenerateGeneric(masm);
+}
+
+
+static void Generate_KeyedStoreIC_ExternalByteArray(MacroAssembler* masm) {
+  KeyedStoreIC::GenerateExternalArray(masm, kExternalByteArray);
+}
+
+
+static void Generate_KeyedStoreIC_ExternalUnsignedByteArray(
+    MacroAssembler* masm) {
+  KeyedStoreIC::GenerateExternalArray(masm, kExternalUnsignedByteArray);
+}
+
+
+static void Generate_KeyedStoreIC_ExternalShortArray(MacroAssembler* masm) {
+  KeyedStoreIC::GenerateExternalArray(masm, kExternalShortArray);
+}
+
+
+static void Generate_KeyedStoreIC_ExternalUnsignedShortArray(
+    MacroAssembler* masm) {
+  KeyedStoreIC::GenerateExternalArray(masm, kExternalUnsignedShortArray);
+}
+
+
+static void Generate_KeyedStoreIC_ExternalIntArray(MacroAssembler* masm) {
+  KeyedStoreIC::GenerateExternalArray(masm, kExternalIntArray);
+}
+
+
+static void Generate_KeyedStoreIC_ExternalUnsignedIntArray(
+    MacroAssembler* masm) {
+  KeyedStoreIC::GenerateExternalArray(masm, kExternalUnsignedIntArray);
+}
+
+
+static void Generate_KeyedStoreIC_ExternalFloatArray(MacroAssembler* masm) {
+  KeyedStoreIC::GenerateExternalArray(masm, kExternalFloatArray);
 }
 
 
@@ -606,11 +697,6 @@ static void Generate_ConstructCall_DebugBreak(MacroAssembler* masm) {
 
 static void Generate_Return_DebugBreak(MacroAssembler* masm) {
   Debug::GenerateReturnDebugBreak(masm);
-}
-
-
-static void Generate_Return_DebugBreakEntry(MacroAssembler* masm) {
-  Debug::GenerateReturnDebugBreakEntry(masm);
 }
 
 

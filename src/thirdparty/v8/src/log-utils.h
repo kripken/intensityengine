@@ -114,6 +114,9 @@ class Log : public AllStatic {
     return !is_stopped_ && (output_handle_ != NULL || output_buffer_ != NULL);
   }
 
+  // Size of buffer used for formatting log messages.
+  static const int kMessageBufferSize = 2048;
+
  private:
   typedef int (*WritePtr)(const char* msg, int length);
 
@@ -126,9 +129,10 @@ class Log : public AllStatic {
   // Implementation of writing to a log file.
   static int WriteToFile(const char* msg, int length) {
     ASSERT(output_handle_ != NULL);
-    int rv = fwrite(msg, 1, length, output_handle_);
-    ASSERT(length == rv);
-    return rv;
+    size_t rv = fwrite(msg, 1, length, output_handle_);
+    ASSERT(static_cast<size_t>(length) == rv);
+    USE(rv);
+    return length;
   }
 
   // Implementation of writing to a memory buffer.
@@ -161,9 +165,6 @@ class Log : public AllStatic {
   // mutex_ is a Mutex used for enforcing exclusive
   // access to the formatting buffer and the log file or log memory buffer.
   static Mutex* mutex_;
-
-  // Size of buffer used for formatting log messages.
-  static const int kMessageBufferSize = 2048;
 
   // Buffer used for formatting log messages. This is a singleton buffer and
   // mutex_ should be acquired before using it.
@@ -246,6 +247,9 @@ class LogMessageBuilder BASE_EMBEDDED {
   void AppendAddress(Address addr, Address bias);
 
   void AppendDetailed(String* str, bool show_impl_info);
+
+  // Append a portion of a string.
+  void AppendStringPart(const char* str, int len);
 
   // Stores log message into compressor, returns true if the message
   // was stored (i.e. doesn't repeat the previous one).

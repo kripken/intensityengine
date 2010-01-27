@@ -47,6 +47,13 @@ double ceiling(double x) {
 }
 
 
+// Give V8 the opportunity to override the default fmod behavior.
+double modulo(double x, double y) {
+  UNIMPLEMENTED();
+  return 0;
+}
+
+
 // Initialize OS class early in the V8 startup.
 void OS::Setup() {
   // Seed the random number generator.
@@ -143,10 +150,21 @@ int OS::VSNPrintF(char* str, size_t size, const char* format, va_list args) {
 }
 
 
+uint64_t OS::CpuFeaturesImpliedByPlatform() {
+  return 0;
+}
+
+
 double OS::nan_value() {
   UNIMPLEMENTED();
   return 0;
 }
+
+
+bool OS::ArmCpuHasFeature(CpuFeature feature) {
+  UNIMPLEMENTED();
+}
+
 
 bool OS::IsOutsideAllocatedSpace(void* address) {
   UNIMPLEMENTED();

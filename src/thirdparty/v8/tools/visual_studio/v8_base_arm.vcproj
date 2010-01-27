@@ -237,18 +237,6 @@
 				>
 			</File>
 			<File
-			        RelativePath="..\..\src\arm\cfg-arm.cc"
-			        >
-			</File>
-			<File
-			        RelativePath="..\..\src\cfg.cc"
-			        >
-			</File>
-			<File
-			        RelativePath="..\..\src\cfg.h"
-			        >
-			</File>
-			<File
 				RelativePath="..\..\src\char-predicates-inl.h"
 				>
 			</File>
@@ -310,6 +298,10 @@
 			</File>
 			<File
 				RelativePath="..\..\src\compiler.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\arm\constants-arm.cc"
 				>
 			</File>
 			<File
@@ -404,6 +396,18 @@
 				RelativePath="..\..\src\factory.h"
 				>
 			</File>
+                        <File
+                                RelativePath="..\..\src\arm\fast-codegen-arm.cc"
+                                >
+                        </File>
+                        <File
+                                RelativePath="..\..\src\fast-codegen.cc"
+                                >
+                        </File>
+                        <File
+                                RelativePath="..\..\src\fast-codegen.h"
+                                >
+                        </File>
 			<File
 				RelativePath="..\..\src\flags.cc"
 				>
@@ -490,6 +494,14 @@
 			</File>
 			<File
 				RelativePath="..\..\src\heap.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\heap-profiler.cc"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\heap-profiler.h"
 				>
 			</File>
 			<File
@@ -957,7 +969,7 @@
 			Name="include"
 			>
 			<File
-				RelativePath="..\..\include\debug.h"
+				RelativePath="..\..\include\v8-debug.h"
 				>
 			</File>
 			<File

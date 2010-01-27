@@ -37,7 +37,7 @@ namespace internal {
                                                    \
   V(EmptyFunction)                                 \
                                                    \
-  V(ArrayCode)                                     \
+  V(ArrayCodeGeneric)                              \
                                                    \
   V(ArrayPush)                                     \
   V(ArrayPop)                                      \
@@ -48,49 +48,65 @@ namespace internal {
 
 
 // Define list of builtins implemented in assembly.
-#define BUILTIN_LIST_A(V)                                      \
-  V(ArgumentsAdaptorTrampoline, BUILTIN, UNINITIALIZED)        \
-  V(JSConstructCall,            BUILTIN, UNINITIALIZED)        \
-  V(JSConstructStubGeneric,     BUILTIN, UNINITIALIZED)        \
-  V(JSEntryTrampoline,          BUILTIN, UNINITIALIZED)        \
-  V(JSConstructEntryTrampoline, BUILTIN, UNINITIALIZED)        \
-                                                               \
-  V(LoadIC_Miss,                BUILTIN, UNINITIALIZED)        \
-  V(KeyedLoadIC_Miss,           BUILTIN, UNINITIALIZED)        \
-  V(StoreIC_Miss,               BUILTIN, UNINITIALIZED)        \
-  V(KeyedStoreIC_Miss,          BUILTIN, UNINITIALIZED)        \
-                                                               \
-  V(StoreIC_ExtendStorage,      BUILTIN, UNINITIALIZED)        \
-  V(KeyedStoreIC_ExtendStorage, BUILTIN, UNINITIALIZED)        \
-                                                               \
-  V(LoadIC_Initialize,          LOAD_IC, UNINITIALIZED)        \
-  V(LoadIC_PreMonomorphic,      LOAD_IC, PREMONOMORPHIC)       \
-  V(LoadIC_Normal,              LOAD_IC, MONOMORPHIC)          \
-  V(LoadIC_ArrayLength,         LOAD_IC, MONOMORPHIC)          \
-  V(LoadIC_StringLength,        LOAD_IC, MONOMORPHIC)          \
-  V(LoadIC_FunctionPrototype,   LOAD_IC, MONOMORPHIC)          \
-  V(LoadIC_Megamorphic,         LOAD_IC, MEGAMORPHIC)          \
-                                                               \
-  V(KeyedLoadIC_Initialize,     KEYED_LOAD_IC, UNINITIALIZED)  \
-  V(KeyedLoadIC_PreMonomorphic, KEYED_LOAD_IC, PREMONOMORPHIC) \
-  V(KeyedLoadIC_Generic,        KEYED_LOAD_IC, MEGAMORPHIC)    \
-                                                               \
-  V(StoreIC_Initialize,         STORE_IC, UNINITIALIZED)       \
-  V(StoreIC_Megamorphic,        STORE_IC, MEGAMORPHIC)         \
-                                                               \
-  V(KeyedStoreIC_Initialize,    KEYED_STORE_IC, UNINITIALIZED) \
-  V(KeyedStoreIC_Generic,       KEYED_STORE_IC, MEGAMORPHIC)   \
-                                                               \
-  /* Uses KeyedLoadIC_Initialize; must be after in list. */    \
-  V(FunctionCall,               BUILTIN, UNINITIALIZED)        \
-  V(FunctionApply,              BUILTIN, UNINITIALIZED)
-
+#define BUILTIN_LIST_A(V)                                                 \
+  V(ArgumentsAdaptorTrampoline, BUILTIN, UNINITIALIZED)                   \
+  V(JSConstructCall,            BUILTIN, UNINITIALIZED)                   \
+  V(JSConstructStubGeneric,     BUILTIN, UNINITIALIZED)                   \
+  V(JSEntryTrampoline,          BUILTIN, UNINITIALIZED)                   \
+  V(JSConstructEntryTrampoline, BUILTIN, UNINITIALIZED)                   \
+                                                                          \
+  V(LoadIC_Miss,                BUILTIN, UNINITIALIZED)                   \
+  V(KeyedLoadIC_Miss,           BUILTIN, UNINITIALIZED)                   \
+  V(StoreIC_Miss,               BUILTIN, UNINITIALIZED)                   \
+  V(KeyedStoreIC_Miss,          BUILTIN, UNINITIALIZED)                   \
+                                                                          \
+  V(StoreIC_ExtendStorage,      BUILTIN, UNINITIALIZED)                   \
+  V(KeyedStoreIC_ExtendStorage, BUILTIN, UNINITIALIZED)                   \
+                                                                          \
+  V(LoadIC_Initialize,          LOAD_IC, UNINITIALIZED)                   \
+  V(LoadIC_PreMonomorphic,      LOAD_IC, PREMONOMORPHIC)                  \
+  V(LoadIC_Normal,              LOAD_IC, MONOMORPHIC)                     \
+  V(LoadIC_ArrayLength,         LOAD_IC, MONOMORPHIC)                     \
+  V(LoadIC_StringLength,        LOAD_IC, MONOMORPHIC)                     \
+  V(LoadIC_FunctionPrototype,   LOAD_IC, MONOMORPHIC)                     \
+  V(LoadIC_Megamorphic,         LOAD_IC, MEGAMORPHIC)                     \
+                                                                          \
+  V(KeyedLoadIC_Initialize,     KEYED_LOAD_IC, UNINITIALIZED)             \
+  V(KeyedLoadIC_PreMonomorphic, KEYED_LOAD_IC, PREMONOMORPHIC)            \
+  V(KeyedLoadIC_Generic,        KEYED_LOAD_IC, MEGAMORPHIC)               \
+  V(KeyedLoadIC_String,         KEYED_LOAD_IC, MEGAMORPHIC)               \
+  V(KeyedLoadIC_ExternalByteArray,          KEYED_LOAD_IC, MEGAMORPHIC)   \
+  V(KeyedLoadIC_ExternalUnsignedByteArray,  KEYED_LOAD_IC, MEGAMORPHIC)   \
+  V(KeyedLoadIC_ExternalShortArray,         KEYED_LOAD_IC, MEGAMORPHIC)   \
+  V(KeyedLoadIC_ExternalUnsignedShortArray, KEYED_LOAD_IC, MEGAMORPHIC)   \
+  V(KeyedLoadIC_ExternalIntArray,           KEYED_LOAD_IC, MEGAMORPHIC)   \
+  V(KeyedLoadIC_ExternalUnsignedIntArray,   KEYED_LOAD_IC, MEGAMORPHIC)   \
+  V(KeyedLoadIC_ExternalFloatArray,         KEYED_LOAD_IC, MEGAMORPHIC)   \
+                                                                          \
+  V(StoreIC_Initialize,         STORE_IC, UNINITIALIZED)                  \
+  V(StoreIC_Megamorphic,        STORE_IC, MEGAMORPHIC)                    \
+                                                                          \
+  V(KeyedStoreIC_Initialize,    KEYED_STORE_IC, UNINITIALIZED)            \
+  V(KeyedStoreIC_Generic,       KEYED_STORE_IC, MEGAMORPHIC)              \
+  V(KeyedStoreIC_ExternalByteArray,          KEYED_STORE_IC, MEGAMORPHIC) \
+  V(KeyedStoreIC_ExternalUnsignedByteArray,  KEYED_STORE_IC, MEGAMORPHIC) \
+  V(KeyedStoreIC_ExternalShortArray,         KEYED_STORE_IC, MEGAMORPHIC) \
+  V(KeyedStoreIC_ExternalUnsignedShortArray, KEYED_STORE_IC, MEGAMORPHIC) \
+  V(KeyedStoreIC_ExternalIntArray,           KEYED_STORE_IC, MEGAMORPHIC) \
+  V(KeyedStoreIC_ExternalUnsignedIntArray,   KEYED_STORE_IC, MEGAMORPHIC) \
+  V(KeyedStoreIC_ExternalFloatArray,         KEYED_STORE_IC, MEGAMORPHIC) \
+                                                                          \
+  /* Uses KeyedLoadIC_Initialize; must be after in list. */               \
+  V(FunctionCall,               BUILTIN, UNINITIALIZED)                   \
+  V(FunctionApply,              BUILTIN, UNINITIALIZED)                   \
+                                                                          \
+  V(ArrayCode,                  BUILTIN, UNINITIALIZED)                   \
+  V(ArrayConstructCode,         BUILTIN, UNINITIALIZED)
 
 #ifdef ENABLE_DEBUGGER_SUPPORT
 // Define list of builtins used by the debugger implemented in assembly.
 #define BUILTIN_LIST_DEBUG_A(V)                                \
   V(Return_DebugBreak,          BUILTIN, DEBUG_BREAK)          \
-  V(Return_DebugBreakEntry,     BUILTIN, DEBUG_BREAK)          \
   V(ConstructCall_DebugBreak,   BUILTIN, DEBUG_BREAK)          \
   V(StubNoRegisters_DebugBreak, BUILTIN, DEBUG_BREAK)          \
   V(LoadIC_DebugBreak,          LOAD_IC, DEBUG_BREAK)          \
@@ -132,7 +148,8 @@ namespace internal {
   V(STRING_ADD_LEFT, 1)                  \
   V(STRING_ADD_RIGHT, 1)                 \
   V(APPLY_PREPARE, 1)                    \
-  V(APPLY_OVERFLOW, 1)
+  V(APPLY_OVERFLOW, 1)                   \
+  V(STRING_CHAR_AT, 1)
 
 
 class ObjectVisitor;
@@ -218,6 +235,9 @@ class Builtins : public AllStatic {
 
   static void Generate_FunctionCall(MacroAssembler* masm);
   static void Generate_FunctionApply(MacroAssembler* masm);
+
+  static void Generate_ArrayCode(MacroAssembler* masm);
+  static void Generate_ArrayConstructCode(MacroAssembler* masm);
 };
 
 } }  // namespace v8::internal

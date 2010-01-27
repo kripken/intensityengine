@@ -306,7 +306,7 @@ void StackHandler::Cook(Code* code) {
 
 
 void StackHandler::Uncook(Code* code) {
-  ASSERT(MarkCompactCollector::IsCompacting());
+  ASSERT(MarkCompactCollector::HasCompacted());
   set_pc(code->instruction_start() + OffsetFrom(pc()));
   ASSERT(code->contains(pc()));
 }
@@ -336,7 +336,7 @@ void StackFrame::CookFramesForThread(ThreadLocalTop* thread) {
 void StackFrame::UncookFramesForThread(ThreadLocalTop* thread) {
   // Only uncooking frames when the collector is compacting and thus moving code
   // around.
-  ASSERT(MarkCompactCollector::IsCompacting());
+  ASSERT(MarkCompactCollector::HasCompacted());
   ASSERT(thread->stack_is_cooked());
   for (StackFrameIterator it(thread); !it.done(); it.Advance()) {
     it.frame()->Uncook();
@@ -393,8 +393,19 @@ Code* EntryConstructFrame::code() const {
 }
 
 
+Object*& ExitFrame::code_slot() const {
+  const int offset = ExitFrameConstants::kCodeOffset;
+  return Memory::Object_at(fp() + offset);
+}
+
+
 Code* ExitFrame::code() const {
-  return Heap::c_entry_code();
+  Object* code = code_slot();
+  if (code->IsSmi()) {
+    return Heap::c_entry_debug_break_code();
+  } else {
+    return Code::cast(code);
+  }
 }
 
 
@@ -412,11 +423,6 @@ Address ExitFrame::GetCallerStackPointer() const {
 }
 
 
-Code* ExitDebugFrame::code() const {
-  return Heap::c_entry_debug_break_code();
-}
-
-
 Address StandardFrame::GetExpressionAddress(int n) const {
   const int offset = StandardFrameConstants::kExpressionsOffset;
   return fp() + offset - n * kPointerSize;
@@ -430,7 +436,7 @@ int StandardFrame::ComputeExpressionsCount() const {
   Address limit = sp();
   ASSERT(base >= limit);  // stack grows downwards
   // Include register-allocated locals in number of expressions.
-  return (base - limit) / kPointerSize;
+  return static_cast<int>((base - limit) / kPointerSize);
 }
 
 
@@ -460,7 +466,7 @@ Object* JavaScriptFrame::GetParameter(int index) const {
 int JavaScriptFrame::ComputeParametersCount() const {
   Address base  = caller_sp() + JavaScriptFrameConstants::kReceiverOffset;
   Address limit = fp() + JavaScriptFrameConstants::kSavedRegistersOffset;
-  return (base - limit) / kPointerSize;
+  return static_cast<int>((base - limit) / kPointerSize);
 }
 
 

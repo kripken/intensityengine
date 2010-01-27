@@ -28,7 +28,11 @@
 #include "v8.h"
 
 #include "frames-inl.h"
+#ifdef V8_ARM_VARIANT_THUMB
+#include "arm/assembler-thumb2-inl.h"
+#else
 #include "arm/assembler-arm-inl.h"
+#endif
 
 
 namespace v8 {
@@ -54,23 +58,24 @@ StackFrame::Type ExitFrame::GetStateForFramePointer(Address fp, State* state) {
   if (fp == 0) return NONE;
   // Compute frame type and stack pointer.
   Address sp = fp + ExitFrameConstants::kSPDisplacement;
-  Type type;
-  if (Memory::Address_at(fp + ExitFrameConstants::kDebugMarkOffset) != 0) {
-    type = EXIT_DEBUG;
+  const int offset = ExitFrameConstants::kCodeOffset;
+  Object* code = Memory::Object_at(fp + offset);
+  bool is_debug_exit = code->IsSmi();
+  if (is_debug_exit) {
     sp -= kNumJSCallerSaved * kPointerSize;
-  } else {
-    type = EXIT;
   }
   // Fill in the state.
   state->sp = sp;
   state->fp = fp;
   state->pc_address = reinterpret_cast<Address*>(sp - 1 * kPointerSize);
-  return type;
+  return EXIT;
 }
 
 
 void ExitFrame::Iterate(ObjectVisitor* v) const {
-  // Do nothing
+  v->VisitPointer(&code_slot());
+  // The arguments are traversed as part of the expression stack of
+  // the calling frame.
 }
 
 

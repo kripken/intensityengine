@@ -96,7 +96,7 @@ private:
 //
 #define FLAG FLAG_FULL
 
-// assembler-ia32.cc / assembler-arm.cc
+// assembler-ia32.cc / assembler-arm.cc / assembler-x64.cc
 DEFINE_bool(debug_code, false,
             "generate extra code (comments, assertions) for debugging")
 DEFINE_bool(emit_branch_hints, false, "emit branch hints")
@@ -104,6 +104,18 @@ DEFINE_bool(push_pop_elimination, true,
             "eliminate redundant push/pops in assembly code")
 DEFINE_bool(print_push_pop_elimination, false,
             "print elimination of redundant push/pops in assembly code")
+DEFINE_bool(enable_sse2, true,
+            "enable use of SSE2 instructions if available")
+DEFINE_bool(enable_sse3, true,
+            "enable use of SSE3 instructions if available")
+DEFINE_bool(enable_cmov, true,
+            "enable use of CMOV instruction if available")
+DEFINE_bool(enable_rdtsc, true,
+            "enable use of RDTSC instruction if available")
+DEFINE_bool(enable_sahf, true,
+            "enable use of SAHF instruction if available (X64 only)")
+DEFINE_bool(enable_vfp3, true,
+            "enable use of VFP3 instructions if available (ARM only)")
 
 // bootstrapper.cc
 DEFINE_string(expose_natives_as, NULL, "expose natives in global object")
@@ -122,8 +134,6 @@ DEFINE_bool(stack_trace_on_abort, true,
 // codegen-ia32.cc / codegen-arm.cc
 DEFINE_bool(trace, false, "trace function calls")
 DEFINE_bool(defer_negation, true, "defer negation operation")
-DEFINE_bool(check_stack, true,
-            "check stack for overflow, interrupt, breakpoint")
 
 // codegen.cc
 DEFINE_bool(lazy, true, "use lazy compilation")
@@ -132,8 +142,13 @@ DEFINE_bool(debug_info, true, "add debug information to compiled functions")
 // compiler.cc
 DEFINE_bool(strict, false, "strict error checking")
 DEFINE_int(min_preparse_length, 1024,
-           "Minimum length for automatic enable preparsing")
-DEFINE_bool(multipass, false, "use the multipass code generator")
+           "minimum length for automatic enable preparsing")
+DEFINE_bool(fast_compiler, true,
+            "use the fast-mode compiler for some top-level code")
+DEFINE_bool(trace_bailout, false,
+            "print reasons for failing to use fast compilation")
+DEFINE_bool(always_fast_compiler, false,
+            "always try using the fast compiler")
 
 // compilation-cache.cc
 DEFINE_bool(compilation_cache, true, "enable compilation cache")
@@ -141,17 +156,17 @@ DEFINE_bool(compilation_cache, true, "enable compilation cache")
 // debug.cc
 DEFINE_bool(remote_debugging, false, "enable remote debugging")
 DEFINE_bool(trace_debug_json, false, "trace debugging JSON request/response")
-DEFINE_bool(debugger_auto_break, false,
+DEFINE_bool(debugger_auto_break, true,
             "automatically set the debug break flag when debugger commands are "
-            "in the queue (experimental)")
+            "in the queue")
 
 // frames.cc
 DEFINE_int(max_stack_trace_source_length, 300,
            "maximum length of function source code printed in a stack trace.")
 
 // heap.cc
-DEFINE_int(new_space_size, 0, "size of (each semispace in) the new generation")
-DEFINE_int(old_space_size, 0, "size of the old generation")
+DEFINE_int(max_new_space_size, 0, "max size of the new generation")
+DEFINE_int(max_old_space_size, 0, "max size of the old generation")
 DEFINE_bool(gc_global, false, "always perform global GCs")
 DEFINE_int(gc_interval, -1, "garbage collect after <n> allocations")
 DEFINE_bool(trace_gc, false,
@@ -183,8 +198,17 @@ DEFINE_bool(cleanup_caches_in_maps_at_gc, true,
 DEFINE_bool(canonicalize_object_literal_maps, true,
             "Canonicalize maps for object literals.")
 
+DEFINE_bool(use_big_map_space, true,
+            "Use big map space, but don't compact if it grew too big.")
+
+DEFINE_int(max_map_space_pages, MapSpace::kMaxMapPageIndex - 1,
+           "Maximum number of pages in map space which still allows to encode "
+           "forwarding pointers.  That's actually a constant, but it's useful "
+           "to control it with a flag for better testing.")
+
 // mksnapshot.cc
 DEFINE_bool(h, false, "print this message")
+DEFINE_bool(new_snapshot, true, "use new snapshot implementation")
 
 // parser.cc
 DEFINE_bool(allow_natives_syntax, false, "allow natives syntax")
@@ -212,6 +236,7 @@ DEFINE_bool(preemption, false,
 // Regexp
 DEFINE_bool(trace_regexps, false, "trace regexp execution")
 DEFINE_bool(regexp_optimization, true, "generate optimized regexp code")
+DEFINE_bool(regexp_entry_native, true, "use native code to enter regexp")
 
 // Testing flags test/cctest/test-{flags,api,serialization}.cc
 DEFINE_bool(testing_bool_flag, true, "testing_bool_flag")
@@ -264,6 +289,9 @@ DEFINE_bool(print_builtin_source, false,
             "pretty print source code for builtins")
 DEFINE_bool(print_ast, false, "print source AST")
 DEFINE_bool(print_builtin_ast, false, "print source AST for builtins")
+DEFINE_bool(print_json_ast, false, "print source AST as JSON")
+DEFINE_bool(print_builtin_json_ast, false,
+            "print source AST for builtins as JSON")
 DEFINE_bool(trace_calls, false, "trace calls")
 DEFINE_bool(trace_builtin_calls, false, "trace builtins calls")
 DEFINE_string(stop_at, "", "function name where to insert a breakpoint")
@@ -271,7 +299,6 @@ DEFINE_string(stop_at, "", "function name where to insert a breakpoint")
 // compiler.cc
 DEFINE_bool(print_builtin_scopes, false, "print scopes for builtins")
 DEFINE_bool(print_scopes, false, "print scopes")
-DEFINE_bool(print_cfg, false, "print control-flow graph")
 
 // contexts.cc
 DEFINE_bool(trace_contexts, false, "trace contexts operations")
@@ -307,6 +334,9 @@ DEFINE_bool(collect_heap_spill_statistics, false,
             "(requires heap_stats)")
 
 // Regexp
+DEFINE_bool(regexp_possessive_quantifier,
+            false,
+            "enable possessive quantifier syntax for testing")
 DEFINE_bool(trace_regexp_bytecodes, false, "trace regexp bytecode execution")
 DEFINE_bool(trace_regexp_assembler,
             false,
@@ -335,6 +365,7 @@ DEFINE_bool(log_gc, false,
 DEFINE_bool(log_handles, false, "Log global handle events.")
 DEFINE_bool(log_state_changes, false, "Log state changes.")
 DEFINE_bool(log_suspect, false, "Log suspect operations.")
+DEFINE_bool(log_producers, false, "Log stack traces of JS objects allocations.")
 DEFINE_bool(compress_log, false,
             "Compress log to save space (makes log less human-readable).")
 DEFINE_bool(prof, false,

@@ -150,8 +150,12 @@ bool Object::IsString() {
 bool Object::IsSymbol() {
   if (!this->IsHeapObject()) return false;
   uint32_t type = HeapObject::cast(this)->map()->instance_type();
-  return (type & (kIsNotStringMask | kIsSymbolMask)) ==
-         (kStringTag | kSymbolTag);
+  // Because the symbol tag is non-zero and no non-string types have the
+  // symbol bit set we can test for symbols with a very simple test
+  // operation.
+  ASSERT(kSymbolTag != 0);
+  ASSERT(kNotStringTag + kIsSymbolMask > LAST_TYPE);
+  return (type & kIsSymbolMask) != 0;
 }
 
 
@@ -162,11 +166,6 @@ bool Object::IsConsString() {
          (kStringTag | kConsStringTag);
 }
 
-
-#ifdef DEBUG
-// These are for cast checks.  If you need one of these in release
-// mode you should consider using a StringShape before moving it out
-// of the ifdef
 
 bool Object::IsSeqString() {
   if (!IsString()) return false;
@@ -208,15 +207,6 @@ bool Object::IsExternalTwoByteString() {
 }
 
 
-bool Object::IsSlicedString() {
-  if (!IsString()) return false;
-  return StringShape(String::cast(this)).IsSliced();
-}
-
-
-#endif  // DEBUG
-
-
 StringShape::StringShape(String* str)
   : type_(str->map()->instance_type()) {
   set_valid();
@@ -240,15 +230,13 @@ StringShape::StringShape(InstanceType t)
 
 bool StringShape::IsSymbol() {
   ASSERT(valid());
-  return (type_ & kIsSymbolMask) == kSymbolTag;
+  ASSERT(kSymbolTag != 0);
+  return (type_ & kIsSymbolMask) != 0;
 }
 
 
 bool String::IsAsciiRepresentation() {
   uint32_t type = map()->instance_type();
-  if ((type & kStringRepresentationMask) == kSlicedStringTag) {
-    return SlicedString::cast(this)->buffer()->IsAsciiRepresentation();
-  }
   if ((type & kStringRepresentationMask) == kConsStringTag &&
       ConsString::cast(this)->second()->length() == 0) {
     return ConsString::cast(this)->first()->IsAsciiRepresentation();
@@ -259,9 +247,7 @@ bool String::IsAsciiRepresentation() {
 
 bool String::IsTwoByteRepresentation() {
   uint32_t type = map()->instance_type();
-  if ((type & kStringRepresentationMask) == kSlicedStringTag) {
-    return SlicedString::cast(this)->buffer()->IsTwoByteRepresentation();
-  } else if ((type & kStringRepresentationMask) == kConsStringTag &&
+  if ((type & kStringRepresentationMask) == kConsStringTag &&
              ConsString::cast(this)->second()->length() == 0) {
     return ConsString::cast(this)->first()->IsTwoByteRepresentation();
   }
@@ -271,11 +257,6 @@ bool String::IsTwoByteRepresentation() {
 
 bool StringShape::IsCons() {
   return (type_ & kStringRepresentationMask) == kConsStringTag;
-}
-
-
-bool StringShape::IsSliced() {
-  return (type_ & kStringRepresentationMask) == kSlicedStringTag;
 }
 
 
@@ -302,11 +283,6 @@ uint32_t StringShape::full_representation_tag() {
 
 STATIC_CHECK((kStringRepresentationMask | kStringEncodingMask) ==
              Internals::kFullStringRepresentationMask);
-
-
-uint32_t StringShape::size_tag() {
-  return (type_ & kStringSizeMask);
-}
 
 
 bool StringShape::IsSequentialAscii() {
@@ -357,6 +333,65 @@ bool Object::IsByteArray() {
 bool Object::IsPixelArray() {
   return Object::IsHeapObject() &&
       HeapObject::cast(this)->map()->instance_type() == PIXEL_ARRAY_TYPE;
+}
+
+
+bool Object::IsExternalArray() {
+  if (!Object::IsHeapObject())
+    return false;
+  InstanceType instance_type =
+      HeapObject::cast(this)->map()->instance_type();
+  return (instance_type >= FIRST_EXTERNAL_ARRAY_TYPE &&
+          instance_type <= LAST_EXTERNAL_ARRAY_TYPE);
+}
+
+
+bool Object::IsExternalByteArray() {
+  return Object::IsHeapObject() &&
+      HeapObject::cast(this)->map()->instance_type() ==
+      EXTERNAL_BYTE_ARRAY_TYPE;
+}
+
+
+bool Object::IsExternalUnsignedByteArray() {
+  return Object::IsHeapObject() &&
+      HeapObject::cast(this)->map()->instance_type() ==
+      EXTERNAL_UNSIGNED_BYTE_ARRAY_TYPE;
+}
+
+
+bool Object::IsExternalShortArray() {
+  return Object::IsHeapObject() &&
+      HeapObject::cast(this)->map()->instance_type() ==
+      EXTERNAL_SHORT_ARRAY_TYPE;
+}
+
+
+bool Object::IsExternalUnsignedShortArray() {
+  return Object::IsHeapObject() &&
+      HeapObject::cast(this)->map()->instance_type() ==
+      EXTERNAL_UNSIGNED_SHORT_ARRAY_TYPE;
+}
+
+
+bool Object::IsExternalIntArray() {
+  return Object::IsHeapObject() &&
+      HeapObject::cast(this)->map()->instance_type() ==
+      EXTERNAL_INT_ARRAY_TYPE;
+}
+
+
+bool Object::IsExternalUnsignedIntArray() {
+  return Object::IsHeapObject() &&
+      HeapObject::cast(this)->map()->instance_type() ==
+      EXTERNAL_UNSIGNED_INT_ARRAY_TYPE;
+}
+
+
+bool Object::IsExternalFloatArray() {
+  return Object::IsHeapObject() &&
+      HeapObject::cast(this)->map()->instance_type() ==
+      EXTERNAL_FLOAT_ARRAY_TYPE;
 }
 
 
@@ -744,15 +779,17 @@ int Smi::value() {
 
 Smi* Smi::FromInt(int value) {
   ASSERT(Smi::IsValid(value));
+  int smi_shift_bits = kSmiTagSize + kSmiShiftSize;
   intptr_t tagged_value =
-      (static_cast<intptr_t>(value) << kSmiTagSize) | kSmiTag;
+      (static_cast<intptr_t>(value) << smi_shift_bits) | kSmiTag;
   return reinterpret_cast<Smi*>(tagged_value);
 }
 
 
 Smi* Smi::FromIntptr(intptr_t value) {
   ASSERT(Smi::IsValid(value));
-  return reinterpret_cast<Smi*>((value << kSmiTagSize) | kSmiTag);
+  int smi_shift_bits = kSmiTagSize + kSmiShiftSize;
+  return reinterpret_cast<Smi*>((value << smi_shift_bits) | kSmiTag);
 }
 
 
@@ -776,7 +813,7 @@ int Failure::requested() const {
       kFailureTypeTagSize + kSpaceTagSize - kObjectAlignmentBits;
   STATIC_ASSERT(kShiftBits >= 0);
   ASSERT(type() == RETRY_AFTER_GC);
-  return value() >> kShiftBits;
+  return static_cast<int>(value() >> kShiftBits);
 }
 
 
@@ -802,29 +839,31 @@ Failure* Failure::OutOfMemoryException() {
 }
 
 
-int Failure::value() const {
-  return static_cast<int>(reinterpret_cast<intptr_t>(this) >> kFailureTagSize);
+intptr_t Failure::value() const {
+  return reinterpret_cast<intptr_t>(this) >> kFailureTagSize;
 }
 
 
 Failure* Failure::RetryAfterGC(int requested_bytes) {
   // Assert that the space encoding fits in the three bytes allotted for it.
   ASSERT((LAST_SPACE & ~kSpaceTagMask) == 0);
-  int requested = requested_bytes >> kObjectAlignmentBits;
-  int value = (requested << kSpaceTagSize) | NEW_SPACE;
-  ASSERT(value >> kSpaceTagSize == requested);
-  ASSERT(Smi::IsValid(value));
-  ASSERT(value == ((value << kFailureTypeTagSize) >> kFailureTypeTagSize));
-  ASSERT(Smi::IsValid(value << kFailureTypeTagSize));
+  intptr_t requested = requested_bytes >> kObjectAlignmentBits;
+  int tag_bits = kSpaceTagSize + kFailureTypeTagSize;
+  if (((requested << tag_bits) >> tag_bits) != requested) {
+    // No room for entire requested size in the bits. Round down to
+    // maximally representable size.
+    requested = static_cast<intptr_t>(
+                    (~static_cast<uintptr_t>(0)) >> (tag_bits + 1));
+  }
+  int value = static_cast<int>(requested << kSpaceTagSize) | NEW_SPACE;
   return Construct(RETRY_AFTER_GC, value);
 }
 
 
-Failure* Failure::Construct(Type type, int value) {
-  int info = (value << kFailureTypeTagSize) | type;
+Failure* Failure::Construct(Type type, intptr_t value) {
+  intptr_t info = (static_cast<intptr_t>(value) << kFailureTypeTagSize) | type;
   ASSERT(((info << kFailureTagSize) >> kFailureTagSize) == info);
-  return reinterpret_cast<Failure*>(
-      (static_cast<intptr_t>(info) << kFailureTagSize) | kFailureTag);
+  return reinterpret_cast<Failure*>((info << kFailureTagSize) | kFailureTag);
 }
 
 
@@ -832,6 +871,11 @@ bool Smi::IsValid(intptr_t value) {
 #ifdef DEBUG
   bool in_range = (value >= kMinValue) && (value <= kMaxValue);
 #endif
+
+#ifdef V8_TARGET_ARCH_X64
+  // To be representable as a long smi, the value must be a 32-bit integer.
+  bool result = (value == static_cast<int32_t>(value));
+#else
   // To be representable as an tagged small integer, the two
   // most-significant bits of 'value' must be either 00 or 11 due to
   // sign-extension. To check this we add 01 to the two
@@ -843,20 +887,8 @@ bool Smi::IsValid(intptr_t value) {
   // in fact doesn't work correctly with gcc4.1.1 in some cases: The
   // compiler may produce undefined results in case of signed integer
   // overflow. The computation must be done w/ unsigned ints.
-  bool result =
-      ((static_cast<unsigned int>(value) + 0x40000000U) & 0x80000000U) == 0;
-  ASSERT(result == in_range);
-  return result;
-}
-
-
-bool Smi::IsIntptrValid(intptr_t value) {
-#ifdef DEBUG
-  bool in_range = (value >= kMinValue) && (value <= kMaxValue);
+  bool result = (static_cast<uintptr_t>(value + 0x40000000U) < 0x80000000U);
 #endif
-  // See Smi::IsValid(int) for description.
-  bool result =
-      ((static_cast<uintptr_t>(value) + 0x40000000U) < 0x80000000U);
   ASSERT(result == in_range);
   return result;
 }
@@ -925,14 +957,14 @@ MapWord MapWord::EncodeAddress(Address map_address, int offset) {
   // exceed the object area size of a page.
   ASSERT(0 <= offset && offset < Page::kObjectAreaSize);
 
-  int compact_offset = offset >> kObjectAlignmentBits;
+  uintptr_t compact_offset = offset >> kObjectAlignmentBits;
   ASSERT(compact_offset < (1 << kForwardingOffsetBits));
 
   Page* map_page = Page::FromAddress(map_address);
   ASSERT_MAP_PAGE_INDEX(map_page->mc_page_index);
 
-  int map_page_offset =
-      map_page->Offset(map_address) >> kObjectAlignmentBits;
+  uintptr_t map_page_offset =
+      map_page->Offset(map_address) >> kMapAlignmentBits;
 
   uintptr_t encoding =
       (compact_offset << kForwardingOffsetShift) |
@@ -948,8 +980,8 @@ Address MapWord::DecodeMapAddress(MapSpace* map_space) {
   ASSERT_MAP_PAGE_INDEX(map_page_index);
 
   int map_page_offset = static_cast<int>(
-      ((value_ & kMapPageOffsetMask) >> kMapPageOffsetShift)
-      << kObjectAlignmentBits);
+      ((value_ & kMapPageOffsetMask) >> kMapPageOffsetShift) <<
+      kMapAlignmentBits);
 
   return (map_space->PageAddress(map_page_index) + map_page_offset);
 }
@@ -958,9 +990,9 @@ Address MapWord::DecodeMapAddress(MapSpace* map_space) {
 int MapWord::DecodeOffset() {
   // The offset field is represented in the kForwardingOffsetBits
   // most-significant bits.
-  int offset = (value_ >> kForwardingOffsetShift) << kObjectAlignmentBits;
-  ASSERT(0 <= offset && offset < Page::kObjectAreaSize);
-  return offset;
+  uintptr_t offset = (value_ >> kForwardingOffsetShift) << kObjectAlignmentBits;
+  ASSERT(offset < static_cast<uintptr_t>(Page::kObjectAreaSize));
+  return static_cast<int>(offset);
 }
 
 
@@ -1087,14 +1119,16 @@ ACCESSORS(JSObject, properties, FixedArray, kPropertiesOffset)
 Array* JSObject::elements() {
   Object* array = READ_FIELD(this, kElementsOffset);
   // In the assert below Dictionary is covered under FixedArray.
-  ASSERT(array->IsFixedArray() || array->IsPixelArray());
+  ASSERT(array->IsFixedArray() || array->IsPixelArray() ||
+         array->IsExternalArray());
   return reinterpret_cast<Array*>(array);
 }
 
 
 void JSObject::set_elements(Array* value, WriteBarrierMode mode) {
   // In the assert below Dictionary is covered under FixedArray.
-  ASSERT(value->IsFixedArray() || value->IsPixelArray());
+  ASSERT(value->IsFixedArray() || value->IsPixelArray() ||
+         value->IsExternalArray());
   WRITE_FIELD(this, kElementsOffset, value);
   CONDITIONAL_WRITE_BARRIER(this, kElementsOffset, mode);
 }
@@ -1470,7 +1504,7 @@ void DescriptorArray::Set(int descriptor_number, Descriptor* desc) {
   // Range check.
   ASSERT(descriptor_number < number_of_descriptors());
 
-  // Make sure non of the elements in desc are in new space.
+  // Make sure none of the elements in desc are in new space.
   ASSERT(!Heap::InNewSpace(desc->GetKey()));
   ASSERT(!Heap::InNewSpace(desc->GetValue()));
 
@@ -1533,7 +1567,6 @@ CAST_ACCESSOR(SeqString)
 CAST_ACCESSOR(SeqAsciiString)
 CAST_ACCESSOR(SeqTwoByteString)
 CAST_ACCESSOR(ConsString)
-CAST_ACCESSOR(SlicedString)
 CAST_ACCESSOR(ExternalString)
 CAST_ACCESSOR(ExternalAsciiString)
 CAST_ACCESSOR(ExternalTwoByteString)
@@ -1557,6 +1590,14 @@ CAST_ACCESSOR(JSRegExp)
 CAST_ACCESSOR(Proxy)
 CAST_ACCESSOR(ByteArray)
 CAST_ACCESSOR(PixelArray)
+CAST_ACCESSOR(ExternalArray)
+CAST_ACCESSOR(ExternalByteArray)
+CAST_ACCESSOR(ExternalUnsignedByteArray)
+CAST_ACCESSOR(ExternalShortArray)
+CAST_ACCESSOR(ExternalUnsignedShortArray)
+CAST_ACCESSOR(ExternalIntArray)
+CAST_ACCESSOR(ExternalUnsignedIntArray)
+CAST_ACCESSOR(ExternalFloatArray)
 CAST_ACCESSOR(Struct)
 
 
@@ -1575,44 +1616,25 @@ HashTable<Shape, Key>* HashTable<Shape, Key>::cast(Object* obj) {
 INT_ACCESSORS(Array, length, kLengthOffset)
 
 
+INT_ACCESSORS(String, length, kLengthOffset)
+
+
+uint32_t String::hash_field() {
+  return READ_UINT32_FIELD(this, kHashFieldOffset);
+}
+
+
+void String::set_hash_field(uint32_t value) {
+  WRITE_UINT32_FIELD(this, kHashFieldOffset, value);
+}
+
+
 bool String::Equals(String* other) {
   if (other == this) return true;
   if (StringShape(this).IsSymbol() && StringShape(other).IsSymbol()) {
     return false;
   }
   return SlowEquals(other);
-}
-
-
-int String::length() {
-  uint32_t len = READ_INT_FIELD(this, kLengthOffset);
-
-  ASSERT(kShortStringTag + kLongLengthShift == kShortLengthShift);
-  ASSERT(kMediumStringTag + kLongLengthShift == kMediumLengthShift);
-  ASSERT(kLongStringTag == 0);
-
-  return len >> (StringShape(this).size_tag() + kLongLengthShift);
-}
-
-
-void String::set_length(int value) {
-  ASSERT(kShortStringTag + kLongLengthShift == kShortLengthShift);
-  ASSERT(kMediumStringTag + kLongLengthShift == kMediumLengthShift);
-  ASSERT(kLongStringTag == 0);
-
-  WRITE_INT_FIELD(this,
-                  kLengthOffset,
-                  value << (StringShape(this).size_tag() + kLongLengthShift));
-}
-
-
-uint32_t String::length_field() {
-  return READ_UINT32_FIELD(this, kLengthOffset);
-}
-
-
-void String::set_length_field(uint32_t value) {
-  WRITE_UINT32_FIELD(this, kLengthOffset, value);
 }
 
 
@@ -1636,9 +1658,6 @@ uint16_t String::Get(int index) {
     case kConsStringTag | kAsciiStringTag:
     case kConsStringTag | kTwoByteStringTag:
       return ConsString::cast(this)->ConsStringGet(index);
-    case kSlicedStringTag | kAsciiStringTag:
-    case kSlicedStringTag | kTwoByteStringTag:
-      return SlicedString::cast(this)->SlicedStringGet(index);
     case kExternalStringTag | kAsciiStringTag:
       return ExternalAsciiString::cast(this)->ExternalAsciiStringGet(index);
     case kExternalStringTag | kTwoByteStringTag:
@@ -1668,11 +1687,6 @@ bool String::IsFlat() {
       String* second = ConsString::cast(this)->second();
       // Only flattened strings have second part empty.
       return second->length() == 0;
-    }
-    case kSlicedStringTag: {
-      StringRepresentationTag tag =
-          StringShape(SlicedString::cast(this)->buffer()).representation_tag();
-      return tag == kSeqStringTag || tag == kExternalStringTag;
     }
     default:
       return true;
@@ -1727,30 +1741,12 @@ void SeqTwoByteString::SeqTwoByteStringSet(int index, uint16_t value) {
 
 int SeqTwoByteString::SeqTwoByteStringSize(InstanceType instance_type) {
   uint32_t length = READ_INT_FIELD(this, kLengthOffset);
-
-  ASSERT(kShortStringTag + kLongLengthShift == kShortLengthShift);
-  ASSERT(kMediumStringTag + kLongLengthShift == kMediumLengthShift);
-  ASSERT(kLongStringTag == 0);
-
-  // Use the map (and not 'this') to compute the size tag, since
-  // TwoByteStringSize is called during GC when maps are encoded.
-  length >>= StringShape(instance_type).size_tag() + kLongLengthShift;
-
   return SizeFor(length);
 }
 
 
 int SeqAsciiString::SeqAsciiStringSize(InstanceType instance_type) {
   uint32_t length = READ_INT_FIELD(this, kLengthOffset);
-
-  ASSERT(kShortStringTag + kLongLengthShift == kShortLengthShift);
-  ASSERT(kMediumStringTag + kLongLengthShift == kMediumLengthShift);
-  ASSERT(kLongStringTag == 0);
-
-  // Use the map (and not 'this') to compute the size tag, since
-  // AsciiStringSize is called during GC when maps are encoded.
-  length >>= StringShape(instance_type).size_tag() + kLongLengthShift;
-
   return SizeFor(length);
 }
 
@@ -1787,27 +1783,6 @@ void ConsString::set_second(String* value, WriteBarrierMode mode) {
 }
 
 
-String* SlicedString::buffer() {
-  return String::cast(READ_FIELD(this, kBufferOffset));
-}
-
-
-void SlicedString::set_buffer(String* buffer) {
-  WRITE_FIELD(this, kBufferOffset, buffer);
-  WRITE_BARRIER(this, kBufferOffset);
-}
-
-
-int SlicedString::start() {
-  return READ_INT_FIELD(this, kStartOffset);
-}
-
-
-void SlicedString::set_start(int start) {
-  WRITE_INT_FIELD(this, kStartOffset, start);
-}
-
-
 ExternalAsciiString::Resource* ExternalAsciiString::resource() {
   return *reinterpret_cast<Resource**>(FIELD_ADDR(this, kResourceOffset));
 }
@@ -1819,34 +1794,6 @@ void ExternalAsciiString::set_resource(
 }
 
 
-Map* ExternalAsciiString::StringMap(int length) {
-  Map* map;
-  // Number of characters: determines the map.
-  if (length <= String::kMaxShortStringSize) {
-    map = Heap::short_external_ascii_string_map();
-  } else if (length <= String::kMaxMediumStringSize) {
-    map = Heap::medium_external_ascii_string_map();
-  } else {
-    map = Heap::long_external_ascii_string_map();
-  }
-  return map;
-}
-
-
-Map* ExternalAsciiString::SymbolMap(int length) {
-  Map* map;
-  // Number of characters: determines the map.
-  if (length <= String::kMaxShortStringSize) {
-    map = Heap::short_external_ascii_symbol_map();
-  } else if (length <= String::kMaxMediumStringSize) {
-    map = Heap::medium_external_ascii_symbol_map();
-  } else {
-    map = Heap::long_external_ascii_symbol_map();
-  }
-  return map;
-}
-
-
 ExternalTwoByteString::Resource* ExternalTwoByteString::resource() {
   return *reinterpret_cast<Resource**>(FIELD_ADDR(this, kResourceOffset));
 }
@@ -1855,34 +1802,6 @@ ExternalTwoByteString::Resource* ExternalTwoByteString::resource() {
 void ExternalTwoByteString::set_resource(
     ExternalTwoByteString::Resource* resource) {
   *reinterpret_cast<Resource**>(FIELD_ADDR(this, kResourceOffset)) = resource;
-}
-
-
-Map* ExternalTwoByteString::StringMap(int length) {
-  Map* map;
-  // Number of characters: determines the map.
-  if (length <= String::kMaxShortStringSize) {
-    map = Heap::short_external_string_map();
-  } else if (length <= String::kMaxMediumStringSize) {
-    map = Heap::medium_external_string_map();
-  } else {
-    map = Heap::long_external_string_map();
-  }
-  return map;
-}
-
-
-Map* ExternalTwoByteString::SymbolMap(int length) {
-  Map* map;
-  // Number of characters: determines the map.
-  if (length <= String::kMaxShortStringSize) {
-    map = Heap::short_external_symbol_map();
-  } else if (length <= String::kMaxMediumStringSize) {
-    map = Heap::medium_external_symbol_map();
-  } else {
-    map = Heap::long_external_symbol_map();
-  }
-  return map;
 }
 
 
@@ -1937,6 +1856,116 @@ uint8_t PixelArray::get(int index) {
 void PixelArray::set(int index, uint8_t value) {
   ASSERT((index >= 0) && (index < this->length()));
   uint8_t* ptr = external_pointer();
+  ptr[index] = value;
+}
+
+
+void* ExternalArray::external_pointer() {
+  intptr_t ptr = READ_INTPTR_FIELD(this, kExternalPointerOffset);
+  return reinterpret_cast<void*>(ptr);
+}
+
+
+void ExternalArray::set_external_pointer(void* value, WriteBarrierMode mode) {
+  intptr_t ptr = reinterpret_cast<intptr_t>(value);
+  WRITE_INTPTR_FIELD(this, kExternalPointerOffset, ptr);
+}
+
+
+int8_t ExternalByteArray::get(int index) {
+  ASSERT((index >= 0) && (index < this->length()));
+  int8_t* ptr = static_cast<int8_t*>(external_pointer());
+  return ptr[index];
+}
+
+
+void ExternalByteArray::set(int index, int8_t value) {
+  ASSERT((index >= 0) && (index < this->length()));
+  int8_t* ptr = static_cast<int8_t*>(external_pointer());
+  ptr[index] = value;
+}
+
+
+uint8_t ExternalUnsignedByteArray::get(int index) {
+  ASSERT((index >= 0) && (index < this->length()));
+  uint8_t* ptr = static_cast<uint8_t*>(external_pointer());
+  return ptr[index];
+}
+
+
+void ExternalUnsignedByteArray::set(int index, uint8_t value) {
+  ASSERT((index >= 0) && (index < this->length()));
+  uint8_t* ptr = static_cast<uint8_t*>(external_pointer());
+  ptr[index] = value;
+}
+
+
+int16_t ExternalShortArray::get(int index) {
+  ASSERT((index >= 0) && (index < this->length()));
+  int16_t* ptr = static_cast<int16_t*>(external_pointer());
+  return ptr[index];
+}
+
+
+void ExternalShortArray::set(int index, int16_t value) {
+  ASSERT((index >= 0) && (index < this->length()));
+  int16_t* ptr = static_cast<int16_t*>(external_pointer());
+  ptr[index] = value;
+}
+
+
+uint16_t ExternalUnsignedShortArray::get(int index) {
+  ASSERT((index >= 0) && (index < this->length()));
+  uint16_t* ptr = static_cast<uint16_t*>(external_pointer());
+  return ptr[index];
+}
+
+
+void ExternalUnsignedShortArray::set(int index, uint16_t value) {
+  ASSERT((index >= 0) && (index < this->length()));
+  uint16_t* ptr = static_cast<uint16_t*>(external_pointer());
+  ptr[index] = value;
+}
+
+
+int32_t ExternalIntArray::get(int index) {
+  ASSERT((index >= 0) && (index < this->length()));
+  int32_t* ptr = static_cast<int32_t*>(external_pointer());
+  return ptr[index];
+}
+
+
+void ExternalIntArray::set(int index, int32_t value) {
+  ASSERT((index >= 0) && (index < this->length()));
+  int32_t* ptr = static_cast<int32_t*>(external_pointer());
+  ptr[index] = value;
+}
+
+
+uint32_t ExternalUnsignedIntArray::get(int index) {
+  ASSERT((index >= 0) && (index < this->length()));
+  uint32_t* ptr = static_cast<uint32_t*>(external_pointer());
+  return ptr[index];
+}
+
+
+void ExternalUnsignedIntArray::set(int index, uint32_t value) {
+  ASSERT((index >= 0) && (index < this->length()));
+  uint32_t* ptr = static_cast<uint32_t*>(external_pointer());
+  ptr[index] = value;
+}
+
+
+float ExternalFloatArray::get(int index) {
+  ASSERT((index >= 0) && (index < this->length()));
+  float* ptr = static_cast<float*>(external_pointer());
+  return ptr[index];
+}
+
+
+void ExternalFloatArray::set(int index, float value) {
+  ASSERT((index >= 0) && (index < this->length()));
+  float* ptr = static_cast<float*>(external_pointer());
   ptr[index] = value;
 }
 
@@ -2241,6 +2270,7 @@ ACCESSORS(AccessorInfo, setter, Object, kSetterOffset)
 ACCESSORS(AccessorInfo, data, Object, kDataOffset)
 ACCESSORS(AccessorInfo, name, Object, kNameOffset)
 ACCESSORS(AccessorInfo, flag, Smi, kFlagOffset)
+ACCESSORS(AccessorInfo, load_stub_cache, Object, kLoadStubCacheOffset)
 
 ACCESSORS(AccessCheckInfo, named_callback, Object, kNamedCallbackOffset)
 ACCESSORS(AccessCheckInfo, indexed_callback, Object, kIndexedCallbackOffset)
@@ -2300,7 +2330,7 @@ ACCESSORS(Script, wrapper, Proxy, kWrapperOffset)
 ACCESSORS(Script, type, Smi, kTypeOffset)
 ACCESSORS(Script, compilation_type, Smi, kCompilationTypeOffset)
 ACCESSORS(Script, line_ends, Object, kLineEndsOffset)
-ACCESSORS(Script, eval_from_function, Object, kEvalFromFunctionOffset)
+ACCESSORS(Script, eval_from_shared, Object, kEvalFromSharedOffset)
 ACCESSORS(Script, eval_from_instructions_offset, Smi,
           kEvalFrominstructionsOffsetOffset)
 
@@ -2338,12 +2368,12 @@ BOOL_ACCESSORS(SharedFunctionInfo, start_position_and_type, is_expression,
 BOOL_ACCESSORS(SharedFunctionInfo, start_position_and_type, is_toplevel,
                kIsTopLevelBit)
 BOOL_GETTER(SharedFunctionInfo, compiler_hints,
-            has_only_this_property_assignments,
-            kHasOnlyThisPropertyAssignments)
-BOOL_GETTER(SharedFunctionInfo, compiler_hints,
             has_only_simple_this_property_assignments,
             kHasOnlySimpleThisPropertyAssignments)
-
+BOOL_ACCESSORS(SharedFunctionInfo,
+               compiler_hints,
+               try_fast_codegen,
+               kTryFastCodegen)
 
 INT_ACCESSORS(SharedFunctionInfo, length, kLengthOffset)
 INT_ACCESSORS(SharedFunctionInfo, formal_parameter_count,
@@ -2359,6 +2389,20 @@ INT_ACCESSORS(SharedFunctionInfo, compiler_hints,
               kCompilerHintsOffset)
 INT_ACCESSORS(SharedFunctionInfo, this_property_assignments_count,
               kThisPropertyAssignmentsCountOffset)
+
+
+bool Script::HasValidSource() {
+  Object* src = this->source();
+  if (!src->IsString()) return true;
+  String* src_str = String::cast(src);
+  if (!StringShape(src_str).IsExternal()) return true;
+  if (src_str->IsAsciiRepresentation()) {
+    return ExternalAsciiString::cast(src)->resource() != NULL;
+  } else if (src_str->IsTwoByteRepresentation()) {
+    return ExternalTwoByteString::cast(src)->resource() != NULL;
+  }
+  return true;
+}
 
 
 void SharedFunctionInfo::DontAdaptArguments() {
@@ -2538,16 +2582,6 @@ INT_ACCESSORS(Code, relocation_size, kRelocationSizeOffset)
 INT_ACCESSORS(Code, sinfo_size, kSInfoSizeOffset)
 
 
-Code::ICTargetState Code::ic_flag() {
-  return static_cast<ICTargetState>(READ_BYTE_FIELD(this, kICFlagOffset));
-}
-
-
-void Code::set_ic_flag(ICTargetState value) {
-  WRITE_BYTE_FIELD(this, kICFlagOffset, value);
-}
-
-
 byte* Code::instruction_start()  {
   return FIELD_ADDR(this, kHeaderSize);
 }
@@ -2645,6 +2679,25 @@ JSObject::ElementsKind JSObject::GetElementsKind() {
     ASSERT(array->IsDictionary());
     return DICTIONARY_ELEMENTS;
   }
+  if (array->IsExternalArray()) {
+    switch (array->map()->instance_type()) {
+      case EXTERNAL_BYTE_ARRAY_TYPE:
+        return EXTERNAL_BYTE_ELEMENTS;
+      case EXTERNAL_UNSIGNED_BYTE_ARRAY_TYPE:
+        return EXTERNAL_UNSIGNED_BYTE_ELEMENTS;
+      case EXTERNAL_SHORT_ARRAY_TYPE:
+        return EXTERNAL_SHORT_ELEMENTS;
+      case EXTERNAL_UNSIGNED_SHORT_ARRAY_TYPE:
+        return EXTERNAL_UNSIGNED_SHORT_ELEMENTS;
+      case EXTERNAL_INT_ARRAY_TYPE:
+        return EXTERNAL_INT_ELEMENTS;
+      case EXTERNAL_UNSIGNED_INT_ARRAY_TYPE:
+        return EXTERNAL_UNSIGNED_INT_ELEMENTS;
+      default:
+        ASSERT(array->map()->instance_type() == EXTERNAL_FLOAT_ARRAY_TYPE);
+        return EXTERNAL_FLOAT_ELEMENTS;
+    }
+  }
   ASSERT(array->IsPixelArray());
   return PIXEL_ELEMENTS;
 }
@@ -2662,6 +2715,52 @@ bool JSObject::HasDictionaryElements() {
 
 bool JSObject::HasPixelElements() {
   return GetElementsKind() == PIXEL_ELEMENTS;
+}
+
+
+bool JSObject::HasExternalArrayElements() {
+  return (HasExternalByteElements() ||
+          HasExternalUnsignedByteElements() ||
+          HasExternalShortElements() ||
+          HasExternalUnsignedShortElements() ||
+          HasExternalIntElements() ||
+          HasExternalUnsignedIntElements() ||
+          HasExternalFloatElements());
+}
+
+
+bool JSObject::HasExternalByteElements() {
+  return GetElementsKind() == EXTERNAL_BYTE_ELEMENTS;
+}
+
+
+bool JSObject::HasExternalUnsignedByteElements() {
+  return GetElementsKind() == EXTERNAL_UNSIGNED_BYTE_ELEMENTS;
+}
+
+
+bool JSObject::HasExternalShortElements() {
+  return GetElementsKind() == EXTERNAL_SHORT_ELEMENTS;
+}
+
+
+bool JSObject::HasExternalUnsignedShortElements() {
+  return GetElementsKind() == EXTERNAL_UNSIGNED_SHORT_ELEMENTS;
+}
+
+
+bool JSObject::HasExternalIntElements() {
+  return GetElementsKind() == EXTERNAL_INT_ELEMENTS;
+}
+
+
+bool JSObject::HasExternalUnsignedIntElements() {
+  return GetElementsKind() == EXTERNAL_UNSIGNED_INT_ELEMENTS;
+}
+
+
+bool JSObject::HasExternalFloatElements() {
+  return GetElementsKind() == EXTERNAL_FLOAT_ELEMENTS;
 }
 
 
@@ -2688,13 +2787,13 @@ NumberDictionary* JSObject::element_dictionary() {
 
 
 bool String::HasHashCode() {
-  return (length_field() & kHashComputedMask) != 0;
+  return (hash_field() & kHashComputedMask) != 0;
 }
 
 
 uint32_t String::Hash() {
   // Fast case: has hash code already been computed?
-  uint32_t field = length_field();
+  uint32_t field = hash_field();
   if (field & kHashComputedMask) return field >> kHashShift;
   // Slow case: compute hash code and set it.
   return ComputeAndSetHash();
@@ -2711,7 +2810,7 @@ StringHasher::StringHasher(int length)
 
 
 bool StringHasher::has_trivial_hash() {
-  return length_ > String::kMaxMediumStringSize;
+  return length_ > String::kMaxHashCalcLength;
 }
 
 
@@ -2767,7 +2866,7 @@ uint32_t StringHasher::GetHash() {
 
 
 bool String::AsArrayIndex(uint32_t* index) {
-  uint32_t field = length_field();
+  uint32_t field = hash_field();
   if ((field & kHashComputedMask) && !(field & kIsArrayIndexMask)) return false;
   return SlowAsArrayIndex(index);
 }
@@ -2780,6 +2879,43 @@ Object* JSObject::GetPrototype() {
 
 PropertyAttributes JSObject::GetPropertyAttribute(String* key) {
   return GetPropertyAttributeWithReceiver(this, key);
+}
+
+// TODO(504): this may be useful in other places too where JSGlobalProxy
+// is used.
+Object* JSObject::BypassGlobalProxy() {
+  if (IsJSGlobalProxy()) {
+    Object* proto = GetPrototype();
+    if (proto->IsNull()) return Heap::undefined_value();
+    ASSERT(proto->IsJSGlobalObject());
+    return proto;
+  }
+  return this;
+}
+
+
+bool JSObject::HasHiddenPropertiesObject() {
+  ASSERT(!IsJSGlobalProxy());
+  return GetPropertyAttributePostInterceptor(this,
+                                             Heap::hidden_symbol(),
+                                             false) != ABSENT;
+}
+
+
+Object* JSObject::GetHiddenPropertiesObject() {
+  ASSERT(!IsJSGlobalProxy());
+  PropertyAttributes attributes;
+  return GetLocalPropertyPostInterceptor(this,
+                                         Heap::hidden_symbol(),
+                                         &attributes);
+}
+
+
+Object* JSObject::SetHiddenPropertiesObject(Object* hidden_obj) {
+  ASSERT(!IsJSGlobalProxy());
+  return SetPropertyPostInterceptor(Heap::hidden_symbol(),
+                                    hidden_obj,
+                                    DONT_ENUM);
 }
 
 
@@ -2854,8 +2990,19 @@ void Map::ClearCodeCache() {
 
 void JSArray::EnsureSize(int required_size) {
   ASSERT(HasFastElements());
-  if (elements()->length() >= required_size) return;
-  Expand(required_size);
+  Array* elts = elements();
+  const int kArraySizeThatFitsComfortablyInNewSpace = 128;
+  if (elts->length() < required_size) {
+    // Doubling in size would be overkill, but leave some slack to avoid
+    // constantly growing.
+    Expand(required_size + (required_size >> 3));
+    // It's a performance benefit to keep a frequently used array in new-space.
+  } else if (!Heap::new_space()->Contains(elts) &&
+             required_size < kArraySizeThatFitsComfortablyInNewSpace) {
+    // Expand will allocate a new backing store in new space even if the size
+    // we asked for isn't larger than what we had before.
+    Expand(required_size);
+  }
 }
 
 

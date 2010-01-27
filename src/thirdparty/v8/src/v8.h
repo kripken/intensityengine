@@ -51,11 +51,6 @@
 #error both DEBUG and NDEBUG are set
 #endif
 
-// Enable debugger support by default, unless it is in ANDROID
-#if !defined(ENABLE_DEBUGGER_SUPPORT) && !defined(ANDROID)
-#define ENABLE_DEBUGGER_SUPPORT
-#endif
-
 // Basic includes
 #include "../include/v8.h"
 #include "globals.h"
@@ -76,6 +71,8 @@
 
 namespace v8 {
 namespace internal {
+
+class Deserializer;
 
 class V8 : public AllStatic {
  public:
@@ -100,7 +97,7 @@ class V8 : public AllStatic {
   static Smi* RandomPositiveSmi();
 
   // Idle notification directly from the API.
-  static bool IdleNotification(bool is_high_priority);
+  static bool IdleNotification();
 
  private:
   // True if engine is currently running

@@ -66,8 +66,9 @@ namespace internal {
   T(DEC, "--", 0)                                                       \
                                                                         \
   /* Assignment operators. */                                           \
-  /* IsAssignmentOp() relies on this block of enum values */            \
-  /* being contiguous and sorted in the same order! */                  \
+  /* IsAssignmentOp() and Assignment::is_compound() relies on */        \
+  /* this block of enum values being contiguous and sorted in the */    \
+  /* same order! */                                                     \
   T(INIT_VAR, "=init_var", 2)  /* AST-use only. */                      \
   T(INIT_CONST, "=init_const", 2)  /* AST-use only. */                  \
   T(ASSIGN, "=", 2)                                                     \
@@ -211,14 +212,12 @@ class Token {
   };
 #undef T
 
-#ifdef DEBUG
   // Returns a string corresponding to the C++ token name
   // (e.g. "LT" for the token LT).
   static const char* Name(Value tok) {
     ASSERT(0 <= tok && tok < NUM_TOKENS);
     return name_[tok];
   }
-#endif
 
   // Predicates
   static bool IsAssignmentOp(Value tok) {
@@ -260,19 +259,8 @@ class Token {
     return precedence_[tok];
   }
 
-  // Returns the keyword value if str is a keyword;
-  // returns IDENTIFIER otherwise. The class must
-  // have been initialized.
-  static Value Lookup(const char* str);
-
-  // Must be called once to initialize the class.
-  // Multiple calls are ignored.
-  static void Initialize();
-
  private:
-#ifdef DEBUG
   static const char* name_[NUM_TOKENS];
-#endif
   static const char* string_[NUM_TOKENS];
   static int8_t precedence_[NUM_TOKENS];
 };

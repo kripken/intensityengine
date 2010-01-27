@@ -97,13 +97,18 @@ ANDROID_LINKFLAGS = ['-nostdlib',
 
 LIBRARY_FLAGS = {
   'all': {
-    'CPPDEFINES':   ['ENABLE_LOGGING_AND_PROFILING'],
     'CPPPATH': [join(root_dir, 'src')],
     'regexp:native': {
         'CPPDEFINES': ['V8_NATIVE_REGEXP']
     },
     'mode:debug': {
       'CPPDEFINES': ['V8_ENABLE_CHECKS']
+    },
+    'profilingsupport:on': {
+      'CPPDEFINES':   ['ENABLE_LOGGING_AND_PROFILING'],
+    },
+    'debuggersupport:on': {
+      'CPPDEFINES':   ['ENABLE_DEBUGGER_SUPPORT'],
     }
   },
   'gcc': {
@@ -111,11 +116,14 @@ LIBRARY_FLAGS = {
       'CCFLAGS':      ['$DIALECTFLAGS', '$WARNINGFLAGS'],
       'CXXFLAGS':     ['$CCFLAGS', '-fno-rtti', '-fno-exceptions'],
     },
+    'visibility:hidden': {
+      # Use visibility=default to disable this.
+      'CXXFLAGS':     ['-fvisibility=hidden']
+    },
     'mode:debug': {
       'CCFLAGS':      ['-g', '-O0'],
       'CPPDEFINES':   ['ENABLE_DISASSEMBLER', 'DEBUG'],
       'os:android': {
-        'CPPDEFINES': ['ENABLE_DEBUGGER_SUPPORT'],
         'CCFLAGS':    ['-mthumb']
       }
     },
@@ -124,7 +132,7 @@ LIBRARY_FLAGS = {
                        '-ffunction-sections'],
       'os:android': {
         'CCFLAGS':    ['-mthumb', '-Os'],
-        'CPPDEFINES': ['SK_RELEASE', 'NDEBUG', 'ENABLE_DEBUGGER_SUPPORT']
+        'CPPDEFINES': ['SK_RELEASE', 'NDEBUG']
       }
     },
     'os:linux': {
@@ -136,8 +144,16 @@ LIBRARY_FLAGS = {
     },
     'os:macos': {
       'CCFLAGS':      ['-ansi', '-mmacosx-version-min=10.4'],
+      'library:shared': {
+        'CPPDEFINES': ['V8_SHARED']
+      }
     },
     'os:freebsd': {
+      'CPPPATH' : ['/usr/local/include'],
+      'LIBPATH' : ['/usr/local/lib'],
+      'CCFLAGS':      ['-ansi'],
+    },
+    'os:openbsd': {
       'CPPPATH' : ['/usr/local/include'],
       'LIBPATH' : ['/usr/local/lib'],
       'CCFLAGS':      ['-ansi'],
@@ -166,6 +182,12 @@ LIBRARY_FLAGS = {
       'CCFLAGS':      ['-m32'],
       'LINKFLAGS':    ['-m32']
     },
+    'armvariant:thumb2': {
+      'CPPDEFINES':   ['V8_ARM_VARIANT_THUMB']
+    },
+    'armvariant:arm': {
+      'CPPDEFINES':   ['V8_ARM_VARIANT_ARM']
+    },
     'arch:x64': {
       'CPPDEFINES':   ['V8_TARGET_ARCH_X64'],
       'CCFLAGS':      ['-m64'],
@@ -181,7 +203,7 @@ LIBRARY_FLAGS = {
       'CXXFLAGS':     ['$CCFLAGS', '/GR-', '/Gy'],
       'CPPDEFINES':   ['WIN32'],
       'LINKFLAGS':    ['/INCREMENTAL:NO', '/NXCOMPAT', '/IGNORE:4221'],
-      'CCPDBFLAGS':   [] #['/Zi'] # INTENSITY
+      'CCPDBFLAGS':   ['/Zi']
     },
     'verbose:off': {
       'DIALECTFLAGS': ['/nologo'],
@@ -218,9 +240,9 @@ LIBRARY_FLAGS = {
         'CCFLAGS': ['/MD']
       },
       'msvcltcg:on': {
-        'CCFLAGS':      [], #'/GL'], # INTENSITY
-        'LINKFLAGS':    [], #'/LTCG'], # INTENSITY
-        'ARFLAGS':      [], #'/LTCG'], # INTENSITY
+        'CCFLAGS':      ['/GL'],
+        'LINKFLAGS':    ['/LTCG'],
+        'ARFLAGS':      ['/LTCG'],
       }
     }
   }
@@ -230,7 +252,6 @@ LIBRARY_FLAGS = {
 V8_EXTRA_FLAGS = {
   'gcc': {
     'all': {
-      'CXXFLAGS':     [], #['-fvisibility=hidden'],
       'WARNINGFLAGS': ['-Wall',
                        '-Werror',
                        '-W',
@@ -259,11 +280,15 @@ V8_EXTRA_FLAGS = {
     'all': {
       'WARNINGFLAGS': ['/WX', '/wd4355', '/wd4800']
     },
+    'library:shared': {
+      'CPPDEFINES': ['BUILDING_V8_SHARED'],
+      'LIBS': ['winmm', 'ws2_32']
+    },
     'arch:ia32': {
       'WARNINGFLAGS': ['/W3']
     },
     'arch:x64': {
-      'WARNINGFLAGS': ['/W2']
+      'WARNINGFLAGS': ['/W3']
     },
     'arch:arm': {
       'CPPDEFINES':   ['V8_TARGET_ARCH_ARM'],
@@ -287,6 +312,9 @@ MKSNAPSHOT_EXTRA_FLAGS = {
       'LIBS': ['pthread'],
     },
     'os:freebsd': {
+      'LIBS': ['execinfo', 'pthread']
+    },
+    'os:openbsd': {
       'LIBS': ['execinfo', 'pthread']
     },
     'os:win32': {
@@ -335,6 +363,9 @@ CCTEST_EXTRA_FLAGS = {
     'os:freebsd': {
       'LIBS':         ['execinfo', 'pthread']
     },
+    'os:openbsd': {
+      'LIBS':         ['execinfo', 'pthread']
+    },
     'os:win32': {
       'LIBS': ['winmm', 'ws2_32']
     },
@@ -363,7 +394,8 @@ CCTEST_EXTRA_FLAGS = {
       'CPPDEFINES': ['V8_TARGET_ARCH_IA32']
     },
     'arch:x64': {
-      'CPPDEFINES':   ['V8_TARGET_ARCH_X64']
+      'CPPDEFINES':   ['V8_TARGET_ARCH_X64'],
+      'LINKFLAGS': ['/STACK:2091752']
     },
   }
 }
@@ -387,7 +419,11 @@ SAMPLE_FLAGS = {
     },
     'os:freebsd': {
       'LIBPATH' : ['/usr/local/lib'],
-      'LIBS':         ['execinfo', 'pthread']
+      'LIBS':     ['execinfo', 'pthread']
+    },
+    'os:openbsd': {
+      'LIBPATH' : ['/usr/local/lib'],
+      'LIBS':     ['execinfo', 'pthread']
     },
     'os:win32': {
       'LIBS':         ['winmm', 'ws2_32']
@@ -464,7 +500,7 @@ SAMPLE_FLAGS = {
     },
     'arch:x64': {
       'CPPDEFINES': ['V8_TARGET_ARCH_X64'],
-      'LINKFLAGS': ['/MACHINE:X64']
+      'LINKFLAGS': ['/MACHINE:X64', '/STACK:2091752']
     },
     'mode:debug': {
       'CCFLAGS':   ['/Od'],
@@ -492,6 +528,9 @@ D8_FLAGS = {
       'LIBS': ['pthread'],
     },
     'os:freebsd': {
+      'LIBS': ['pthread'],
+    },
+    'os:openbsd': {
       'LIBS': ['pthread'],
     },
     'os:android': {
@@ -544,7 +583,7 @@ SIMPLE_OPTIONS = {
     'help': 'the toolchain to use (' + TOOLCHAIN_GUESS + ')'
   },
   'os': {
-    'values': ['freebsd', 'linux', 'macos', 'win32', 'android'],
+    'values': ['freebsd', 'linux', 'macos', 'win32', 'android', 'openbsd'],
     'default': OS_GUESS,
     'help': 'the os to build for (' + OS_GUESS + ')'
   },
@@ -572,6 +611,16 @@ SIMPLE_OPTIONS = {
     'values': ['static', 'shared'],
     'default': 'static',
     'help': 'the type of library to produce'
+  },
+  'profilingsupport': {
+    'values': ['on', 'off'],
+    'default': 'on',
+    'help': 'enable profiling of JavaScript code'
+  },
+  'debuggersupport': {
+    'values': ['on', 'off'],
+    'default': 'on',
+    'help': 'enable debugging of JavaScript code'
   },
   'soname': {
     'values': ['on', 'off'],
@@ -612,6 +661,16 @@ SIMPLE_OPTIONS = {
     'values': ['on', 'off'],
     'default': 'off',
     'help': 'more output from compiler and linker'
+  },
+  'visibility': {
+    'values': ['default', 'hidden'],
+    'default': 'hidden',
+    'help': 'shared library symbol visibility'
+  },
+  'armvariant': {
+    'values': ['arm', 'thumb2', 'none'],
+    'default': 'none',
+    'help': 'generate thumb2 instructions instead of arm instructions (default)'
   }
 }
 
@@ -791,6 +850,14 @@ def PostprocessOptions(options):
       # Print a warning if arch has explicitly been set
       print "Warning: forcing architecture to match simulator (%s)" % options['simulator']
     options['arch'] = options['simulator']
+  if (options['prof'] != 'off') and (options['profilingsupport'] == 'off'):
+    # Print a warning if profiling is enabled without profiling support
+    print "Warning: forcing profilingsupport on when prof is on"
+    options['profilingsupport'] = 'on'
+  if (options['armvariant'] == 'none' and options['arch'] == 'arm'):
+    options['armvariant'] = 'arm'
+  if (options['armvariant'] != 'none' and options['arch'] != 'arm'):
+    options['armvariant'] = 'none'
 
 
 def ParseEnvOverrides(arg, imports):
@@ -883,6 +950,7 @@ def BuildSpecific(env, mode, env_overrides):
 
   d8_env = Environment()
   d8_env.Replace(**context.flags['d8'])
+  context.ApplyEnvOverrides(d8_env)
   shell = d8_env.Program('d8' + suffix, object_files + shell_files)
   context.d8_targets.append(shell)
 

@@ -31,8 +31,9 @@
 #include "bootstrapper.h"
 #include "debug.h"
 #include "execution.h"
-#include "string-stream.h"
 #include "platform.h"
+#include "simulator.h"
+#include "string-stream.h"
 
 namespace v8 {
 namespace internal {
@@ -50,9 +51,34 @@ Address top_addresses[] = {
     NULL
 };
 
+
+v8::TryCatch* ThreadLocalTop::TryCatchHandler() {
+  return TRY_CATCH_FROM_ADDRESS(try_catch_handler_address());
+}
+
+
+void ThreadLocalTop::Initialize() {
+  c_entry_fp_ = 0;
+  handler_ = 0;
+#ifdef ENABLE_LOGGING_AND_PROFILING
+  js_entry_sp_ = 0;
+#endif
+  stack_is_cooked_ = false;
+  try_catch_handler_address_ = NULL;
+  context_ = NULL;
+  int id = ThreadManager::CurrentId();
+  thread_id_ = (id == 0) ? ThreadManager::kInvalidId : id;
+  external_caught_exception_ = false;
+  failed_access_check_callback_ = NULL;
+  save_context_ = NULL;
+  catcher_ = NULL;
+}
+
+
 Address Top::get_address_from_id(Top::AddressId id) {
   return top_addresses[id];
 }
+
 
 char* Top::Iterate(ObjectVisitor* v, char* thread_storage) {
   ThreadLocalTop* thread = reinterpret_cast<ThreadLocalTop*>(thread_storage);
@@ -69,9 +95,9 @@ void Top::Iterate(ObjectVisitor* v, ThreadLocalTop* thread) {
   v->VisitPointer(bit_cast<Object**, Context**>(&(thread->context_)));
   v->VisitPointer(&(thread->scheduled_exception_));
 
-  for (v8::TryCatch* block = thread->try_catch_handler_;
+  for (v8::TryCatch* block = thread->TryCatchHandler();
        block != NULL;
-       block = block->next_) {
+       block = TRY_CATCH_FROM_ADDRESS(block->next_)) {
     v->VisitPointer(bit_cast<Object**, void**>(&(block->exception_)));
     v->VisitPointer(bit_cast<Object**, void**>(&(block->message_)));
   }
@@ -90,22 +116,10 @@ void Top::Iterate(ObjectVisitor* v) {
 
 
 void Top::InitializeThreadLocal() {
-  thread_local_.c_entry_fp_ = 0;
-  thread_local_.handler_ = 0;
-#ifdef ENABLE_LOGGING_AND_PROFILING
-  thread_local_.js_entry_sp_ = 0;
-#endif
-  thread_local_.stack_is_cooked_ = false;
-  thread_local_.try_catch_handler_ = NULL;
-  thread_local_.context_ = NULL;
-  thread_local_.thread_id_ = ThreadManager::kInvalidId;
-  thread_local_.external_caught_exception_ = false;
-  thread_local_.failed_access_check_callback_ = NULL;
+  thread_local_.Initialize();
   clear_pending_exception();
   clear_pending_message();
   clear_scheduled_exception();
-  thread_local_.save_context_ = NULL;
-  thread_local_.catcher_ = NULL;
 }
 
 
@@ -252,46 +266,24 @@ void Top::TearDown() {
 }
 
 
-// There are cases where the C stack is separated from JS stack (ARM simulator).
-// To figure out the order of top-most JS try-catch handler and the top-most C
-// try-catch handler, the C try-catch handler keeps a reference to the top-most
-// JS try_catch handler when it was created.
-//
-// Here is a picture to explain the idea:
-//   Top::thread_local_.handler_       Top::thread_local_.try_catch_handler_
-//
-//             |                                         |
-//             v                                         v
-//
-//      | JS handler  |                        | C try_catch handler |
-//      |    next     |--+           +-------- |    js_handler_      |
-//                       |           |         |      next_          |--+
-//                       |           |                                  |
-//      | JS handler  |--+ <---------+                                  |
-//      |    next     |
-//
-// If the top-most JS try-catch handler is not equal to
-// Top::thread_local_.try_catch_handler_.js_handler_, it means the JS handler
-// is on the top. Otherwise, it means the C try-catch handler is on the top.
-//
 void Top::RegisterTryCatchHandler(v8::TryCatch* that) {
-  StackHandler* handler =
-    reinterpret_cast<StackHandler*>(thread_local_.handler_);
-
-  // Find the top-most try-catch handler.
-  while (handler != NULL && !handler->is_try_catch()) {
-    handler = handler->next();
-  }
-
-  that->js_handler_ = handler;  // casted to void*
-  thread_local_.try_catch_handler_ = that;
+  // The ARM simulator has a separate JS stack.  We therefore register
+  // the C++ try catch handler with the simulator and get back an
+  // address that can be used for comparisons with addresses into the
+  // JS stack.  When running without the simulator, the address
+  // returned will be the address of the C++ try catch handler itself.
+  Address address = reinterpret_cast<Address>(
+      SimulatorStack::RegisterCTryCatch(reinterpret_cast<uintptr_t>(that)));
+  thread_local_.set_try_catch_handler_address(address);
 }
 
 
 void Top::UnregisterTryCatchHandler(v8::TryCatch* that) {
-  ASSERT(thread_local_.try_catch_handler_ == that);
-  thread_local_.try_catch_handler_ = that->next_;
+  ASSERT(thread_local_.TryCatchHandler() == that);
+  thread_local_.set_try_catch_handler_address(
+      reinterpret_cast<Address>(that->next_));
   thread_local_.catcher_ = NULL;
+  SimulatorStack::UnregisterCTryCatch();
 }
 
 
@@ -492,11 +484,17 @@ static MayAccessDecision MayAccessPreCheck(JSObject* receiver,
 
 bool Top::MayNamedAccess(JSObject* receiver, Object* key, v8::AccessType type) {
   ASSERT(receiver->IsAccessCheckNeeded());
+
+  // The callers of this method are not expecting a GC.
+  AssertNoAllocation no_gc;
+
+  // Skip checks for hidden properties access.  Note, we do not
+  // require existence of a context in this case.
+  if (key == Heap::hidden_symbol()) return true;
+
   // Check for compatibility between the security tokens in the
   // current lexical context and the accessed object.
   ASSERT(Top::context());
-  // The callers of this method are not expecting a GC.
-  AssertNoAllocation no_gc;
 
   MayAccessDecision decision = MayAccessPreCheck(receiver, type);
   if (decision != UNKNOWN) return decision == YES;
@@ -690,12 +688,17 @@ void Top::ComputeLocation(MessageLocation* target) {
 void Top::ReportUncaughtException(Handle<Object> exception,
                                   MessageLocation* location,
                                   Handle<String> stack_trace) {
-  Handle<Object> message =
-    MessageHandler::MakeMessageObject("uncaught_exception",
-                                      location,
-                                      HandleVector<Object>(&exception, 1),
-                                      stack_trace);
-
+  Handle<Object> message;
+  if (!Bootstrapper::IsActive()) {
+    // It's not safe to try to make message objects while the bootstrapper
+    // is active since the infrastructure may not have been properly
+    // initialized.
+    message =
+      MessageHandler::MakeMessageObject("uncaught_exception",
+                                        location,
+                                        HandleVector<Object>(&exception, 1),
+                                        stack_trace);
+  }
   // Report the uncaught exception.
   MessageHandler::ReportMessage(location, message);
 }
@@ -712,20 +715,18 @@ bool Top::ShouldReturnException(bool* is_caught_externally,
 
   // Get the address of the external handler so we can compare the address to
   // determine which one is closer to the top of the stack.
-  v8::TryCatch* try_catch = thread_local_.try_catch_handler_;
+  Address external_handler_address = thread_local_.try_catch_handler_address();
 
   // The exception has been externally caught if and only if there is
   // an external handler which is on top of the top-most try-catch
   // handler.
-  //
-  // See comments in RegisterTryCatchHandler for details.
-  *is_caught_externally = try_catch != NULL &&
-      (handler == NULL || handler == try_catch->js_handler_ ||
+  *is_caught_externally = external_handler_address != NULL &&
+      (handler == NULL || handler->address() > external_handler_address ||
        !catchable_by_javascript);
 
   if (*is_caught_externally) {
     // Only report the exception if the external handler is verbose.
-    return thread_local_.try_catch_handler_->is_verbose_;
+    return thread_local_.TryCatchHandler()->is_verbose_;
   } else {
     // Report the exception if it isn't caught by JavaScript code.
     return handler == NULL;
@@ -762,17 +763,22 @@ void Top::DoThrow(Object* exception,
   MessageLocation potential_computed_location;
   bool try_catch_needs_message =
       is_caught_externally &&
-      thread_local_.try_catch_handler_->capture_message_;
+      thread_local_.TryCatchHandler()->capture_message_;
   if (report_exception || try_catch_needs_message) {
     if (location == NULL) {
       // If no location was specified we use a computed one instead
       ComputeLocation(&potential_computed_location);
       location = &potential_computed_location;
     }
-    Handle<String> stack_trace;
-    if (FLAG_trace_exception) stack_trace = StackTrace();
-    message_obj = MessageHandler::MakeMessageObject("uncaught_exception",
-        location, HandleVector<Object>(&exception_handle, 1), stack_trace);
+    if (!Bootstrapper::IsActive()) {
+      // It's not safe to try to make message objects or collect stack
+      // traces while the bootstrapper is active since the infrastructure
+      // may not have been properly initialized.
+      Handle<String> stack_trace;
+      if (FLAG_trace_exception) stack_trace = StackTrace();
+      message_obj = MessageHandler::MakeMessageObject("uncaught_exception",
+          location, HandleVector<Object>(&exception_handle, 1), stack_trace);
+    }
   }
 
   // Save the message for reporting if the the exception remains uncaught.
@@ -788,7 +794,7 @@ void Top::DoThrow(Object* exception,
   }
 
   if (is_caught_externally) {
-    thread_local_.catcher_ = thread_local_.try_catch_handler_;
+    thread_local_.catcher_ = thread_local_.TryCatchHandler();
   }
 
   // NOTE: Notifying the debugger or generating the message
@@ -812,15 +818,15 @@ void Top::ReportPendingMessages() {
   } else if (thread_local_.pending_exception_ ==
              Heap::termination_exception()) {
     if (external_caught) {
-      thread_local_.try_catch_handler_->can_continue_ = false;
-      thread_local_.try_catch_handler_->exception_ = Heap::null_value();
+      thread_local_.TryCatchHandler()->can_continue_ = false;
+      thread_local_.TryCatchHandler()->exception_ = Heap::null_value();
     }
   } else {
     Handle<Object> exception(pending_exception());
     thread_local_.external_caught_exception_ = false;
     if (external_caught) {
-      thread_local_.try_catch_handler_->can_continue_ = true;
-      thread_local_.try_catch_handler_->exception_ =
+      thread_local_.TryCatchHandler()->can_continue_ = true;
+      thread_local_.TryCatchHandler()->exception_ =
         thread_local_.pending_exception_;
       if (!thread_local_.pending_message_obj_->IsTheHole()) {
         try_catch_handler()->message_ = thread_local_.pending_message_obj_;
@@ -874,9 +880,9 @@ bool Top::OptionalRescheduleException(bool is_bottom_call) {
       // If the exception is externally caught, clear it if there are no
       // JavaScript frames on the way to the C++ frame that has the
       // external handler.
-      ASSERT(thread_local_.try_catch_handler_ != NULL);
+      ASSERT(thread_local_.try_catch_handler_address() != NULL);
       Address external_handler_address =
-          reinterpret_cast<Address>(thread_local_.try_catch_handler_);
+          thread_local_.try_catch_handler_address();
       JavaScriptFrameIterator it;
       if (it.done() || (it.frame()->sp() > external_handler_address)) {
         clear_exception = true;
@@ -923,6 +929,19 @@ Handle<Context> Top::global_context() {
 
 Handle<Context> Top::GetCallingGlobalContext() {
   JavaScriptFrameIterator it;
+#ifdef ENABLE_DEBUGGER_SUPPORT
+  if (Debug::InDebugger()) {
+    while (!it.done()) {
+      JavaScriptFrame* frame = it.frame();
+      Context* context = Context::cast(frame->context());
+      if (context->global_context() == *Debug::debug_context()) {
+        it.Advance();
+      } else {
+        break;
+      }
+    }
+  }
+#endif  // ENABLE_DEBUGGER_SUPPORT
   if (it.done()) return Handle<Context>::null();
   JavaScriptFrame* frame = it.frame();
   Context* context = Context::cast(frame->context());

@@ -188,6 +188,11 @@ class EXPORT Debug {
    */
   typedef void (*HostDispatchHandler)();
 
+  /**
+   * Callback function for the host to ensure debug messages are processed.
+   */
+  typedef void (*DebugMessageDispatchHandler)();
+
   // Set a C debug event listener.
   static bool SetDebugEventListener(EventCallback that,
                                     Handle<Value> data = Handle<Value>());
@@ -210,6 +215,18 @@ class EXPORT Debug {
   // Dispatch interface.
   static void SetHostDispatchHandler(HostDispatchHandler handler,
                                      int period = 100);
+
+  /**
+   * Register a callback function to be called when a debug message has been
+   * received and is ready to be processed. For the debug messages to be
+   * processed V8 needs to be entered, and in certain embedding scenarios this
+   * callback can be used to make sure V8 is entered for the debug message to
+   * be processed. Note that debug messages will only be processed if there is
+   * a V8 break. This can happen automatically by using the option
+   * --debugger-auto-break.
+   */
+  static void SetDebugMessageDispatchHandler(
+      DebugMessageDispatchHandler handler);
 
  /**
   * Run a JavaScript function in the debugger.
@@ -241,8 +258,11 @@ class EXPORT Debug {
   * supplied TCP/IP port for remote debugger connection.
   * \param name the name of the embedding application
   * \param port the TCP/IP port to listen on
+  * \param wait_for_connection whether V8 should pause on a first statement
+  *   allowing remote debugger to connect before anything interesting happened
   */
-  static bool EnableAgent(const char* name, int port);
+  static bool EnableAgent(const char* name, int port,
+                          bool wait_for_connection = false);
 };
 
 

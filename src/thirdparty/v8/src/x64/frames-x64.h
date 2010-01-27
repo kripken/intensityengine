@@ -31,9 +31,6 @@
 namespace v8 {
 namespace internal {
 
-// TODO(x64): This is a stub, mostly just a copy of the ia32 bit version.
-// This might all need to change to be correct for x64.
-
 static const int kNumRegs = 8;
 static const RegList kJSCallerSaved =
     1 << 0 |  // rax
@@ -66,7 +63,7 @@ class EntryFrameConstants : public AllStatic {
 
 class ExitFrameConstants : public AllStatic {
  public:
-  static const int kDebugMarkOffset = -2 * kPointerSize;
+  static const int kCodeOffset      = -2 * kPointerSize;
   static const int kSPOffset        = -1 * kPointerSize;
 
   static const int kCallerFPOffset  = +0 * kPointerSize;

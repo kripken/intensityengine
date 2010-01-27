@@ -180,6 +180,9 @@ class VirtualFrame : public ZoneObject {
   // shared return site.  Emits code for spills.
   void PrepareForReturn();
 
+  // Number of local variables after when we use a loop for allocating.
+  static const int kLocalVarBound = 5;
+
   // Allocate and initialize the frame-allocated locals.
   void AllocateStackSlots();
 
@@ -305,7 +308,6 @@ class VirtualFrame : public ZoneObject {
   // removes from) the stack.
   void InvokeBuiltin(Builtins::JavaScript id,
                      InvokeJSFlags flag,
-                     Result* arg_count_register,
                      int arg_count);
 
   // Call into an IC stub given the number of arguments it removes
@@ -346,6 +348,11 @@ class VirtualFrame : public ZoneObject {
   // Push an element on top of the expression stack and emit a
   // corresponding push instruction.
   void EmitPush(Register reg);
+
+  // Push multiple registers on the stack and the virtual frame
+  // Register are selected by setting bit in src_regs and
+  // are pushed in decreasing order: r15 .. r0.
+  void EmitPushMultiple(int count, int src_regs);
 
   // Push an element on the virtual frame.
   void Push(Register reg);

@@ -30,13 +30,7 @@
 #include "assembler.h"
 #include "regexp-stack.h"
 #include "regexp-macro-assembler.h"
-#if V8_TARGET_ARCH_ARM
-#include "arm/simulator-arm.h"
-#elif V8_TARGET_ARCH_IA32
-#include "ia32/simulator-ia32.h"
-#elif V8_TARGET_ARCH_X64
-#include "x64/simulator-x64.h"
-#endif
+#include "simulator.h"
 
 namespace v8 {
 namespace internal {
@@ -130,11 +124,6 @@ NativeRegExpMacroAssembler::Result NativeRegExpMacroAssembler::Match(
 
   if (StringShape(subject_ptr).IsCons()) {
     subject_ptr = ConsString::cast(subject_ptr)->first();
-  } else if (StringShape(subject_ptr).IsSliced()) {
-    SlicedString* slice = SlicedString::cast(subject_ptr);
-    start_offset += slice->start();
-    end_offset += slice->start();
-    subject_ptr = slice->buffer();
   }
   // Ensure that an underlying string has the same ascii-ness.
   ASSERT(subject_ptr->IsAsciiRepresentation() == is_ascii);
@@ -154,17 +143,6 @@ NativeRegExpMacroAssembler::Result NativeRegExpMacroAssembler::Match(
                        input_end,
                        offsets_vector,
                        previous_index == 0);
-
-  if (res == SUCCESS) {
-    // Capture values are relative to start_offset only.
-    // Convert them to be relative to start of string.
-    for (int i = 0; i < offsets_vector_length; i++) {
-      if (offsets_vector[i] >= 0) {
-        offsets_vector[i] += previous_index;
-      }
-    }
-  }
-
   return res;
 }
 
@@ -178,7 +156,7 @@ NativeRegExpMacroAssembler::Result NativeRegExpMacroAssembler::Execute(
     int* output,
     bool at_start) {
   typedef int (*matcher)(String*, int, const byte*,
-                         const byte*, int*, int, Address);
+                         const byte*, int*, int, Address, int);
   matcher matcher_func = FUNCTION_CAST<matcher>(code->entry());
 
   int at_start_val = at_start ? 1 : 0;
@@ -187,6 +165,7 @@ NativeRegExpMacroAssembler::Result NativeRegExpMacroAssembler::Execute(
   RegExpStack stack;
   Address stack_base = RegExpStack::stack_base();
 
+  int direct_call = 0;
   int result = CALL_GENERATED_REGEXP_CODE(matcher_func,
                                           input,
                                           start_offset,
@@ -194,7 +173,8 @@ NativeRegExpMacroAssembler::Result NativeRegExpMacroAssembler::Execute(
                                           input_end,
                                           output,
                                           at_start_val,
-                                          stack_base);
+                                          stack_base,
+                                          direct_call);
   ASSERT(result <= SUCCESS);
   ASSERT(result >= RETRY);
 

@@ -37,6 +37,8 @@
 #ifndef V8_X64_ASSEMBLER_X64_H_
 #define V8_X64_ASSEMBLER_X64_H_
 
+#include "serialize.h"
+
 namespace v8 {
 namespace internal {
 
@@ -222,13 +224,18 @@ enum Condition {
   less_equal    = 14,
   greater       = 15,
 
+  // Fake conditions that are handled by the
+  // opcodes using them.
+  always        = 16,
+  never         = 17,
   // aliases
   carry         = below,
   not_carry     = above_equal,
   zero          = equal,
   not_zero      = not_equal,
   sign          = negative,
-  not_sign      = positive
+  not_sign      = positive,
+  last_condition = greater
 };
 
 
@@ -284,7 +291,6 @@ inline Hint NegateHint(Hint hint) {
 class Immediate BASE_EMBEDDED {
  public:
   explicit Immediate(int32_t value) : value_(value) {}
-  inline explicit Immediate(Smi* value);
 
  private:
   int32_t value_;
@@ -358,50 +364,48 @@ class Operand BASE_EMBEDDED {
 //   }
 class CpuFeatures : public AllStatic {
  public:
-  // Feature flags bit positions. They are mostly based on the CPUID spec.
-  // (We assign CPUID itself to one of the currently reserved bits --
-  // feel free to change this if needed.)
-  enum Feature { SSE3 = 32,
-                 SSE2 = 26,
-                 CMOV = 15,
-                 RDTSC = 4,
-                 CPUID = 10,
-                 SAHF = 0};
   // Detect features of the target CPU. Set safe defaults if the serializer
   // is enabled (snapshots must be portable).
   static void Probe();
   // Check whether a feature is supported by the target CPU.
-  static bool IsSupported(Feature f) {
+  static bool IsSupported(CpuFeature f) {
+    if (f == SSE2 && !FLAG_enable_sse2) return false;
+    if (f == SSE3 && !FLAG_enable_sse3) return false;
+    if (f == CMOV && !FLAG_enable_cmov) return false;
+    if (f == RDTSC && !FLAG_enable_rdtsc) return false;
+    if (f == SAHF && !FLAG_enable_sahf) return false;
     return (supported_ & (V8_UINT64_C(1) << f)) != 0;
   }
   // Check whether a feature is currently enabled.
-  static bool IsEnabled(Feature f) {
+  static bool IsEnabled(CpuFeature f) {
     return (enabled_ & (V8_UINT64_C(1) << f)) != 0;
   }
   // Enable a specified feature within a scope.
   class Scope BASE_EMBEDDED {
 #ifdef DEBUG
    public:
-    explicit Scope(Feature f) {
+    explicit Scope(CpuFeature f) {
+      uint64_t mask = (V8_UINT64_C(1) << f);
       ASSERT(CpuFeatures::IsSupported(f));
+      ASSERT(!Serializer::enabled() || (found_by_runtime_probing_ & mask) == 0);
       old_enabled_ = CpuFeatures::enabled_;
-      CpuFeatures::enabled_ |= (V8_UINT64_C(1) << f);
+      CpuFeatures::enabled_ |= mask;
     }
     ~Scope() { CpuFeatures::enabled_ = old_enabled_; }
    private:
     uint64_t old_enabled_;
 #else
    public:
-    explicit Scope(Feature f) {}
+    explicit Scope(CpuFeature f) {}
 #endif
   };
  private:
   // Safe defaults include SSE2 and CMOV for X64. It is always available, if
   // anyone checks, but they shouldn't need to check.
-  static const uint64_t kDefaultCpuFeatures =
-      (1 << CpuFeatures::SSE2 | 1 << CpuFeatures::CMOV);
+  static const uint64_t kDefaultCpuFeatures = (1 << SSE2 | 1 << CMOV);
   static uint64_t supported_;
   static uint64_t enabled_;
+  static uint64_t found_by_runtime_probing_;
 };
 
 
@@ -440,17 +444,49 @@ class Assembler : public Malloced {
   // Assembler functions are invoked in between GetCode() calls.
   void GetCode(CodeDesc* desc);
 
-  // Read/Modify the code target in the branch/call instruction at pc.
-  // On the x64 architecture, the address is absolute, not relative.
+  // Read/Modify the code target in the relative branch/call instruction at pc.
+  // On the x64 architecture, we use relative jumps with a 32-bit displacement
+  // to jump to other Code objects in the Code space in the heap.
+  // Jumps to C functions are done indirectly through a 64-bit register holding
+  // the absolute address of the target.
+  // These functions convert between absolute Addresses of Code objects and
+  // the relative displacements stored in the code.
   static inline Address target_address_at(Address pc);
   static inline void set_target_address_at(Address pc, Address target);
 
+  // This sets the branch destination (which is in the instruction on x64).
+  // This is for calls and branches within generated code.
+  inline static void set_target_at(Address instruction_payload,
+                                   Address target) {
+    set_target_address_at(instruction_payload, target);
+  }
+
+  // This sets the branch destination (which is a load instruction on x64).
+  // This is for calls and branches to runtime code.
+  inline static void set_external_target_at(Address instruction_payload,
+                                            Address target) {
+    *reinterpret_cast<Address*>(instruction_payload) = target;
+  }
+
+  inline Handle<Object> code_target_object_handle_at(Address pc);
+  // Number of bytes taken up by the branch target in the code.
+  static const int kCallTargetSize = 4;      // Use 32-bit displacement.
+  static const int kExternalTargetSize = 8;  // Use 64-bit absolute.
   // Distance between the address of the code target in the call instruction
-  // and the return address.  Checked in the debug build.
-  static const int kPatchReturnSequenceLength = 3 + kPointerSize;
-  // Distance between start of patched return sequence and the emitted address
-  // to jump to (movq = REX.W 0xB8+r.).
-  static const int kPatchReturnSequenceAddressOffset = 2;
+  // and the return address pushed on the stack.
+  static const int kCallTargetAddressOffset = 4;  // Use 32-bit displacement.
+  // Distance between the start of the JS return sequence and where the
+  // 32-bit displacement of a near call would be, relative to the pushed
+  // return address.  TODO: Use return sequence length instead.
+  // Should equal Debug::kX64JSReturnSequenceLength - kCallTargetAddressOffset;
+  static const int kPatchReturnSequenceAddressOffset = 13 - 4;
+  // TODO(X64): Rename this, removing the "Real", after changing the above.
+  static const int kRealPatchReturnSequenceAddressOffset = 2;
+
+  // The x64 JS return sequence is padded with int3 to make it large
+  // enough to hold a call instruction when the debugger patches it.
+  static const int kCallInstructionLength = 13;
+  static const int kJSReturnSequenceLength = 13;
 
   // ---------------------------------------------------------------------------
   // Code generation
@@ -496,6 +532,10 @@ class Assembler : public Malloced {
   void movb(Register dst, Immediate imm);
   void movb(const Operand& dst, Register src);
 
+  // Move the low 16 bits of a 64-bit register value to a 16-bit
+  // memory location.
+  void movw(const Operand& dst, Register src);
+
   void movl(Register dst, Register src);
   void movl(Register dst, const Operand& src);
   void movl(const Operand& dst, Register src);
@@ -525,10 +565,13 @@ class Assembler : public Malloced {
   void movq(Register dst, ExternalReference ext);
   void movq(Register dst, Handle<Object> handle, RelocInfo::Mode rmode);
 
+  void movsxbq(Register dst, const Operand& src);
+  void movsxwq(Register dst, const Operand& src);
   void movsxlq(Register dst, Register src);
   void movsxlq(Register dst, const Operand& src);
   void movzxbq(Register dst, const Operand& src);
   void movzxbl(Register dst, const Operand& src);
+  void movzxwq(Register dst, const Operand& src);
   void movzxwl(Register dst, const Operand& src);
 
   // New x64 instruction to load from an immediate 64-bit pointer into RAX.
@@ -687,10 +730,21 @@ class Assembler : public Malloced {
     immediate_arithmetic_op(0x4, dst, src);
   }
 
+  void andl(Register dst, Immediate src) {
+    immediate_arithmetic_op_32(0x4, dst, src);
+  }
+
+  void andl(Register dst, Register src) {
+    arithmetic_op_32(0x23, dst, src);
+  }
+
+
   void decq(Register dst);
   void decq(const Operand& dst);
   void decl(Register dst);
   void decl(const Operand& dst);
+  void decb(Register dst);
+  void decb(const Operand& dst);
 
   // Sign-extends rax into rdx:rax.
   void cqo();
@@ -721,12 +775,17 @@ class Assembler : public Malloced {
 
   void neg(Register dst);
   void neg(const Operand& dst);
+  void negl(Register dst);
 
   void not_(Register dst);
   void not_(const Operand& dst);
 
   void or_(Register dst, Register src) {
     arithmetic_op(0x0B, dst, src);
+  }
+
+  void orl(Register dst, Register src) {
+    arithmetic_op_32(0x0B, dst, src);
   }
 
   void or_(Register dst, const Operand& src) {
@@ -741,12 +800,34 @@ class Assembler : public Malloced {
     immediate_arithmetic_op(0x1, dst, src);
   }
 
+  void orl(Register dst, Immediate src) {
+    immediate_arithmetic_op_32(0x1, dst, src);
+  }
+
   void or_(const Operand& dst, Immediate src) {
     immediate_arithmetic_op(0x1, dst, src);
   }
 
+  void orl(const Operand& dst, Immediate src) {
+    immediate_arithmetic_op_32(0x1, dst, src);
+  }
 
-  void rcl(Register dst, uint8_t imm8);
+
+  void rcl(Register dst, Immediate imm8) {
+    shift(dst, imm8, 0x2);
+  }
+
+  void rol(Register dst, Immediate imm8) {
+    shift(dst, imm8, 0x0);
+  }
+
+  void rcr(Register dst, Immediate imm8) {
+    shift(dst, imm8, 0x3);
+  }
+
+  void ror(Register dst, Immediate imm8) {
+    shift(dst, imm8, 0x1);
+  }
 
   // Shifts dst:src left by cl bits, affecting only dst.
   void shld(Register dst, Register src);
@@ -767,12 +848,12 @@ class Assembler : public Malloced {
   }
 
   // Shifts dst right, duplicating sign bit, by cl % 64 bits.
-  void sar(Register dst) {
+  void sar_cl(Register dst) {
     shift(dst, 0x7);
   }
 
   // Shifts dst right, duplicating sign bit, by cl % 64 bits.
-  void sarl(Register dst) {
+  void sarl_cl(Register dst) {
     shift_32(dst, 0x7);
   }
 
@@ -780,11 +861,11 @@ class Assembler : public Malloced {
     shift(dst, shift_amount, 0x4);
   }
 
-  void shl(Register dst) {
+  void shl_cl(Register dst) {
     shift(dst, 0x4);
   }
 
-  void shll(Register dst) {
+  void shll_cl(Register dst) {
     shift_32(dst, 0x4);
   }
 
@@ -796,11 +877,11 @@ class Assembler : public Malloced {
     shift(dst, shift_amount, 0x5);
   }
 
-  void shr(Register dst) {
+  void shr_cl(Register dst) {
     shift(dst, 0x5);
   }
 
-  void shrl(Register dst) {
+  void shrl_cl(Register dst) {
     shift_32(dst, 0x5);
   }
 
@@ -847,6 +928,7 @@ class Assembler : public Malloced {
     immediate_arithmetic_op_8(0x5, dst, src);
   }
 
+  void testb(Register dst, Register src);
   void testb(Register reg, Immediate mask);
   void testb(const Operand& op, Immediate mask);
   void testl(Register dst, Register src);
@@ -857,7 +939,15 @@ class Assembler : public Malloced {
   void testq(Register dst, Immediate mask);
 
   void xor_(Register dst, Register src) {
-    arithmetic_op(0x33, dst, src);
+    if (dst.code() == src.code()) {
+      arithmetic_op_32(0x33, dst, src);
+    } else {
+      arithmetic_op(0x33, dst, src);
+    }
+  }
+
+  void xorl(Register dst, Register src) {
+    arithmetic_op_32(0x33, dst, src);
   }
 
   void xor_(Register dst, const Operand& src) {
@@ -881,6 +971,7 @@ class Assembler : public Malloced {
   void bts(const Operand& dst, Register src);
 
   // Miscellaneous
+  void clc();
   void cpuid();
   void hlt();
   void int3();
@@ -910,6 +1001,7 @@ class Assembler : public Malloced {
   // Calls
   // Call near relative 32-bit displacement, relative to next instruction.
   void call(Label* L);
+  void call(Handle<Code> target, RelocInfo::Mode rmode);
 
   // Call near absolute indirect, address in register
   void call(Register adr);
@@ -919,7 +1011,9 @@ class Assembler : public Malloced {
 
   // Jumps
   // Jump short or near relative.
+  // Use a 32-bit signed displacement.
   void jmp(Label* L);  // unconditional jump to L
+  void jmp(Handle<Code> target, RelocInfo::Mode rmode);
 
   // Jump near absolute indirect (r64)
   void jmp(Register adr);
@@ -929,6 +1023,7 @@ class Assembler : public Malloced {
 
   // Conditional jumps
   void j(Condition cc, Label* L);
+  void j(Condition cc, Handle<Code> target, RelocInfo::Mode rmode);
 
   // Floating-point operations
   void fld(int i);
@@ -941,6 +1036,7 @@ class Assembler : public Malloced {
 
   void fstp_s(const Operand& adr);
   void fstp_d(const Operand& adr);
+  void fstp(int index);
 
   void fild_s(const Operand& adr);
   void fild_d(const Operand& adr);
@@ -977,6 +1073,9 @@ class Assembler : public Malloced {
   void ftst();
   void fucomp(int i);
   void fucompp();
+  void fucomi(int i);
+  void fucomip();
+
   void fcompp();
   void fnstsw_ax();
   void fwait();
@@ -991,8 +1090,7 @@ class Assembler : public Malloced {
 
   // SSE2 instructions
   void movsd(const Operand& dst, XMMRegister src);
-  void movsd(Register src, XMMRegister dst);
-  void movsd(XMMRegister dst, Register src);
+  void movsd(XMMRegister src, XMMRegister dst);
   void movsd(XMMRegister src, const Operand& dst);
 
   void cvttss2si(Register dst, const Operand& src);
@@ -1034,25 +1132,21 @@ class Assembler : public Malloced {
   void RecordStatementPosition(int pos);
   void WriteRecordedPositions();
 
-  // Writes a doubleword of data in the code stream.
-  // Used for inline tables, e.g., jump-tables.
-  // void dd(uint32_t data);
-
-  // Writes a quadword of data in the code stream.
-  // Used for inline tables, e.g., jump-tables.
-  // void dd(uint64_t data, RelocInfo::Mode reloc_info);
-
-  int pc_offset() const  { return pc_ - buffer_; }
+  int pc_offset() const  { return static_cast<int>(pc_ - buffer_); }
   int current_statement_position() const { return current_statement_position_; }
   int current_position() const  { return current_position_; }
 
   // Check if there is less than kGap bytes available in the buffer.
   // If this is the case, we need to grow the buffer before emitting
   // an instruction or relocation information.
-  inline bool overflow() const { return pc_ >= reloc_info_writer.pos() - kGap; }
+  inline bool buffer_overflow() const {
+    return pc_ >= reloc_info_writer.pos() - kGap;
+  }
 
   // Get the number of bytes available in the buffer.
-  inline int available_space() const { return reloc_info_writer.pos() - pc_; }
+  inline int available_space() const {
+    return static_cast<int>(reloc_info_writer.pos() - pc_);
+  }
 
   // Avoid overflows for displacements etc.
   static const int kMaximalBufferSize = 512*MB;
@@ -1081,9 +1175,9 @@ class Assembler : public Malloced {
 
   void emit(byte x) { *pc_++ = x; }
   inline void emitl(uint32_t x);
-  inline void emit(Handle<Object> handle);
   inline void emitq(uint64_t x, RelocInfo::Mode rmode);
   inline void emitw(uint16_t x);
+  inline void emit_code_target(Handle<Code> target, RelocInfo::Mode rmode);
   void emit(Immediate x) { emitl(x.value_); }
 
   // Emits a REX prefix that encodes a 64-bit operand size and
@@ -1261,6 +1355,7 @@ class Assembler : public Malloced {
   byte* pc_;  // the program counter; moves forward
   RelocInfoWriter reloc_info_writer;
 
+  List< Handle<Code> > code_targets_;
   // push-pop elimination
   byte* last_pc_;
 
@@ -1279,7 +1374,7 @@ class Assembler : public Malloced {
 class EnsureSpace BASE_EMBEDDED {
  public:
   explicit EnsureSpace(Assembler* assembler) : assembler_(assembler) {
-    if (assembler_->overflow()) assembler_->GrowBuffer();
+    if (assembler_->buffer_overflow()) assembler_->GrowBuffer();
 #ifdef DEBUG
     space_before_ = assembler_->available_space();
 #endif

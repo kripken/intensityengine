@@ -191,6 +191,7 @@ class RelocInfo BASE_EMBEDDED {
   INLINE(Address target_address());
   INLINE(void set_target_address(Address target));
   INLINE(Object* target_object());
+  INLINE(Handle<Object> target_object_handle(Assembler* origin));
   INLINE(Object** target_object_address());
   INLINE(void set_target_object(Object* target));
 
@@ -216,10 +217,10 @@ class RelocInfo BASE_EMBEDDED {
 
   // Patch the code with a call.
   void PatchCodeWithCall(Address target, int guard_bytes);
-  // Check whether the current instruction is currently a call
-  // sequence (whether naturally or a return sequence overwritten
-  // to enter the debugger).
-  INLINE(bool IsCallInstruction());
+
+  // Check whether this return sequence has been patched
+  // with a call to the debugger.
+  INLINE(bool IsPatchedReturnSequence());
 
 #ifdef ENABLE_DISASSEMBLER
   // Printing
@@ -372,6 +373,8 @@ class ExternalReference BASE_EMBEDDED {
  public:
   explicit ExternalReference(Builtins::CFunctionId id);
 
+  explicit ExternalReference(ApiFunction* ptr);
+
   explicit ExternalReference(Builtins::Name name);
 
   explicit ExternalReference(Runtime::FunctionId id);
@@ -398,6 +401,10 @@ class ExternalReference BASE_EMBEDDED {
   static ExternalReference builtin_passed_function();
   static ExternalReference random_positive_smi_function();
 
+  // Static data in the keyed lookup cache.
+  static ExternalReference keyed_lookup_cache_keys();
+  static ExternalReference keyed_lookup_cache_field_offsets();
+
   // Static variable Factory::the_hole_value.location()
   static ExternalReference the_hole_value_location();
 
@@ -405,10 +412,18 @@ class ExternalReference BASE_EMBEDDED {
   static ExternalReference roots_address();
 
   // Static variable StackGuard::address_of_jslimit()
-  static ExternalReference address_of_stack_guard_limit();
+  static ExternalReference address_of_stack_limit();
+
+  // Static variable StackGuard::address_of_real_jslimit()
+  static ExternalReference address_of_real_stack_limit();
 
   // Static variable RegExpStack::limit_address()
   static ExternalReference address_of_regexp_stack_limit();
+
+  // Static variables for RegExp.
+  static ExternalReference address_of_static_offsets_vector();
+  static ExternalReference address_of_regexp_stack_memory_address();
+  static ExternalReference address_of_regexp_stack_memory_size();
 
   // Static variable Heap::NewSpaceStart()
   static ExternalReference new_space_start();
@@ -420,6 +435,12 @@ class ExternalReference BASE_EMBEDDED {
 
   static ExternalReference double_fp_operation(Token::Value operation);
   static ExternalReference compare_doubles();
+
+  static ExternalReference handle_scope_extensions_address();
+  static ExternalReference handle_scope_next_address();
+  static ExternalReference handle_scope_limit_address();
+
+  static ExternalReference scheduled_exception_address();
 
   Address address() const {return reinterpret_cast<Address>(address_);}
 
@@ -459,12 +480,16 @@ class ExternalReference BASE_EMBEDDED {
 
   static void* Redirect(void* address, bool fp_return = false) {
     if (redirector_ == NULL) return address;
-    return (*redirector_)(address, fp_return);
+    void* answer = (*redirector_)(address, fp_return);
+    return answer;
   }
 
   static void* Redirect(Address address_arg, bool fp_return = false) {
     void* address = reinterpret_cast<void*>(address_arg);
-    return redirector_ == NULL ? address : (*redirector_)(address, fp_return);
+    void* answer = (redirector_ == NULL) ?
+                   address :
+                   (*redirector_)(address, fp_return);
+    return answer;
   }
 
   void* address_;

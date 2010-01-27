@@ -38,11 +38,6 @@ Condition NegateCondition(Condition cc) {
   return static_cast<Condition>(cc ^ 1);
 }
 
-// -----------------------------------------------------------------------------
-
-Immediate::Immediate(Smi* value) {
-  value_ = static_cast<int32_t>(reinterpret_cast<intptr_t>(value));
-}
 
 // -----------------------------------------------------------------------------
 // Implementation of Assembler
@@ -67,6 +62,20 @@ void Assembler::emitq(uint64_t x, RelocInfo::Mode rmode) {
 void Assembler::emitw(uint16_t x) {
   Memory::uint16_at(pc_) = x;
   pc_ += sizeof(uint16_t);
+}
+
+
+void Assembler::emit_code_target(Handle<Code> target, RelocInfo::Mode rmode) {
+  ASSERT(RelocInfo::IsCodeTarget(rmode));
+  RecordRelocInfo(rmode);
+  int current = code_targets_.length();
+  if (current > 0 && code_targets_.last().is_identical_to(target)) {
+    // Optimization if we keep jumping to the same code target.
+    emitl(current - 1);
+  } else {
+    code_targets_.Add(target);
+    emitl(current);
+  }
 }
 
 
@@ -162,15 +171,18 @@ void Assembler::emit_optional_rex_32(const Operand& op) {
 
 
 Address Assembler::target_address_at(Address pc) {
-  return Memory::Address_at(pc);
+  return Memory::int32_at(pc) + pc + 4;
 }
 
 
 void Assembler::set_target_address_at(Address pc, Address target) {
-  Memory::Address_at(pc) = target;
-  CPU::FlushICache(pc, sizeof(intptr_t));
+  Memory::int32_at(pc) = static_cast<int32_t>(target - pc - 4);
+  CPU::FlushICache(pc, sizeof(int32_t));
 }
 
+Handle<Object> Assembler::code_target_object_handle_at(Address pc) {
+  return code_targets_[Memory::int32_at(pc)];
+}
 
 // -----------------------------------------------------------------------------
 // Implementation of RelocInfo
@@ -179,15 +191,24 @@ void Assembler::set_target_address_at(Address pc, Address target) {
 void RelocInfo::apply(intptr_t delta) {
   if (IsInternalReference(rmode_)) {
     // absolute code pointer inside code object moves with the code object.
-    intptr_t* p = reinterpret_cast<intptr_t*>(pc_);
-    *p += delta;  // relocate entry
+    Memory::Address_at(pc_) += static_cast<int32_t>(delta);
+  } else if (IsCodeTarget(rmode_)) {
+    Memory::int32_at(pc_) -= static_cast<int32_t>(delta);
+  } else if (rmode_ == JS_RETURN && IsPatchedReturnSequence()) {
+    // Special handling of js_return when a break point is set (call
+    // instruction has been inserted).
+    Memory::int32_at(pc_ + 1) -= static_cast<int32_t>(delta);  // relocate entry
   }
 }
 
 
 Address RelocInfo::target_address() {
   ASSERT(IsCodeTarget(rmode_) || rmode_ == RUNTIME_ENTRY);
-  return Assembler::target_address_at(pc_);
+  if (IsCodeTarget(rmode_)) {
+    return Assembler::target_address_at(pc_);
+  } else {
+    return Memory::Address_at(pc_);
+  }
 }
 
 
@@ -199,13 +220,27 @@ Address RelocInfo::target_address_address() {
 
 void RelocInfo::set_target_address(Address target) {
   ASSERT(IsCodeTarget(rmode_) || rmode_ == RUNTIME_ENTRY);
-  Assembler::set_target_address_at(pc_, target);
+  if (IsCodeTarget(rmode_)) {
+    Assembler::set_target_address_at(pc_, target);
+  } else {
+    Memory::Address_at(pc_) = target;
+  }
 }
 
 
 Object* RelocInfo::target_object() {
   ASSERT(IsCodeTarget(rmode_) || rmode_ == EMBEDDED_OBJECT);
-  return *reinterpret_cast<Object**>(pc_);
+  return Memory::Object_at(pc_);
+}
+
+
+Handle<Object> RelocInfo::target_object_handle(Assembler *origin) {
+  ASSERT(IsCodeTarget(rmode_) || rmode_ == EMBEDDED_OBJECT);
+  if (rmode_ == EMBEDDED_OBJECT) {
+    return Memory::Object_Handle_at(pc_);
+  } else {
+    return origin->code_target_object_handle_at(pc_);
+  }
 }
 
 
@@ -227,46 +262,49 @@ void RelocInfo::set_target_object(Object* target) {
 }
 
 
-bool RelocInfo::IsCallInstruction() {
+bool RelocInfo::IsPatchedReturnSequence() {
   // The recognized call sequence is:
   //  movq(kScratchRegister, immediate64); call(kScratchRegister);
   // It only needs to be distinguished from a return sequence
   //  movq(rsp, rbp); pop(rbp); ret(n); int3 *6
   // The 11th byte is int3 (0xCC) in the return sequence and
   // REX.WB (0x48+register bit) for the call sequence.
+#ifdef ENABLE_DEBUGGER_SUPPORT
   return pc_[10] != 0xCC;
+#else
+  return false;
+#endif
 }
 
 
 Address RelocInfo::call_address() {
-  ASSERT(IsCallInstruction());
-  return Assembler::target_address_at(
-      pc_ + Assembler::kPatchReturnSequenceAddressOffset);
+  ASSERT(IsPatchedReturnSequence());
+  return Memory::Address_at(
+      pc_ + Assembler::kRealPatchReturnSequenceAddressOffset);
 }
 
 
 void RelocInfo::set_call_address(Address target) {
-  ASSERT(IsCallInstruction());
-  Assembler::set_target_address_at(
-      pc_ + Assembler::kPatchReturnSequenceAddressOffset,
-      target);
+  ASSERT(IsPatchedReturnSequence());
+  Memory::Address_at(pc_ + Assembler::kRealPatchReturnSequenceAddressOffset) =
+      target;
 }
 
 
 Object* RelocInfo::call_object() {
-  ASSERT(IsCallInstruction());
+  ASSERT(IsPatchedReturnSequence());
   return *call_object_address();
 }
 
 
 void RelocInfo::set_call_object(Object* target) {
-  ASSERT(IsCallInstruction());
+  ASSERT(IsPatchedReturnSequence());
   *call_object_address() = target;
 }
 
 
 Object** RelocInfo::call_object_address() {
-  ASSERT(IsCallInstruction());
+  ASSERT(IsPatchedReturnSequence());
   return reinterpret_cast<Object**>(
       pc_ + Assembler::kPatchReturnSequenceAddressOffset);
 }

@@ -188,7 +188,7 @@ void StringStream::Add(Vector<const char> format, Vector<FmtElm> elms) {
 void StringStream::PrintObject(Object* o) {
   o->ShortPrint(this);
   if (o->IsString()) {
-    if (String::cast(o)->length() <= String::kMaxMediumStringSize) {
+    if (String::cast(o)->length() <= String::kMaxShortPrintLength) {
       return;
     }
   } else if (o->IsNumber() || o->IsOddball()) {
@@ -251,7 +251,7 @@ void StringStream::Add(const char* format, FmtElm arg0, FmtElm arg1,
 }
 
 
-SmartPointer<const char> StringStream::ToCString() {
+SmartPointer<const char> StringStream::ToCString() const {
   char* str = NewArray<char>(length_ + 1);
   memcpy(str, buffer_, length_);
   str[length_] = '\0';

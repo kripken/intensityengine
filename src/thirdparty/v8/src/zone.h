@@ -118,7 +118,7 @@ class Zone {
 class ZoneObject {
  public:
   // Allocate a new ZoneObject of 'size' bytes in the Zone.
-  void* operator new(size_t size) { return Zone::New(size); }
+  void* operator new(size_t size) { return Zone::New(static_cast<int>(size)); }
 
   // Ideally, the delete operator should be private instead of
   // public, but unfortunately the compiler sometimes synthesizes
@@ -202,10 +202,6 @@ class ZoneScope BASE_EMBEDDED {
   ZoneScopeMode mode_;
   static int nesting_;
 };
-
-
-template <typename Node, class Callback>
-static void DoForEach(Node* node, Callback* callback);
 
 
 // A zone splay tree.  The config type parameter encapsulates the
@@ -297,9 +293,7 @@ class ZoneSplayTree : public ZoneObject {
   };
 
   template <class Callback>
-  void ForEach(Callback* c) {
-    DoForEach<typename ZoneSplayTree<Config>::Node, Callback>(root_, c);
-  }
+  void ForEach(Callback* callback);
 
  private:
   Node* root_;

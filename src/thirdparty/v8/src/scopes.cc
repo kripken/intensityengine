@@ -42,7 +42,7 @@ class ZoneAllocator: public Allocator {
   /* nothing to do */
   virtual ~ZoneAllocator()  {}
 
-  virtual void* New(size_t size)  { return Zone::New(size); }
+  virtual void* New(size_t size)  { return Zone::New(static_cast<int>(size)); }
 
   /* ignored - Zone is freed in one fell swoop */
   virtual void Delete(void* p)  {}
@@ -189,8 +189,7 @@ void Scope::Initialize(bool inside_with) {
       variables_.Declare(this, Factory::this_symbol(), Variable::VAR,
                          false, Variable::THIS);
   var->rewrite_ = new Slot(var, Slot::PARAMETER, -1);
-  receiver_ = new VariableProxy(Factory::this_symbol(), true, false);
-  receiver_->BindTo(var);
+  receiver_ = var;
 
   if (is_function_scope()) {
     // Declare 'arguments' variable which exists in all functions.
@@ -237,7 +236,7 @@ Variable* Scope::DeclareLocal(Handle<String> name, Variable::Mode mode) {
 
 Variable* Scope::DeclareGlobal(Handle<String> name) {
   ASSERT(is_global_scope());
-  return variables_.Declare(this, name, Variable::DYNAMIC, true,
+  return variables_.Declare(this, name, Variable::DYNAMIC_GLOBAL, true,
                             Variable::NORMAL);
 }
 
@@ -540,11 +539,11 @@ Variable* Scope::NonLocal(Handle<String> name, Variable::Mode mode) {
 
 
 // Lookup a variable starting with this scope. The result is either
-// the statically resolved (local!) variable belonging to an outer scope,
-// or NULL. It may be NULL because a) we couldn't find a variable, or b)
-// because the variable is just a guess (and may be shadowed by another
-// variable that is introduced dynamically via an 'eval' call or a 'with'
-// statement).
+// the statically resolved variable belonging to an outer scope, or
+// NULL. It may be NULL because a) we couldn't find a variable, or b)
+// because the variable is just a guess (and may be shadowed by
+// another variable that is introduced dynamically via an 'eval' call
+// or a 'with' statement).
 Variable* Scope::LookupRecursive(Handle<String> name,
                                  bool inner_lookup,
                                  Variable** invalidated_local) {
@@ -598,9 +597,11 @@ Variable* Scope::LookupRecursive(Handle<String> name,
   if (inner_lookup)
     var->is_accessed_from_inner_scope_ = true;
 
-  // If the variable we have found is just a guess, invalidate the result.
+  // If the variable we have found is just a guess, invalidate the
+  // result. If the found variable is local, record that fact so we
+  // can generate fast code to get it if it is not shadowed by eval.
   if (guess) {
-    *invalidated_local = var;
+    if (!var->is_global()) *invalidated_local = var;
     var = NULL;
   }
 

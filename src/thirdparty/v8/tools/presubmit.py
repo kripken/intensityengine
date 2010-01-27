@@ -28,9 +28,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+import md5
 import optparse
 import os
-from os.path import abspath, join, dirname, basename
+from os.path import abspath, join, dirname, basename, exists
+import pickle
 import re
 import sys
 import subprocess
@@ -93,6 +95,50 @@ whitespace/todo
 """.split()
 
 
+class FileContentsCache(object):
+
+  def __init__(self, sums_file_name):
+    self.sums = {}
+    self.sums_file_name = sums_file_name
+
+  def Load(self):
+    try:
+      sums_file = None
+      try:
+        sums_file = open(self.sums_file_name, 'r')
+        self.sums = pickle.load(sums_file)
+      except IOError:
+        # File might not exist, this is OK.
+        pass
+    finally:
+      if sums_file:
+        sums_file.close()
+
+  def Save(self):
+    try:
+      sums_file = open(self.sums_file_name, 'w')
+      pickle.dump(self.sums, sums_file)
+    finally:
+      sums_file.close()
+
+  def FilterUnchangedFiles(self, files):
+    changed_or_new = []
+    for file in files:
+      try:
+        handle = open(file, "r")
+        file_sum = md5.new(handle.read()).digest()
+        if not file in self.sums or self.sums[file] != file_sum:
+          changed_or_new.append(file)
+          self.sums[file] = file_sum
+      finally:
+        handle.close()
+    return changed_or_new
+
+  def RemoveFile(self, file):
+    if file in self.sums:
+      self.sums.pop(file)
+
+
 class SourceFileProcessor(object):
   """
   Utility class that can run through a directory structure, find all relevant
@@ -103,12 +149,12 @@ class SourceFileProcessor(object):
     all_files = []
     for file in self.GetPathsToSearch():
       all_files += self.FindFilesIn(join(path, file))
-    if not self.ProcessFiles(all_files):
+    if not self.ProcessFiles(all_files, path):
       return False
     return True
 
   def IgnoreDir(self, name):
-    return name.startswith('.') or name == 'data'
+    return name.startswith('.') or name == 'data' or name == 'sputniktests'
 
   def IgnoreFile(self, name):
     return name.startswith('.')
@@ -137,7 +183,7 @@ class CppLintProcessor(SourceFileProcessor):
               or (name == 'third_party'))
 
   IGNORE_LINT = ['flag-definitions.h']
-  
+
   def IgnoreFile(self, name):
     return (super(CppLintProcessor, self).IgnoreFile(name)
               or (name in CppLintProcessor.IGNORE_LINT))
@@ -145,15 +191,37 @@ class CppLintProcessor(SourceFileProcessor):
   def GetPathsToSearch(self):
     return ['src', 'public', 'samples', join('test', 'cctest')]
 
-  def ProcessFiles(self, files):
+  def ProcessFiles(self, files, path):
+    good_files_cache = FileContentsCache('.cpplint-cache')
+    good_files_cache.Load()
+    files = good_files_cache.FilterUnchangedFiles(files)
+    if len(files) == 0:
+      print 'No changes in files detected. Skipping cpplint check.'
+      return True
+
     filt = '-,' + ",".join(['+' + n for n in ENABLED_LINT_RULES])
     command = ['cpplint.py', '--filter', filt] + join(files)
-    process = subprocess.Popen(command)
-    return process.wait() == 0
+    local_cpplint = join(path, "tools", "cpplint.py")
+    if exists(local_cpplint):
+      command = ['python', local_cpplint, '--filter', filt] + join(files)
+
+    process = subprocess.Popen(command, stderr=subprocess.PIPE)
+    LINT_ERROR_PATTERN = re.compile(r'^(.+)[:(]\d+[:)]')
+    while True:
+      out_line = process.stderr.readline()
+      if out_line == '' and process.poll() != None:
+        break
+      sys.stderr.write(out_line)
+      m = LINT_ERROR_PATTERN.match(out_line)
+      if m:
+        good_files_cache.RemoveFile(m.group(1))
+
+    good_files_cache.Save()
+    return process.returncode == 0
 
 
 COPYRIGHT_HEADER_PATTERN = re.compile(
-    r'Copyright [\d-]*200[8-9] the V8 project authors. All rights reserved.')
+    r'Copyright [\d-]*20[0-1][0-9] the V8 project authors. All rights reserved.')
 
 class SourceProcessor(SourceFileProcessor):
   """
@@ -194,7 +262,7 @@ class SourceProcessor(SourceFileProcessor):
         result = False
     return result
 
-  def ProcessFiles(self, files):
+  def ProcessFiles(self, files, path):
     success = True
     for file in files:
       try:

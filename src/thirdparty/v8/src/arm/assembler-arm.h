@@ -41,6 +41,7 @@
 #define V8_ARM_ASSEMBLER_ARM_H_
 #include <stdio.h>
 #include "assembler.h"
+#include "serialize.h"
 
 namespace v8 {
 namespace internal {
@@ -101,6 +102,94 @@ extern Register ip;
 extern Register sp;
 extern Register lr;
 extern Register pc;
+
+
+// Single word VFP register.
+struct SwVfpRegister {
+  bool is_valid() const  { return 0 <= code_ && code_ < 32; }
+  bool is(SwVfpRegister reg) const  { return code_ == reg.code_; }
+  int code() const  {
+    ASSERT(is_valid());
+    return code_;
+  }
+  int bit() const  {
+    ASSERT(is_valid());
+    return 1 << code_;
+  }
+
+  int code_;
+};
+
+
+// Double word VFP register.
+struct DwVfpRegister {
+  // Supporting d0 to d15, can be later extended to d31.
+  bool is_valid() const  { return 0 <= code_ && code_ < 16; }
+  bool is(DwVfpRegister reg) const  { return code_ == reg.code_; }
+  int code() const  {
+    ASSERT(is_valid());
+    return code_;
+  }
+  int bit() const  {
+    ASSERT(is_valid());
+    return 1 << code_;
+  }
+
+  int code_;
+};
+
+
+// Support for VFP registers s0 to s31 (d0 to d15).
+// Note that "s(N):s(N+1)" is the same as "d(N/2)".
+extern SwVfpRegister s0;
+extern SwVfpRegister s1;
+extern SwVfpRegister s2;
+extern SwVfpRegister s3;
+extern SwVfpRegister s4;
+extern SwVfpRegister s5;
+extern SwVfpRegister s6;
+extern SwVfpRegister s7;
+extern SwVfpRegister s8;
+extern SwVfpRegister s9;
+extern SwVfpRegister s10;
+extern SwVfpRegister s11;
+extern SwVfpRegister s12;
+extern SwVfpRegister s13;
+extern SwVfpRegister s14;
+extern SwVfpRegister s15;
+extern SwVfpRegister s16;
+extern SwVfpRegister s17;
+extern SwVfpRegister s18;
+extern SwVfpRegister s19;
+extern SwVfpRegister s20;
+extern SwVfpRegister s21;
+extern SwVfpRegister s22;
+extern SwVfpRegister s23;
+extern SwVfpRegister s24;
+extern SwVfpRegister s25;
+extern SwVfpRegister s26;
+extern SwVfpRegister s27;
+extern SwVfpRegister s28;
+extern SwVfpRegister s29;
+extern SwVfpRegister s30;
+extern SwVfpRegister s31;
+
+extern DwVfpRegister d0;
+extern DwVfpRegister d1;
+extern DwVfpRegister d2;
+extern DwVfpRegister d3;
+extern DwVfpRegister d4;
+extern DwVfpRegister d5;
+extern DwVfpRegister d6;
+extern DwVfpRegister d7;
+extern DwVfpRegister d8;
+extern DwVfpRegister d9;
+extern DwVfpRegister d10;
+extern DwVfpRegister d11;
+extern DwVfpRegister d12;
+extern DwVfpRegister d13;
+extern DwVfpRegister d14;
+extern DwVfpRegister d15;
 
 
 // Coprocessor register
@@ -372,8 +461,57 @@ class MemOperand BASE_EMBEDDED {
   friend class Assembler;
 };
 
+// CpuFeatures keeps track of which features are supported by the target CPU.
+// Supported features must be enabled by a Scope before use.
+class CpuFeatures : public AllStatic {
+ public:
+  // Detect features of the target CPU. Set safe defaults if the serializer
+  // is enabled (snapshots must be portable).
+  static void Probe();
+
+  // Check whether a feature is supported by the target CPU.
+  static bool IsSupported(CpuFeature f) {
+    if (f == VFP3 && !FLAG_enable_vfp3) return false;
+    return (supported_ & (1u << f)) != 0;
+  }
+
+  // Check whether a feature is currently enabled.
+  static bool IsEnabled(CpuFeature f) {
+    return (enabled_ & (1u << f)) != 0;
+  }
+
+  // Enable a specified feature within a scope.
+  class Scope BASE_EMBEDDED {
+#ifdef DEBUG
+   public:
+    explicit Scope(CpuFeature f) {
+      ASSERT(CpuFeatures::IsSupported(f));
+      ASSERT(!Serializer::enabled() ||
+             (found_by_runtime_probing_ & (1u << f)) == 0);
+      old_enabled_ = CpuFeatures::enabled_;
+      CpuFeatures::enabled_ |= 1u << f;
+    }
+    ~Scope() { CpuFeatures::enabled_ = old_enabled_; }
+   private:
+    unsigned old_enabled_;
+#else
+   public:
+    explicit Scope(CpuFeature f) {}
+#endif
+  };
+
+ private:
+  static unsigned supported_;
+  static unsigned enabled_;
+  static unsigned found_by_runtime_probing_;
+};
+
 
 typedef int32_t Instr;
+
+
+extern const Instr kMovLrPc;
+extern const Instr kLdrPCPattern;
 
 
 class Assembler : public Malloced {
@@ -433,17 +571,39 @@ class Assembler : public Malloced {
   INLINE(static Address target_address_at(Address pc));
   INLINE(static void set_target_address_at(Address pc, Address target));
 
+  // This sets the branch destination (which is in the constant pool on ARM).
+  // This is for calls and branches within generated code.
+  inline static void set_target_at(Address constant_pool_entry, Address target);
+
+  // This sets the branch destination (which is in the constant pool on ARM).
+  // This is for calls and branches to runtime code.
+  inline static void set_external_target_at(Address constant_pool_entry,
+                                            Address target) {
+    set_target_at(constant_pool_entry, target);
+  }
+
+  // Here we are patching the address in the constant pool, not the actual call
+  // instruction.  The address in the constant pool is the same size as a
+  // pointer.
+  static const int kCallTargetSize = kPointerSize;
+  static const int kExternalTargetSize = kPointerSize;
+
+  // Size of an instruction.
+  static const int kInstrSize = sizeof(Instr);
+
   // Distance between the instruction referring to the address of the call
   // target (ldr pc, [target addr in const pool]) and the return address
-  static const int kPatchReturnSequenceLength = sizeof(Instr);
+  static const int kCallTargetAddressOffset = kInstrSize;
+
   // Distance between start of patched return sequence and the emitted address
   // to jump to.
-  static const int kPatchReturnSequenceAddressOffset = 1;
+  static const int kPatchReturnSequenceAddressOffset = kInstrSize;
 
   // Difference between address of current opcode and value read from pc
   // register.
   static const int kPcLoadDelta = 8;
 
+  static const int kJSReturnSequenceLength = 4;
 
   // ---------------------------------------------------------------------------
   // Code generation
@@ -630,6 +790,56 @@ class Assembler : public Malloced {
   void stc2(Coprocessor coproc, CRegister crd, Register base, int option,
             LFlag l = Short);  // v5 and above
 
+  // Support for VFP.
+  // All these APIs support S0 to S31 and D0 to D15.
+  // Currently these APIs do not support extended D registers, i.e, D16 to D31.
+  // However, some simple modifications can allow
+  // these APIs to support D16 to D31.
+
+  void vmov(const DwVfpRegister dst,
+            const Register src1,
+            const Register src2,
+            const Condition cond = al);
+  void vmov(const Register dst1,
+            const Register dst2,
+            const DwVfpRegister src,
+            const Condition cond = al);
+  void vmov(const SwVfpRegister dst,
+            const Register src,
+            const Condition cond = al);
+  void vmov(const Register dst,
+            const SwVfpRegister src,
+            const Condition cond = al);
+  void vcvt(const DwVfpRegister dst,
+            const SwVfpRegister src,
+            const Condition cond = al);
+  void vcvt(const SwVfpRegister dst,
+            const DwVfpRegister src,
+            const Condition cond = al);
+
+  void vadd(const DwVfpRegister dst,
+            const DwVfpRegister src1,
+            const DwVfpRegister src2,
+            const Condition cond = al);
+  void vsub(const DwVfpRegister dst,
+            const DwVfpRegister src1,
+            const DwVfpRegister src2,
+            const Condition cond = al);
+  void vmul(const DwVfpRegister dst,
+            const DwVfpRegister src1,
+            const DwVfpRegister src2,
+            const Condition cond = al);
+  void vdiv(const DwVfpRegister dst,
+            const DwVfpRegister src1,
+            const DwVfpRegister src2,
+            const Condition cond = al);
+  void vcmp(const DwVfpRegister src1,
+            const DwVfpRegister src2,
+            const SBit s = LeaveCC,
+            const Condition cond = al);
+  void vmrs(const Register dst,
+            const Condition cond = al);
+
   // Pseudo instructions
   void nop()  { mov(r0, Operand(r0)); }
 
@@ -637,8 +847,8 @@ class Assembler : public Malloced {
     str(src, MemOperand(sp, 4, NegPreIndex), cond);
   }
 
-  void pop(Register dst) {
-    ldr(dst, MemOperand(sp, 4, PostIndex), al);
+  void pop(Register dst, Condition cond = al) {
+    ldr(dst, MemOperand(sp, 4, PostIndex), cond);
   }
 
   void pop() {
@@ -652,8 +862,22 @@ class Assembler : public Malloced {
   // Jump unconditionally to given label.
   void jmp(Label* L) { b(L, al); }
 
+  // Check the code size generated from label to here.
+  int InstructionsGeneratedSince(Label* l) {
+    return (pc_offset() - l->pos()) / kInstrSize;
+  }
+
+  // Check whether an immediate fits an addressing mode 1 instruction.
+  bool ImmediateFitsAddrMode1Instruction(int32_t imm32);
+
+  // Postpone the generation of the constant pool for the specified number of
+  // instructions.
+  void BlockConstPoolFor(int instructions);
 
   // Debugging
+
+  // Mark address of the ExitJSFrame code.
+  void RecordJSReturn();
 
   // Record a comment relocation entry that can be used by a disassembler.
   // Use --debug_code to enable.
@@ -671,7 +895,7 @@ class Assembler : public Malloced {
   int buffer_space() const { return reloc_info_writer.pos() - pc_; }
 
   // Read/patch instructions
-  Instr instr_at(byte* pc) { return *reinterpret_cast<Instr*>(pc); }
+  static Instr instr_at(byte* pc) { return *reinterpret_cast<Instr*>(pc); }
   void instr_at_put(byte* pc, Instr instr) {
     *reinterpret_cast<Instr*>(pc) = instr;
   }
@@ -708,7 +932,6 @@ class Assembler : public Malloced {
   int next_buffer_check_;  // pc offset of next buffer check
 
   // Code generation
-  static const int kInstrSize = sizeof(Instr);  // signed size
   // The relocation writer's position is at least kGap bytes below the end of
   // the generated instructions. This is so that multi-instruction sequences do
   // not have to check for overflow. The same is true for writes of large
@@ -795,6 +1018,8 @@ class Assembler : public Malloced {
   void RecordRelocInfo(RelocInfo::Mode rmode, intptr_t data = 0);
 
   friend class RegExpMacroAssemblerARM;
+  friend class RelocInfo;
+  friend class CodePatcher;
 };
 
 } }  // namespace v8::internal

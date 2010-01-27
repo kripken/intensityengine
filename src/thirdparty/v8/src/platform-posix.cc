@@ -27,7 +27,7 @@
 
 // Platform specific code for POSIX goes here. This is not a platform on its
 // own but contains the parts which are the same across POSIX platforms Linux,
-// Mac OS and FreeBSD.
+// Mac OS, FreeBSD and OpenBSD.
 
 #include <unistd.h>
 #include <errno.h>
@@ -53,6 +53,19 @@
 
 namespace v8 {
 namespace internal {
+
+// ----------------------------------------------------------------------------
+// Math functions
+
+double modulo(double x, double y) {
+  return fmod(x, y);
+}
+
+
+double OS::nan_value() {
+  // NAN from math.h is defined in C99 and not in POSIX.
+  return NAN;
+}
 
 
 // ----------------------------------------------------------------------------

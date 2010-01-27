@@ -63,14 +63,16 @@ void VirtualFrame::Enter() {
   Comment cmnt(masm(), "[ Enter JS frame");
 
 #ifdef DEBUG
-  // Verify that rdi contains a JS function.  The following code
-  // relies on rax being available for use.
-  __ testl(rdi, Immediate(kSmiTagMask));
-  __ Check(not_zero,
-           "VirtualFrame::Enter - rdi is not a function (smi check).");
-  __ CmpObjectType(rdi, JS_FUNCTION_TYPE, rax);
-  __ Check(equal,
-           "VirtualFrame::Enter - rdi is not a function (map check).");
+  if (FLAG_debug_code) {
+    // Verify that rdi contains a JS function.  The following code
+    // relies on rax being available for use.
+    Condition not_smi = NegateCondition(masm()->CheckSmi(rdi));
+    __ Check(not_smi,
+             "VirtualFrame::Enter - rdi is not a function (smi check).");
+    __ CmpObjectType(rdi, JS_FUNCTION_TYPE, rax);
+    __ Check(equal,
+             "VirtualFrame::Enter - rdi is not a function (map check).");
+  }
 #endif
 
   EmitPush(rbp);
@@ -127,11 +129,29 @@ void VirtualFrame::AllocateStackSlots() {
     Handle<Object> undefined = Factory::undefined_value();
     FrameElement initial_value =
         FrameElement::ConstantElement(undefined, FrameElement::SYNCED);
-    __ movq(kScratchRegister, undefined, RelocInfo::EMBEDDED_OBJECT);
+    if (count == 1) {
+      __ Push(undefined);
+    } else if (count < kLocalVarBound) {
+      // For less locals the unrolled loop is more compact.
+      __ movq(kScratchRegister, undefined, RelocInfo::EMBEDDED_OBJECT);
+      for (int i = 0; i < count; i++) {
+        __ push(kScratchRegister);
+      }
+    } else {
+      // For more locals a loop in generated code is more compact.
+      Label alloc_locals_loop;
+      Result cnt = cgen()->allocator()->Allocate();
+      ASSERT(cnt.is_valid());
+      __ movq(cnt.reg(), Immediate(count));
+      __ movq(kScratchRegister, undefined, RelocInfo::EMBEDDED_OBJECT);
+      __ bind(&alloc_locals_loop);
+      __ push(kScratchRegister);
+      __ decl(cnt.reg());
+      __ j(not_zero, &alloc_locals_loop);
+    }
     for (int i = 0; i < count; i++) {
       elements_.Add(initial_value);
       stack_pointer_++;
-      __ push(kScratchRegister);
     }
   }
 }
@@ -194,6 +214,14 @@ void VirtualFrame::EmitPush(Immediate immediate) {
   elements_.Add(FrameElement::MemoryElement());
   stack_pointer_++;
   __ push(immediate);
+}
+
+
+void VirtualFrame::EmitPush(Smi* smi_value) {
+  ASSERT(stack_pointer_ == element_count() - 1);
+  elements_.Add(FrameElement::MemoryElement());
+  stack_pointer_++;
+  __ Push(smi_value);
 }
 
 
@@ -841,7 +869,7 @@ void VirtualFrame::SyncElementByPushing(int index) {
 
   switch (element.type()) {
     case FrameElement::INVALID:
-      __ push(Immediate(Smi::FromInt(0)));
+      __ Push(Smi::FromInt(0));
       break;
 
     case FrameElement::MEMORY:
@@ -1004,7 +1032,7 @@ Result VirtualFrame::CallConstructor(int arg_count) {
   function.ToRegister(rdi);
 
   // Constructors are called with the number of arguments in register
-  // eax for now. Another option would be to have separate construct
+  // rax for now. Another option would be to have separate construct
   // call trampolines per different arguments counts encountered.
   Result num_args = cgen()->allocator()->Allocate(rax);
   ASSERT(num_args.is_valid());

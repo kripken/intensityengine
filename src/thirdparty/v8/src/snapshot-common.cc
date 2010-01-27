@@ -32,14 +32,15 @@
 #include "api.h"
 #include "serialize.h"
 #include "snapshot.h"
+#include "platform.h"
 
 namespace v8 {
 namespace internal {
 
 bool Snapshot::Deserialize(const byte* content, int len) {
-  Deserializer des(content, len);
-  des.GetFlags();
-  return V8::Initialize(&des);
+  SnapshotByteSource source(content, len);
+  Deserializer deserializer(&source);
+  return V8::Initialize(&deserializer);
 }
 
 
@@ -48,28 +49,49 @@ bool Snapshot::Initialize(const char* snapshot_file) {
     int len;
     byte* str = ReadBytes(snapshot_file, &len);
     if (!str) return false;
-    bool result = Deserialize(str, len);
+    Deserialize(str, len);
     DeleteArray(str);
-    return result;
+    return true;
   } else if (size_ > 0) {
-    return Deserialize(data_, size_);
+    Deserialize(data_, size_);
+    return true;
   }
   return false;
 }
 
 
+class FileByteSink : public SnapshotByteSink {
+ public:
+  explicit FileByteSink(const char* snapshot_file) {
+    fp_ = OS::FOpen(snapshot_file, "wb");
+    if (fp_ == NULL) {
+      PrintF("Unable to write to snapshot file \"%s\"\n", snapshot_file);
+      exit(1);
+    }
+  }
+  virtual ~FileByteSink() {
+    if (fp_ != NULL) {
+      fclose(fp_);
+    }
+  }
+  virtual void Put(int byte, const char* description) {
+    if (fp_ != NULL) {
+      fputc(byte, fp_);
+    }
+  }
+
+ private:
+  FILE* fp_;
+};
+
+
 bool Snapshot::WriteToFile(const char* snapshot_file) {
-  Serializer ser;
+  FileByteSink file(snapshot_file);
+  Serializer ser(&file);
   ser.Serialize();
-  byte* str;
-  int len;
-  ser.Finalize(&str, &len);
-
-  int written = WriteBytes(snapshot_file, str, len);
-
-  DeleteArray(str);
-  return written == len;
+  return true;
 }
+
 
 
 } }  // namespace v8::internal

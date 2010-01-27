@@ -1,4 +1,4 @@
-// Copyright 2006-2008 the V8 project authors. All rights reserved.
+// Copyright 2006-2009 the V8 project authors. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -38,32 +38,9 @@ namespace internal {
 const Register cp = { 8 };  // JavaScript context pointer
 
 
-// Helper types to make boolean flag easier to read at call-site.
-enum InvokeFlag {
-  CALL_FUNCTION,
-  JUMP_FUNCTION
-};
-
 enum InvokeJSFlags {
   CALL_JS,
   JUMP_JS
-};
-
-enum ExitJSFlag {
-  RETURN,
-  DO_NOT_RETURN
-};
-
-enum CodeLocation {
-  IN_JAVASCRIPT,
-  IN_JS_ENTRY,
-  IN_C_ENTRY
-};
-
-enum HandlerType {
-  TRY_CATCH_HANDLER,
-  TRY_FINALLY_HANDLER,
-  JS_ENTRY_HANDLER
 };
 
 
@@ -87,6 +64,13 @@ class MacroAssembler: public Assembler {
   void Call(byte* target, RelocInfo::Mode rmode, Condition cond = al);
   void Call(Handle<Code> code, RelocInfo::Mode rmode, Condition cond = al);
   void Ret(Condition cond = al);
+
+  // Emit code to discard a non-negative number of pointer-sized elements
+  // from the stack, clobbering only the sp register.
+  void Drop(int count, Condition cond = al);
+
+  void Call(Label* target);
+  void Move(Register dst, Handle<Object> value);
   // Jumps to the label at the index given by the Smi in "index".
   void SmiJumpTable(Register index, Vector<Label*> targets);
   // Load an object from the root table.
@@ -102,6 +86,11 @@ class MacroAssembler: public Assembler {
   void RecordWrite(Register object, Register offset, Register scratch);
 
   // ---------------------------------------------------------------------------
+  // Stack limit support
+
+  void StackLimitCheck(Label* on_stack_limit_hit);
+
+  // ---------------------------------------------------------------------------
   // Activation frames
 
   void EnterInternalFrame() { EnterFrame(StackFrame::INTERNAL); }
@@ -110,15 +99,19 @@ class MacroAssembler: public Assembler {
   void EnterConstructFrame() { EnterFrame(StackFrame::CONSTRUCT); }
   void LeaveConstructFrame() { LeaveFrame(StackFrame::CONSTRUCT); }
 
-  // Enter specific kind of exit frame; either EXIT or
-  // EXIT_DEBUG. Expects the number of arguments in register r0 and
+  // Enter specific kind of exit frame; either normal or debug mode.
+  // Expects the number of arguments in register r0 and
   // the builtin function to call in register r1. Exits with argc in
   // r4, argv in r6, and and the builtin function to call in r5.
-  void EnterExitFrame(StackFrame::Type type);
+  void EnterExitFrame(ExitFrame::Mode mode);
 
   // Leave the current exit frame. Expects the return value in r0.
-  void LeaveExitFrame(StackFrame::Type type);
+  void LeaveExitFrame(ExitFrame::Mode mode);
 
+  // Align the stack by optionally pushing a Smi zero.
+  void AlignStack(int offset);
+
+  void LoadContext(Register dst, int context_chain_length);
 
   // ---------------------------------------------------------------------------
   // JavaScript invokes
@@ -162,6 +155,9 @@ class MacroAssembler: public Assembler {
   // On exit, r0 contains TOS (code slot).
   void PushTryHandler(CodeLocation try_location, HandlerType type);
 
+  // Unlink the stack handler on top of the stack from the try handler chain.
+  // Must preserve the result register.
+  void PopTryHandler();
 
   // ---------------------------------------------------------------------------
   // Inline caching support
@@ -190,16 +186,28 @@ class MacroAssembler: public Assembler {
   // ---------------------------------------------------------------------------
   // Allocation support
 
-  // Allocate an object in new space. If the new space is exhausted control
-  // continues at the gc_required label. The allocated object is returned in
-  // result. If the flag tag_allocated_object is true the result is tagged as
-  // as a heap object.
-  void AllocateObjectInNewSpace(int object_size,
-                                Register result,
-                                Register scratch1,
-                                Register scratch2,
-                                Label* gc_required,
-                                bool tag_allocated_object);
+  // Allocate an object in new space. The object_size is specified in words (not
+  // bytes). If the new space is exhausted control continues at the gc_required
+  // label. The allocated object is returned in result. If the flag
+  // tag_allocated_object is true the result is tagged as as a heap object.
+  void AllocateInNewSpace(int object_size,
+                          Register result,
+                          Register scratch1,
+                          Register scratch2,
+                          Label* gc_required,
+                          AllocationFlags flags);
+  void AllocateInNewSpace(Register object_size,
+                          Register result,
+                          Register scratch1,
+                          Register scratch2,
+                          Label* gc_required,
+                          AllocationFlags flags);
+
+  // Undo allocation in new space. The object passed and objects allocated after
+  // it will no longer be allocated. The caller must make sure that no pointers
+  // are left to the object(s) no longer allocated as they would be invalid when
+  // allocation is undone.
+  void UndoAllocationInNewSpace(Register object, Register scratch);
 
   // ---------------------------------------------------------------------------
   // Support functions.
@@ -220,11 +228,20 @@ class MacroAssembler: public Assembler {
   // It leaves the map in the map register (unless the type_reg and map register
   // are the same register).  It leaves the heap object in the heap_object
   // register unless the heap_object register is the same register as one of the
-  // other // registers.
+  // other registers.
   void CompareObjectType(Register heap_object,
                          Register map,
                          Register type_reg,
                          InstanceType type);
+
+  // Compare instance type in a map.  map contains a valid map object whose
+  // object type should be compared with the given type.  This both
+  // sets the flags and leaves the object type in the type_reg register.  It
+  // leaves the heap object in the heap_object register unless the heap_object
+  // register is the same register as type_reg.
+  void CompareInstanceType(Register map,
+                           Register type_reg,
+                           InstanceType type);
 
   inline void BranchOnSmi(Register value, Label* smi_label) {
     tst(value, Operand(kSmiTagMask));
@@ -240,13 +257,17 @@ class MacroAssembler: public Assembler {
   // occurred.
   void IllegalOperation(int num_arguments);
 
+  // Uses VFP instructions to Convert a Smi to a double.
+  void IntegerToDoubleConversionWithVFP3(Register inReg,
+                                         Register outHighReg,
+                                         Register outLowReg);
+
 
   // ---------------------------------------------------------------------------
   // Runtime calls
 
   // Call a code stub.
   void CallStub(CodeStub* stub, Condition cond = al);
-  void CallJSExitStub(CodeStub* stub);
 
   // Return from a code stub after popping its arguments.
   void StubReturn(int argc);
@@ -259,12 +280,14 @@ class MacroAssembler: public Assembler {
   void CallRuntime(Runtime::FunctionId fid, int num_arguments);
 
   // Tail call of a runtime routine (jump).
-  // Like JumpToBuiltin, but also takes care of passing the number
+  // Like JumpToRuntime, but also takes care of passing the number
   // of parameters.
-  void TailCallRuntime(const ExternalReference& ext, int num_arguments);
+  void TailCallRuntime(const ExternalReference& ext,
+                       int num_arguments,
+                       int result_size);
 
-  // Jump to the builtin routine.
-  void JumpToBuiltin(const ExternalReference& builtin);
+  // Jump to a runtime routine.
+  void JumpToRuntime(const ExternalReference& builtin);
 
   // Invoke specified builtin JavaScript function. Adds an entry to
   // the unresolved list if the name does not resolve.
@@ -329,14 +352,51 @@ class MacroAssembler: public Assembler {
                       Label* done,
                       InvokeFlag flag);
 
-  // Get the code for the given builtin. Returns if able to resolve
-  // the function in the 'resolved' flag.
+  // Prepares for a call or jump to a builtin by doing two things:
+  // 1. Emits code that fetches the builtin's function object from the context
+  //    at runtime, and puts it in the register rdi.
+  // 2. Fetches the builtin's code object, and returns it in a handle, at
+  //    compile time, so that later code can emit instructions to jump or call
+  //    the builtin directly.  If the code object has not yet been created, it
+  //    returns the builtin code object for IllegalFunction, and sets the
+  //    output parameter "resolved" to false.  Code that uses the return value
+  //    should then add the address and the builtin name to the list of fixups
+  //    called unresolved_, which is fixed up by the bootstrapper.
   Handle<Code> ResolveBuiltin(Builtins::JavaScript id, bool* resolved);
 
   // Activation support.
   void EnterFrame(StackFrame::Type type);
   void LeaveFrame(StackFrame::Type type);
 };
+
+
+#ifdef ENABLE_DEBUGGER_SUPPORT
+// The code patcher is used to patch (typically) small parts of code e.g. for
+// debugging and other types of instrumentation. When using the code patcher
+// the exact number of bytes specified must be emitted. It is not legal to emit
+// relocation information. If any of these constraints are violated it causes
+// an assertion to fail.
+class CodePatcher {
+ public:
+  CodePatcher(byte* address, int instructions);
+  virtual ~CodePatcher();
+
+  // Macro assembler to emit code.
+  MacroAssembler* masm() { return &masm_; }
+
+  // Emit an instruction directly.
+  void Emit(Instr x);
+
+  // Emit an address directly.
+  void Emit(Address addr);
+
+ private:
+  byte* address_;  // The address of the code being patched.
+  int instructions_;  // Number of instructions of the expected patch size.
+  int size_;  // Number of bytes of the expected patch size.
+  MacroAssembler masm_;  // Macro assembler used to generate the code.
+};
+#endif  // ENABLE_DEBUGGER_SUPPORT
 
 
 // -----------------------------------------------------------------------------

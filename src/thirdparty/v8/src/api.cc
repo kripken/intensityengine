@@ -28,6 +28,7 @@
 #include "v8.h"
 
 #include "api.h"
+#include "arguments.h"
 #include "bootstrapper.h"
 #include "compiler.h"
 #include "debug.h"
@@ -36,6 +37,7 @@
 #include "platform.h"
 #include "serialize.h"
 #include "snapshot.h"
+#include "utils.h"
 #include "v8threads.h"
 #include "version.h"
 
@@ -71,7 +73,7 @@ namespace v8 {
     thread_local.DecrementCallDepth();                                         \
     if (has_pending_exception) {                                               \
       if (thread_local.CallDepthIsZero() && i::Top::is_out_of_memory()) {      \
-        if (!thread_local.IgnoreOutOfMemory())                                 \
+        if (!thread_local.ignore_out_of_memory())                              \
           i::V8::FatalProcessOutOfMemory(NULL);                                \
       }                                                                        \
       bool call_depth_is_zero = thread_local.CallDepthIsZero();                \
@@ -124,6 +126,48 @@ static FatalErrorCallback& GetFatalErrorHandler() {
 // When V8 cannot allocated memory FatalProcessOutOfMemory is called.
 // The default fatal error handler is called and execution is stopped.
 void i::V8::FatalProcessOutOfMemory(const char* location) {
+  i::HeapStats heap_stats;
+  int start_marker;
+  heap_stats.start_marker = &start_marker;
+  int new_space_size;
+  heap_stats.new_space_size = &new_space_size;
+  int new_space_capacity;
+  heap_stats.new_space_capacity = &new_space_capacity;
+  int old_pointer_space_size;
+  heap_stats.old_pointer_space_size = &old_pointer_space_size;
+  int old_pointer_space_capacity;
+  heap_stats.old_pointer_space_capacity = &old_pointer_space_capacity;
+  int old_data_space_size;
+  heap_stats.old_data_space_size = &old_data_space_size;
+  int old_data_space_capacity;
+  heap_stats.old_data_space_capacity = &old_data_space_capacity;
+  int code_space_size;
+  heap_stats.code_space_size = &code_space_size;
+  int code_space_capacity;
+  heap_stats.code_space_capacity = &code_space_capacity;
+  int map_space_size;
+  heap_stats.map_space_size = &map_space_size;
+  int map_space_capacity;
+  heap_stats.map_space_capacity = &map_space_capacity;
+  int cell_space_size;
+  heap_stats.cell_space_size = &cell_space_size;
+  int cell_space_capacity;
+  heap_stats.cell_space_capacity = &cell_space_capacity;
+  int lo_space_size;
+  heap_stats.lo_space_size = &lo_space_size;
+  int global_handle_count;
+  heap_stats.global_handle_count = &global_handle_count;
+  int weak_global_handle_count;
+  heap_stats.weak_global_handle_count = &weak_global_handle_count;
+  int pending_global_handle_count;
+  heap_stats.pending_global_handle_count = &pending_global_handle_count;
+  int near_death_global_handle_count;
+  heap_stats.near_death_global_handle_count = &near_death_global_handle_count;
+  int destroyed_global_handle_count;
+  heap_stats.destroyed_global_handle_count = &destroyed_global_handle_count;
+  int end_marker;
+  heap_stats.end_marker = &end_marker;
+  i::Heap::RecordStats(&heap_stats);
   i::V8::SetFatalError();
   FatalErrorCallback callback = GetFatalErrorHandler();
   {
@@ -341,9 +385,12 @@ ResourceConstraints::ResourceConstraints()
 
 
 bool SetResourceConstraints(ResourceConstraints* constraints) {
-  bool result = i::Heap::ConfigureHeap(constraints->max_young_space_size(),
-                                       constraints->max_old_space_size());
-  if (!result) return false;
+  int young_space_size = constraints->max_young_space_size();
+  int old_gen_size = constraints->max_old_space_size();
+  if (young_space_size != 0 || old_gen_size != 0) {
+    bool result = i::Heap::ConfigureHeap(young_space_size / 2, old_gen_size);
+    if (!result) return false;
+  }
   if (constraints->stack_limit() != NULL) {
     uintptr_t limit = reinterpret_cast<uintptr_t>(constraints->stack_limit());
     i::StackGuard::SetStackLimit(limit);
@@ -427,7 +474,7 @@ void Context::Enter() {
   i::Handle<i::Context> env = Utils::OpenHandle(this);
   thread_local.EnterContext(env);
 
-  thread_local.SaveContext(i::GlobalHandles::Create(i::Top::context()));
+  thread_local.SaveContext(i::Top::context());
   i::Top::set_context(*env);
 }
 
@@ -441,13 +488,12 @@ void Context::Exit() {
   }
 
   // Content of 'last_context' could be NULL.
-  i::Handle<i::Object> last_context = thread_local.RestoreContext();
-  i::Top::set_context(static_cast<i::Context*>(*last_context));
-  i::GlobalHandles::Destroy(last_context.location());
+  i::Context* last_context = thread_local.RestoreContext();
+  i::Top::set_context(last_context);
 }
 
 
-void Context::SetData(v8::Handle<Value> data) {
+void Context::SetData(v8::Handle<String> data) {
   if (IsDeadCheck("v8::Context::SetData()")) return;
   ENTER_V8;
   {
@@ -1171,7 +1217,7 @@ Local<Value> Script::Id() {
 }
 
 
-void Script::SetData(v8::Handle<Value> data) {
+void Script::SetData(v8::Handle<String> data) {
   ON_BAILOUT("v8::Script::SetData()", return);
   LOG_API("Script::SetData");
   {
@@ -1188,18 +1234,26 @@ void Script::SetData(v8::Handle<Value> data) {
 
 
 v8::TryCatch::TryCatch()
-    : next_(i::Top::try_catch_handler()),
+    : next_(i::Top::try_catch_handler_address()),
       exception_(i::Heap::the_hole_value()),
       message_(i::Smi::FromInt(0)),
       is_verbose_(false),
+      can_continue_(true),
       capture_message_(true),
-      js_handler_(NULL) {
+      rethrow_(false) {
   i::Top::RegisterTryCatchHandler(this);
 }
 
 
 v8::TryCatch::~TryCatch() {
-  i::Top::UnregisterTryCatchHandler(this);
+  if (rethrow_) {
+    v8::HandleScope scope;
+    v8::Local<v8::Value> exc = v8::Local<v8::Value>::New(Exception());
+    i::Top::UnregisterTryCatchHandler(this);
+    v8::ThrowException(exc);
+  } else {
+    i::Top::UnregisterTryCatchHandler(this);
+  }
 }
 
 
@@ -1210,6 +1264,13 @@ bool v8::TryCatch::HasCaught() const {
 
 bool v8::TryCatch::CanContinue() const {
   return can_continue_;
+}
+
+
+v8::Handle<v8::Value> v8::TryCatch::ReThrow() {
+  if (!HasCaught()) return v8::Local<v8::Value>();
+  rethrow_ = true;
+  return v8::Undefined();
 }
 
 
@@ -1898,6 +1959,7 @@ bool v8::Object::Set(v8::Handle<Value> key, v8::Handle<Value> value,
                      v8::PropertyAttribute attribs) {
   ON_BAILOUT("v8::Object::Set()", return false);
   ENTER_V8;
+  HandleScope scope;
   i::Handle<i::Object> self = Utils::OpenHandle(this);
   i::Handle<i::Object> key_obj = Utils::OpenHandle(*key);
   i::Handle<i::Object> value_obj = Utils::OpenHandle(*value);
@@ -1918,6 +1980,7 @@ bool v8::Object::ForceSet(v8::Handle<Value> key,
                           v8::PropertyAttribute attribs) {
   ON_BAILOUT("v8::Object::ForceSet()", return false);
   ENTER_V8;
+  HandleScope scope;
   i::Handle<i::JSObject> self = Utils::OpenHandle(this);
   i::Handle<i::Object> key_obj = Utils::OpenHandle(*key);
   i::Handle<i::Object> value_obj = Utils::OpenHandle(*value);
@@ -1936,6 +1999,7 @@ bool v8::Object::ForceSet(v8::Handle<Value> key,
 bool v8::Object::ForceDelete(v8::Handle<Value> key) {
   ON_BAILOUT("v8::Object::ForceDelete()", return false);
   ENTER_V8;
+  HandleScope scope;
   i::Handle<i::JSObject> self = Utils::OpenHandle(this);
   i::Handle<i::Object> key_obj = Utils::OpenHandle(*key);
   EXCEPTION_PREAMBLE();
@@ -1989,7 +2053,8 @@ Local<Array> v8::Object::GetPropertyNames() {
   ENTER_V8;
   v8::HandleScope scope;
   i::Handle<i::JSObject> self = Utils::OpenHandle(this);
-  i::Handle<i::FixedArray> value = i::GetKeysInFixedArrayFor(self);
+  i::Handle<i::FixedArray> value =
+      i::GetKeysInFixedArrayFor(self, i::INCLUDE_PROTOS);
   // Because we use caching to speed up enumeration it is important
   // to never change the result of the basic enumeration function so
   // we clone the result.
@@ -2024,11 +2089,11 @@ Local<String> v8::Object::ObjectProtoToString() {
       Local<String> str = Utils::ToLocal(class_name);
       const char* postfix = "]";
 
-      size_t prefix_len = strlen(prefix);
-      size_t str_len = str->Length();
-      size_t postfix_len = strlen(postfix);
+      int prefix_len = i::StrLength(prefix);
+      int str_len = str->Length();
+      int postfix_len = i::StrLength(postfix);
 
-      size_t buf_len = prefix_len + str_len + postfix_len;
+      int buf_len = prefix_len + str_len + postfix_len;
       char* buf = i::NewArray<char>(buf_len);
 
       // Write prefix.
@@ -2120,7 +2185,7 @@ bool v8::Object::HasIndexedLookupInterceptor() {
 }
 
 
-Handle<Value> v8::Object::GetRealNamedPropertyInPrototypeChain(
+Local<Value> v8::Object::GetRealNamedPropertyInPrototypeChain(
       Handle<String> key) {
   ON_BAILOUT("v8::Object::GetRealNamedPropertyInPrototypeChain()",
              return Local<Value>());
@@ -2141,18 +2206,43 @@ Handle<Value> v8::Object::GetRealNamedPropertyInPrototypeChain(
 }
 
 
+Local<Value> v8::Object::GetRealNamedProperty(Handle<String> key) {
+  ON_BAILOUT("v8::Object::GetRealNamedProperty()", return Local<Value>());
+  ENTER_V8;
+  i::Handle<i::JSObject> self_obj = Utils::OpenHandle(this);
+  i::Handle<i::String> key_obj = Utils::OpenHandle(*key);
+  i::LookupResult lookup;
+  self_obj->LookupRealNamedProperty(*key_obj, &lookup);
+  if (lookup.IsValid()) {
+    PropertyAttributes attributes;
+    i::Handle<i::Object> result(self_obj->GetProperty(*self_obj,
+                                                      &lookup,
+                                                      *key_obj,
+                                                      &attributes));
+    return Utils::ToLocal(result);
+  }
+  return Local<Value>();  // No real property was found in prototype chain.
+}
+
+
 // Turns on access checks by copying the map and setting the check flag.
 // Because the object gets a new map, existing inline cache caching
 // the old map of this object will fail.
 void v8::Object::TurnOnAccessCheck() {
   ON_BAILOUT("v8::Object::TurnOnAccessCheck()", return);
   ENTER_V8;
+  HandleScope scope;
   i::Handle<i::JSObject> obj = Utils::OpenHandle(this);
 
   i::Handle<i::Map> new_map =
     i::Factory::CopyMapDropTransitions(i::Handle<i::Map>(obj->map()));
   new_map->set_is_access_check_needed(true);
   obj->set_map(*new_map);
+}
+
+
+bool v8::Object::IsDirty() {
+  return Utils::OpenHandle(this)->IsDirty();
 }
 
 
@@ -2171,6 +2261,7 @@ Local<v8::Object> v8::Object::Clone() {
 int v8::Object::GetIdentityHash() {
   ON_BAILOUT("v8::Object::GetIdentityHash()", return 0);
   ENTER_V8;
+  HandleScope scope;
   i::Handle<i::JSObject> self = Utils::OpenHandle(this);
   i::Handle<i::Object> hidden_props(i::GetHiddenProperties(self, true));
   i::Handle<i::Object> hash_symbol = i::Factory::identity_hash_symbol();
@@ -2200,6 +2291,7 @@ bool v8::Object::SetHiddenValue(v8::Handle<v8::String> key,
                                 v8::Handle<v8::Value> value) {
   ON_BAILOUT("v8::Object::SetHiddenValue()", return false);
   ENTER_V8;
+  HandleScope scope;
   i::Handle<i::JSObject> self = Utils::OpenHandle(this);
   i::Handle<i::Object> hidden_props(i::GetHiddenProperties(self, true));
   i::Handle<i::Object> key_obj = Utils::OpenHandle(*key);
@@ -2239,6 +2331,7 @@ v8::Local<v8::Value> v8::Object::GetHiddenValue(v8::Handle<v8::String> key) {
 bool v8::Object::DeleteHiddenValue(v8::Handle<v8::String> key) {
   ON_BAILOUT("v8::DeleteHiddenValue()", return false);
   ENTER_V8;
+  HandleScope scope;
   i::Handle<i::JSObject> self = Utils::OpenHandle(this);
   i::Handle<i::Object> hidden_props(i::GetHiddenProperties(self, false));
   if (hidden_props->IsUndefined()) {
@@ -2253,7 +2346,8 @@ bool v8::Object::DeleteHiddenValue(v8::Handle<v8::String> key) {
 void v8::Object::SetIndexedPropertiesToPixelData(uint8_t* data, int length) {
   ON_BAILOUT("v8::SetElementsToPixelData()", return);
   ENTER_V8;
-  if (!ApiCheck(i::Smi::IsValid(length),
+  HandleScope scope;
+  if (!ApiCheck(length <= i::PixelArray::kMaxLength,
                 "v8::Object::SetIndexedPropertiesToPixelData()",
                 "length exceeds max acceptable value")) {
     return;
@@ -2266,6 +2360,30 @@ void v8::Object::SetIndexedPropertiesToPixelData(uint8_t* data, int length) {
   }
   i::Handle<i::PixelArray> pixels = i::Factory::NewPixelArray(length, data);
   self->set_elements(*pixels);
+}
+
+
+void v8::Object::SetIndexedPropertiesToExternalArrayData(
+    void* data,
+    ExternalArrayType array_type,
+    int length) {
+  ON_BAILOUT("v8::SetIndexedPropertiesToExternalArrayData()", return);
+  ENTER_V8;
+  HandleScope scope;
+  if (!ApiCheck(length <= i::ExternalArray::kMaxLength,
+                "v8::Object::SetIndexedPropertiesToExternalArrayData()",
+                "length exceeds max acceptable value")) {
+    return;
+  }
+  i::Handle<i::JSObject> self = Utils::OpenHandle(this);
+  if (!ApiCheck(!self->IsJSArray(),
+                "v8::Object::SetIndexedPropertiesToExternalArrayData()",
+                "JSArray is not supported")) {
+    return;
+  }
+  i::Handle<i::ExternalArray> array =
+      i::Factory::NewExternalArray(length, array_type, data);
+  self->set_elements(*array);
 }
 
 
@@ -2413,20 +2531,14 @@ int String::Write(uint16_t* buffer, int start, int length) const {
   ENTER_V8;
   ASSERT(start >= 0 && length >= -1);
   i::Handle<i::String> str = Utils::OpenHandle(this);
-  // Flatten the string for efficiency.  This applies whether we are
-  // using StringInputBuffer or Get(i) to access the characters.
-  str->TryFlattenIfNotFlat();
   int end = length;
   if ( (length == -1) || (length > str->length() - start) )
     end = str->length() - start;
   if (end < 0) return 0;
-  write_input_buffer.Reset(start, *str);
-  int i;
-  for (i = 0; i < end; i++)
-    buffer[i] = write_input_buffer.GetNext();
-  if (length == -1 || i < length)
-    buffer[i] = '\0';
-  return i;
+  i::String::WriteToFlat(*str, buffer, start, end);
+  if (length == -1 || end < length)
+    buffer[end] = '\0';
+  return end;
 }
 
 
@@ -2547,7 +2659,16 @@ void v8::Object::SetInternalField(int index, v8::Handle<Value> value) {
 
 
 void v8::Object::SetPointerInInternalField(int index, void* value) {
-  SetInternalField(index, External::Wrap(value));
+  i::Object* as_object = reinterpret_cast<i::Object*>(value);
+  if (as_object->IsSmi()) {
+    Utils::OpenHandle(this)->SetInternalField(index, as_object);
+    return;
+  }
+  HandleScope scope;
+  i::Handle<i::Proxy> proxy =
+      i::Factory::NewProxy(reinterpret_cast<i::Address>(value), i::TENURED);
+  if (!proxy.is_null())
+      Utils::OpenHandle(this)->SetInternalField(index, *proxy);
 }
 
 
@@ -2557,11 +2678,8 @@ bool v8::V8::Initialize() {
   if (i::V8::IsRunning()) return true;
   ENTER_V8;
   HandleScope scope;
-  if (i::Snapshot::Initialize()) {
-    return true;
-  } else {
-    return i::V8::Initialize(NULL);
-  }
+  if (i::Snapshot::Initialize()) return true;
+  return i::V8::Initialize(NULL);
 }
 
 
@@ -2571,17 +2689,26 @@ bool v8::V8::Dispose() {
 }
 
 
-bool v8::V8::IdleNotification(bool is_high_priority) {
-  if (!i::V8::IsRunning()) return false;
-  return i::V8::IdleNotification(is_high_priority);
+HeapStatistics::HeapStatistics(): total_heap_size_(0), used_heap_size_(0) { }
+
+
+void v8::V8::GetHeapStatistics(HeapStatistics* heap_statistics) {
+  heap_statistics->set_total_heap_size(i::Heap::CommittedMemory());
+  heap_statistics->set_used_heap_size(i::Heap::SizeOfObjects());
+}
+
+
+bool v8::V8::IdleNotification() {
+  // Returning true tells the caller that it need not
+  // continue to call IdleNotification.
+  if (!i::V8::IsRunning()) return true;
+  return i::V8::IdleNotification();
 }
 
 
 void v8::V8::LowMemoryNotification() {
-#if defined(ANDROID)
   if (!i::V8::IsRunning()) return;
   i::Heap::CollectAllGarbage(true);
-#endif
 }
 
 
@@ -2673,9 +2800,7 @@ Persistent<Context> v8::Context::New(
   }
   // Leave V8.
 
-  if (!ApiCheck(!env.is_null(),
-                "v8::Context::New()",
-                "Could not initialize environment"))
+  if (env.is_null())
     return Persistent<Context>();
   return Persistent<Context>(Utils::ToLocal(env));
 }
@@ -2729,14 +2854,18 @@ v8::Local<v8::Context> Context::GetEntered() {
 
 v8::Local<v8::Context> Context::GetCurrent() {
   if (IsDeadCheck("v8::Context::GetCurrent()")) return Local<Context>();
-  i::Handle<i::Context> context(i::Top::global_context());
+  i::Handle<i::Object> current = i::Top::global_context();
+  if (current.is_null()) return Local<Context>();
+  i::Handle<i::Context> context = i::Handle<i::Context>::cast(current);
   return Utils::ToLocal(context);
 }
 
 
 v8::Local<v8::Context> Context::GetCalling() {
   if (IsDeadCheck("v8::Context::GetCalling()")) return Local<Context>();
-  i::Handle<i::Context> context(i::Top::GetCallingGlobalContext());
+  i::Handle<i::Object> calling = i::Top::GetCallingGlobalContext();
+  if (calling.is_null()) return Local<Context>();
+  i::Handle<i::Context> context = i::Handle<i::Context>::cast(calling);
   return Utils::ToLocal(context);
 }
 
@@ -2804,24 +2933,29 @@ static void* ExternalValueImpl(i::Handle<i::Object> obj) {
 }
 
 
-static const intptr_t kAlignedPointerMask = 3;
-
 Local<Value> v8::External::Wrap(void* data) {
   STATIC_ASSERT(sizeof(data) == sizeof(i::Address));
   LOG_API("External::Wrap");
   EnsureInitialized("v8::External::Wrap()");
   ENTER_V8;
-  if ((reinterpret_cast<intptr_t>(data) & kAlignedPointerMask) == 0) {
-    uintptr_t data_ptr = reinterpret_cast<uintptr_t>(data);
-    intptr_t data_value =
-        static_cast<intptr_t>(data_ptr >> i::Internals::kAlignedPointerShift);
-    STATIC_ASSERT(sizeof(data_ptr) == sizeof(data_value));
-    if (i::Smi::IsIntptrValid(data_value)) {
-      i::Handle<i::Object> obj(i::Smi::FromIntptr(data_value));
-      return Utils::ToLocal(obj);
-    }
+  i::Object* as_object = reinterpret_cast<i::Object*>(data);
+  if (as_object->IsSmi()) {
+    return Utils::ToLocal(i::Handle<i::Object>(as_object));
   }
   return ExternalNewImpl(data);
+}
+
+
+void* v8::Object::SlowGetPointerFromInternalField(int index) {
+  i::Handle<i::JSObject> obj = Utils::OpenHandle(this);
+  i::Object* value = obj->GetInternalField(index);
+  if (value->IsSmi()) {
+    return value;
+  } else if (value->IsProxy()) {
+    return reinterpret_cast<void*>(i::Proxy::cast(value)->proxy());
+  } else {
+    return NULL;
+  }
 }
 
 
@@ -2831,9 +2965,7 @@ void* v8::External::FullUnwrap(v8::Handle<v8::Value> wrapper) {
   void* result;
   if (obj->IsSmi()) {
     // The external value was an aligned pointer.
-    uintptr_t value = static_cast<uintptr_t>(
-        i::Smi::cast(*obj)->value()) << i::Internals::kAlignedPointerShift;
-    result = reinterpret_cast<void*>(value);
+    result = *obj;
   } else if (obj->IsProxy()) {
     result = ExternalValueImpl(obj);
   } else {
@@ -2872,9 +3004,21 @@ Local<String> v8::String::New(const char* data, int length) {
   LOG_API("String::New(char)");
   if (length == 0) return Empty();
   ENTER_V8;
-  if (length == -1) length = strlen(data);
+  if (length == -1) length = i::StrLength(data);
   i::Handle<i::String> result =
       i::Factory::NewStringFromUtf8(i::Vector<const char>(data, length));
+  return Utils::ToLocal(result);
+}
+
+
+Local<String> v8::String::Concat(Handle<String> left, Handle<String> right) {
+  EnsureInitialized("v8::String::New()");
+  LOG_API("String::New(char)");
+  ENTER_V8;
+  i::Handle<i::String> left_string = Utils::OpenHandle(*left);
+  i::Handle<i::String> right_string = Utils::OpenHandle(*right);
+  i::Handle<i::String> result = i::Factory::NewConsString(left_string,
+                                                          right_string);
   return Utils::ToLocal(result);
 }
 
@@ -2883,7 +3027,7 @@ Local<String> v8::String::NewUndetectable(const char* data, int length) {
   EnsureInitialized("v8::String::NewUndetectable()");
   LOG_API("String::NewUndetectable(char)");
   ENTER_V8;
-  if (length == -1) length = strlen(data);
+  if (length == -1) length = i::StrLength(data);
   i::Handle<i::String> result =
       i::Factory::NewStringFromUtf8(i::Vector<const char>(data, length));
   result->MarkAsUndetectable();
@@ -2938,78 +3082,13 @@ i::Handle<i::String> NewExternalAsciiStringHandle(
 }
 
 
-static void DisposeExternalString(v8::Persistent<v8::Value> obj,
-                                  void* parameter) {
-  ENTER_V8;
-  i::ExternalTwoByteString* str =
-      i::ExternalTwoByteString::cast(*Utils::OpenHandle(*obj));
-
-  // External symbols are deleted when they are pruned out of the symbol
-  // table. Generally external symbols are not registered with the weak handle
-  // callbacks unless they are upgraded to a symbol after being externalized.
-  if (!str->IsSymbol()) {
-    v8::String::ExternalStringResource* resource =
-        reinterpret_cast<v8::String::ExternalStringResource*>(parameter);
-    if (resource != NULL) {
-      const size_t total_size = resource->length() * sizeof(*resource->data());
-      i::Counters::total_external_string_memory.Decrement(total_size);
-
-      // The object will continue to live in the JavaScript heap until the
-      // handle is entirely cleaned out by the next GC. For example the
-      // destructor for the resource below could bring it back to life again.
-      // Which is why we make sure to not have a dangling pointer here.
-      str->set_resource(NULL);
-      delete resource;
-    }
-  }
-
-  // In any case we do not need this handle any longer.
-  obj.Dispose();
-}
-
-
-static void DisposeExternalAsciiString(v8::Persistent<v8::Value> obj,
-                                       void* parameter) {
-  ENTER_V8;
-  i::ExternalAsciiString* str =
-      i::ExternalAsciiString::cast(*Utils::OpenHandle(*obj));
-
-  // External symbols are deleted when they are pruned out of the symbol
-  // table. Generally external symbols are not registered with the weak handle
-  // callbacks unless they are upgraded to a symbol after being externalized.
-  if (!str->IsSymbol()) {
-    v8::String::ExternalAsciiStringResource* resource =
-        reinterpret_cast<v8::String::ExternalAsciiStringResource*>(parameter);
-    if (resource != NULL) {
-      const size_t total_size = resource->length() * sizeof(*resource->data());
-      i::Counters::total_external_string_memory.Decrement(total_size);
-
-      // The object will continue to live in the JavaScript heap until the
-      // handle is entirely cleaned out by the next GC. For example the
-      // destructor for the resource below could bring it back to life again.
-      // Which is why we make sure to not have a dangling pointer here.
-      str->set_resource(NULL);
-      delete resource;
-    }
-  }
-
-  // In any case we do not need this handle any longer.
-  obj.Dispose();
-}
-
-
 Local<String> v8::String::NewExternal(
       v8::String::ExternalStringResource* resource) {
   EnsureInitialized("v8::String::NewExternal()");
   LOG_API("String::NewExternal");
   ENTER_V8;
-  const size_t total_size = resource->length() * sizeof(*resource->data());
-  i::Counters::total_external_string_memory.Increment(total_size);
   i::Handle<i::String> result = NewExternalStringHandle(resource);
-  i::Handle<i::Object> handle = i::GlobalHandles::Create(*result);
-  i::GlobalHandles::MakeWeak(handle.location(),
-                             resource,
-                             &DisposeExternalString);
+  i::ExternalStringTable::AddString(*result);
   return Utils::ToLocal(result);
 }
 
@@ -3021,13 +3100,7 @@ bool v8::String::MakeExternal(v8::String::ExternalStringResource* resource) {
   i::Handle<i::String> obj = Utils::OpenHandle(this);
   bool result = obj->MakeExternal(resource);
   if (result && !obj->IsSymbol()) {
-    // Operation was successful and the string is not a symbol. In this case
-    // we need to make sure that the we call the destructor for the external
-    // resource when no strong references to the string remain.
-    i::Handle<i::Object> handle = i::GlobalHandles::Create(*obj);
-    i::GlobalHandles::MakeWeak(handle.location(),
-                               resource,
-                               &DisposeExternalString);
+    i::ExternalStringTable::AddString(*obj);
   }
   return result;
 }
@@ -3038,13 +3111,8 @@ Local<String> v8::String::NewExternal(
   EnsureInitialized("v8::String::NewExternal()");
   LOG_API("String::NewExternal");
   ENTER_V8;
-  const size_t total_size = resource->length() * sizeof(*resource->data());
-  i::Counters::total_external_string_memory.Increment(total_size);
   i::Handle<i::String> result = NewExternalAsciiStringHandle(resource);
-  i::Handle<i::Object> handle = i::GlobalHandles::Create(*result);
-  i::GlobalHandles::MakeWeak(handle.location(),
-                             resource,
-                             &DisposeExternalAsciiString);
+  i::ExternalStringTable::AddString(*result);
   return Utils::ToLocal(result);
 }
 
@@ -3057,13 +3125,7 @@ bool v8::String::MakeExternal(
   i::Handle<i::String> obj = Utils::OpenHandle(this);
   bool result = obj->MakeExternal(resource);
   if (result && !obj->IsSymbol()) {
-    // Operation was successful and the string is not a symbol. In this case
-    // we need to make sure that the we call the destructor for the external
-    // resource when no strong references to the string remain.
-    i::Handle<i::Object> handle = i::GlobalHandles::Create(*obj);
-    i::GlobalHandles::MakeWeak(handle.location(),
-                               resource,
-                               &DisposeExternalAsciiString);
+    i::ExternalStringTable::AddString(*obj);
   }
   return result;
 }
@@ -3093,6 +3155,10 @@ Local<v8::Object> v8::Object::New() {
 Local<v8::Value> v8::Date::New(double time) {
   EnsureInitialized("v8::Date::New()");
   LOG_API("Date::New");
+  if (isnan(time)) {
+    // Introduce only canonical NaN value into the VM, to avoid signaling NaNs.
+    time = i::OS::nan_value();
+  }
   ENTER_V8;
   EXCEPTION_PREAMBLE();
   i::Handle<i::Object> obj =
@@ -3156,7 +3222,7 @@ Local<String> v8::String::NewSymbol(const char* data, int length) {
   EnsureInitialized("v8::String::NewSymbol()");
   LOG_API("String::NewSymbol(char)");
   ENTER_V8;
-  if (length == -1) length = strlen(data);
+  if (length == -1) length = i::StrLength(data);
   i::Handle<i::String> result =
       i::Factory::LookupSymbol(i::Vector<const char>(data, length));
   return Utils::ToLocal(result);
@@ -3165,6 +3231,10 @@ Local<String> v8::String::NewSymbol(const char* data, int length) {
 
 Local<Number> v8::Number::New(double value) {
   EnsureInitialized("v8::Number::New()");
+  if (isnan(value)) {
+    // Introduce only canonical NaN value into the VM, to avoid signaling NaNs.
+    value = i::OS::nan_value();
+  }
   ENTER_V8;
   i::Handle<i::Object> result = i::Factory::NewNumber(value);
   return Utils::NumberToLocal(result);
@@ -3182,8 +3252,19 @@ Local<Integer> v8::Integer::New(int32_t value) {
 }
 
 
+Local<Integer> Integer::NewFromUnsigned(uint32_t value) {
+  bool fits_into_int32_t = (value & (1 << 31)) == 0;
+  if (fits_into_int32_t) {
+    return Integer::New(static_cast<int32_t>(value));
+  }
+  ENTER_V8;
+  i::Handle<i::Object> result = i::Factory::NewNumber(value);
+  return Utils::IntegerToLocal(result);
+}
+
+
 void V8::IgnoreOutOfMemoryException() {
-  thread_local.SetIgnoreOutOfMemory(true);
+  thread_local.set_ignore_out_of_memory(true);
 }
 
 
@@ -3609,6 +3690,14 @@ void Debug::SetHostDispatchHandler(HostDispatchHandler handler,
 }
 
 
+void Debug::SetDebugMessageDispatchHandler(
+    DebugMessageDispatchHandler handler) {
+  EnsureInitialized("v8::Debug::SetDebugMessageDispatchHandler");
+  ENTER_V8;
+  i::Debugger::SetDebugMessageDispatchHandler(handler);
+}
+
+
 Local<Value> Debug::Call(v8::Handle<v8::Function> fun,
                          v8::Handle<v8::Value> data) {
   if (!i::V8::IsRunning()) return Local<Value>();
@@ -3652,8 +3741,8 @@ Local<Value> Debug::GetMirror(v8::Handle<v8::Value> obj) {
 }
 
 
-bool Debug::EnableAgent(const char* name, int port) {
-  return i::Debugger::StartAgent(name, port);
+bool Debug::EnableAgent(const char* name, int port, bool wait_for_connection) {
+  return i::Debugger::StartAgent(name, port, wait_for_connection);
 }
 #endif  // ENABLE_DEBUGGER_SUPPORT
 
@@ -3662,6 +3751,11 @@ namespace internal {
 
 HandleScopeImplementer* HandleScopeImplementer::instance() {
   return &thread_local;
+}
+
+
+void HandleScopeImplementer::FreeThreadResources() {
+  thread_local.Free();
 }
 
 
@@ -3676,7 +3770,7 @@ char* HandleScopeImplementer::ArchiveThreadHelper(char* storage) {
   handle_scope_data_ = *current;
   memcpy(storage, this, sizeof(*this));
 
-  Initialize();
+  ResetAfterArchive();
   current->Initialize();
 
   return storage + ArchiveSpacePerThread();
@@ -3700,19 +3794,21 @@ char* HandleScopeImplementer::RestoreThreadHelper(char* storage) {
 }
 
 
-void HandleScopeImplementer::Iterate(
-    ObjectVisitor* v,
-    List<i::Object**>* blocks,
-    v8::ImplementationUtilities::HandleScopeData* handle_data) {
+void HandleScopeImplementer::IterateThis(ObjectVisitor* v) {
   // Iterate over all handles in the blocks except for the last.
-  for (int i = blocks->length() - 2; i >= 0; --i) {
-    Object** block = blocks->at(i);
+  for (int i = blocks()->length() - 2; i >= 0; --i) {
+    Object** block = blocks()->at(i);
     v->VisitPointers(block, &block[kHandleBlockSize]);
   }
 
   // Iterate over live handles in the last block (if any).
-  if (!blocks->is_empty()) {
-    v->VisitPointers(blocks->last(), handle_data->next);
+  if (!blocks()->is_empty()) {
+    v->VisitPointers(blocks()->last(), handle_scope_data_.next);
+  }
+
+  if (!saved_contexts_.is_empty()) {
+    Object** start = reinterpret_cast<Object**>(&saved_contexts_.first());
+    v->VisitPointers(start, start + saved_contexts_.length());
   }
 }
 
@@ -3720,18 +3816,15 @@ void HandleScopeImplementer::Iterate(
 void HandleScopeImplementer::Iterate(ObjectVisitor* v) {
   v8::ImplementationUtilities::HandleScopeData* current =
       v8::ImplementationUtilities::CurrentHandleScope();
-  Iterate(v, thread_local.Blocks(), current);
+  thread_local.handle_scope_data_ = *current;
+  thread_local.IterateThis(v);
 }
 
 
 char* HandleScopeImplementer::Iterate(ObjectVisitor* v, char* storage) {
   HandleScopeImplementer* thread_local =
       reinterpret_cast<HandleScopeImplementer*>(storage);
-  List<internal::Object**>* blocks_of_archived_thread = thread_local->Blocks();
-  v8::ImplementationUtilities::HandleScopeData* handle_data_of_archived_thread =
-      &thread_local->handle_scope_data_;
-  Iterate(v, blocks_of_archived_thread, handle_data_of_archived_thread);
-
+  thread_local->IterateThis(v);
   return storage + ArchiveSpacePerThread();
 }
 

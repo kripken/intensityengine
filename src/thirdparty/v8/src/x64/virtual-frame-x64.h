@@ -200,6 +200,9 @@ class VirtualFrame : public ZoneObject {
   // shared return site.  Emits code for spills.
   void PrepareForReturn();
 
+  // Number of local variables after when we use a loop for allocating.
+  static const int kLocalVarBound = 7;
+
   // Allocate and initialize the frame-allocated locals.
   void AllocateStackSlots();
 
@@ -340,7 +343,7 @@ class VirtualFrame : public ZoneObject {
   // of the frame.  Key and receiver are not dropped.
   Result CallKeyedStoreIC();
 
-  // Call call IC.  Arguments, reciever, and function name are found
+  // Call call IC.  Arguments, receiver, and function name are found
   // on top of the frame.  Function name slot is not dropped.  The
   // argument count does not include the receiver.
   Result CallCallIC(RelocInfo::Mode mode, int arg_count, int loop_nesting);
@@ -377,6 +380,7 @@ class VirtualFrame : public ZoneObject {
   void EmitPush(const Operand& operand);
   void EmitPush(Heap::RootListIndex index);
   void EmitPush(Immediate immediate);
+  void EmitPush(Smi* value);
   // Uses kScratchRegister, emits appropriate relocation info.
   void EmitPush(Handle<Object> value);
 

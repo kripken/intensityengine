@@ -49,6 +49,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="winmm.lib Ws2_32.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -109,6 +110,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="winmm.lib Ws2_32.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -189,6 +191,10 @@
 		</File>
 		<File
 			RelativePath="..\..\test\cctest\test-heap.cc"
+			>
+		</File>
+		<File
+			RelativePath="..\..\test\cctest\test-heap-profiler.cc"
 			>
 		</File>
 		<File

@@ -31,38 +31,68 @@
 namespace v8 {
 namespace internal {
 
+// List of code stubs used on all platforms. The order in this list is important
+// as only the stubs up to and including RecordWrite allows nested stub calls.
+#define CODE_STUB_LIST_ALL_PLATFORMS(V)  \
+  V(CallFunction)                        \
+  V(GenericBinaryOp)                     \
+  V(StringAdd)                           \
+  V(SubString)                           \
+  V(StringCompare)                       \
+  V(SmiOp)                               \
+  V(Compare)                             \
+  V(RecordWrite)                         \
+  V(ConvertToDouble)                     \
+  V(WriteInt32ToHeapNumber)              \
+  V(StackCheck)                          \
+  V(FastNewClosure)                      \
+  V(FastNewContext)                      \
+  V(FastCloneShallowArray)               \
+  V(GenericUnaryOp)                      \
+  V(RevertToNumber)                      \
+  V(ToBoolean)                           \
+  V(Instanceof)                          \
+  V(CounterOp)                           \
+  V(ArgumentsAccess)                     \
+  V(RegExpExec)                          \
+  V(Runtime)                             \
+  V(CEntry)                              \
+  V(JSEntry)
+
+// List of code stubs only used on ARM platforms.
+#ifdef V8_TARGET_ARCH_ARM
+#define CODE_STUB_LIST_ARM(V)  \
+  V(GetProperty)               \
+  V(SetProperty)               \
+  V(InvokeBuiltin)             \
+  V(RegExpCEntry)
+#else
+#define CODE_STUB_LIST_ARM(V)
+#endif
+
+// Combined list of code stubs.
+#define CODE_STUB_LIST(V)            \
+  CODE_STUB_LIST_ALL_PLATFORMS(V)    \
+  CODE_STUB_LIST_ARM(V)
 
 // Stub is base classes of all stubs.
 class CodeStub BASE_EMBEDDED {
  public:
   enum Major {
-    CallFunction,
-    GenericBinaryOp,
-    SmiOp,
-    Compare,
-    RecordWrite,  // Last stub that allows stub calls inside.
-    ConvertToDouble,
-    WriteInt32ToHeapNumber,
-    StackCheck,
-    UnarySub,
-    RevertToNumber,
-    ToBoolean,
-    Instanceof,
-    CounterOp,
-    ArgumentsAccess,
-    Runtime,
-    CEntry,
-    JSEntry,
-    GetProperty,   // ARM only
-    SetProperty,   // ARM only
-    InvokeBuiltin,  // ARM only
-    JSExit,        // ARM only
-    RegExpCEntry,  // ARM only
+#define DEF_ENUM(name) name,
+    CODE_STUB_LIST(DEF_ENUM)
+#undef DEF_ENUM
+    NoCache,  // marker for stubs that do custom caching
     NUMBER_OF_IDS
   };
 
   // Retrieve the code for the stub. Generate the code if needed.
   Handle<Code> GetCode();
+
+  // Retrieve the code for the stub if already generated.  Do not
+  // generate the code if not already generated and instead return a
+  // retry after GC Failure object.
+  Object* TryGetCode();
 
   static Major MajorKeyFromKey(uint32_t key) {
     return static_cast<Major>(MajorKeyBits::decode(key));
@@ -74,13 +104,30 @@ class CodeStub BASE_EMBEDDED {
 
   virtual ~CodeStub() {}
 
+  // Override these methods to provide a custom caching mechanism for
+  // an individual type of code stub.
+  virtual bool GetCustomCache(Code** code_out) { return false; }
+  virtual void SetCustomCache(Code* value) { }
+  virtual bool has_custom_cache() { return false; }
+
  protected:
   static const int kMajorBits = 5;
   static const int kMinorBits = kBitsPerInt - kSmiTagSize - kMajorBits;
 
  private:
+  // Lookup the code in the (possibly custom) cache.
+  bool FindCodeInCache(Code** code_out);
+
+  // Nonvirtual wrapper around the stub-specific Generate function.  Call
+  // this function to set up the macro assembler and generate the code.
+  void GenerateCode(MacroAssembler* masm);
+
   // Generates the assembler code for the stub.
   virtual void Generate(MacroAssembler* masm) = 0;
+
+  // Perform bookkeeping required after code generation when stub code is
+  // initially generated.
+  void RecordCodeGeneration(Code* code, MacroAssembler* masm);
 
   // Returns information for computing the number key.
   virtual Major MajorKey() = 0;

@@ -52,8 +52,8 @@ namespace internal {
   HT(variable_allocation, V8.VariableAllocation)                      \
   HT(ast_optimization, V8.ASTOptimization)                            \
   HT(code_generation, V8.CodeGeneration)                              \
-  HT(deferred_code_generation, V8.DeferredCodeGeneration)             \
-  HT(code_creation, V8.CodeCreation)
+  HT(deferred_code_generation, V8.DeferredCodeGeneration)
+
 
 // WARNING: STATS_COUNTER_LIST_* is a very large macro that is causing MSVC
 // Intellisense to crash.  It was broken into two macros (each of length 40
@@ -74,8 +74,6 @@ namespace internal {
   SC(objs_since_last_full, V8.ObjsSinceLastFull)                 \
   SC(symbol_table_capacity, V8.SymbolTableCapacity)              \
   SC(number_of_symbols, V8.NumberOfSymbols)                      \
-  /* Current amount of memory in external string buffers. */     \
-  SC(total_external_string_memory, V8.TotalExternalStringMemory) \
   SC(script_wrappers, V8.ScriptWrappers)                         \
   SC(call_initialize_stubs, V8.CallInitializeStubs)              \
   SC(call_premonomorphic_stubs, V8.CallPreMonomorphicStubs)      \
@@ -118,6 +116,7 @@ namespace internal {
   SC(keyed_load_generic_smi, V8.KeyedLoadGenericSmi)                \
   SC(keyed_load_generic_symbol, V8.KeyedLoadGenericSymbol)          \
   SC(keyed_load_generic_slow, V8.KeyedLoadGenericSlow)              \
+  SC(keyed_load_external_array_slow, V8.KeyedLoadExternalArraySlow) \
   /* Count how much the monomorphic keyed-load stubs are hit. */    \
   SC(keyed_load_function_prototype, V8.KeyedLoadFunctionPrototype)  \
   SC(keyed_load_string_length, V8.KeyedLoadStringLength)            \
@@ -142,14 +141,25 @@ namespace internal {
   SC(constructed_objects, V8.ConstructedObjects)                    \
   SC(constructed_objects_runtime, V8.ConstructedObjectsRuntime)     \
   SC(constructed_objects_stub, V8.ConstructedObjectsStub)           \
+  SC(array_function_runtime, V8.ArrayFunctionRuntime)               \
+  SC(array_function_native, V8.ArrayFunctionNative)                 \
   SC(for_in, V8.ForIn)                                              \
   SC(enum_cache_hits, V8.EnumCacheHits)                             \
   SC(enum_cache_misses, V8.EnumCacheMisses)                         \
   SC(reloc_info_count, V8.RelocInfoCount)                           \
   SC(reloc_info_size, V8.RelocInfoSize)                             \
   SC(zone_segment_bytes, V8.ZoneSegmentBytes)                       \
-  SC(compute_entry_frame, V8.ComputeEntryFrame)
-
+  SC(compute_entry_frame, V8.ComputeEntryFrame)                     \
+  SC(generic_binary_stub_calls, V8.GenericBinaryStubCalls)          \
+  SC(generic_binary_stub_calls_regs, V8.GenericBinaryStubCallsRegs) \
+  SC(string_add_runtime, V8.StringAddRuntime)                       \
+  SC(string_add_native, V8.StringAddNative)                         \
+  SC(sub_string_runtime, V8.SubStringRuntime)                       \
+  SC(sub_string_native, V8.SubStringNative)                         \
+  SC(string_compare_native, V8.StringCompareNative)                 \
+  SC(string_compare_runtime, V8.StringCompareRuntime)               \
+  SC(regexp_entry_runtime, V8.RegExpEntryRuntime)                   \
+  SC(regexp_entry_native, V8.RegExpEntryNative)
 
 // This file contains all the v8 counters that are in use.
 class Counters : AllStatic {

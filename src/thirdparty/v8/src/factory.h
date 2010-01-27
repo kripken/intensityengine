@@ -106,11 +106,10 @@ class Factory : public AllStatic {
   static Handle<String> NewConsString(Handle<String> first,
                                       Handle<String> second);
 
-  // Create a new sliced string object which represents a substring of a
-  // backing string.
-  static Handle<String> NewStringSlice(Handle<String> str,
-                                       int begin,
-                                       int end);
+  // Create a new string object which holds a substring of a string.
+  static Handle<String> NewSubString(Handle<String> str,
+                                     int begin,
+                                     int end);
 
   // Creates a new external String object.  There are two String encodings
   // in the system: ASCII and two byte.  Unlike other String types, it does
@@ -155,8 +154,15 @@ class Factory : public AllStatic {
   static Handle<ByteArray> NewByteArray(int length,
                                         PretenureFlag pretenure = NOT_TENURED);
 
-  static Handle<PixelArray> NewPixelArray(int length,
+  static Handle<PixelArray> NewPixelArray(
+      int length,
       uint8_t* external_pointer,
+      PretenureFlag pretenure = NOT_TENURED);
+
+  static Handle<ExternalArray> NewExternalArray(
+      int length,
+      ExternalArrayType array_type,
+      void* external_pointer,
       PretenureFlag pretenure = NOT_TENURED);
 
   static Handle<Map> NewMap(InstanceType type, int instance_size);
@@ -213,7 +219,8 @@ class Factory : public AllStatic {
 
   static Handle<JSFunction> NewFunctionFromBoilerplate(
       Handle<JSFunction> boilerplate,
-      Handle<Context> context);
+      Handle<Context> context,
+      PretenureFlag pretenure = TENURED);
 
   static Handle<Code> NewCode(const CodeDesc& desc,
                               ZoneScopeInfo* sinfo,
@@ -264,7 +271,6 @@ class Factory : public AllStatic {
 
   static Handle<JSFunction> NewFunctionBoilerplate(Handle<String> name,
                                                    int number_of_literals,
-                                                   bool contains_array_literal,
                                                    Handle<Code> code);
 
   static Handle<JSFunction> NewFunctionBoilerplate(Handle<String> name);
@@ -285,6 +291,8 @@ class Factory : public AllStatic {
       Handle<String> key,
       Handle<Object> value,
       PropertyAttributes attributes);
+
+  static Handle<String> NumberToString(Handle<Object> number);
 
   enum ApiInstanceType {
     JavaScriptObject,
@@ -367,7 +375,8 @@ class Factory : public AllStatic {
 
   static Handle<JSFunction> BaseNewFunctionFromBoilerplate(
       Handle<JSFunction> boilerplate,
-      Handle<Map> function_map);
+      Handle<Map> function_map,
+      PretenureFlag pretenure);
 
   // Create a new map cache.
   static Handle<MapCache> NewMapCache(int at_least_space_for);

@@ -77,12 +77,12 @@ class Reference BASE_EMBEDDED {
   // Generate code to push the value of the reference on top of the
   // expression stack.  The reference is expected to be already on top of
   // the expression stack, and it is left in place with its value above it.
-  void GetValue(TypeofState typeof_state);
+  void GetValue();
 
   // Generate code to push the value of a reference on top of the expression
   // stack and then spill the stack frame.  This function is used temporarily
   // while the code generator is being transformed.
-  inline void GetValueAndSpill(TypeofState typeof_state);
+  inline void GetValueAndSpill();
 
   // Generate code to store the value on top of the expression stack in the
   // reference.  The reference is expected to be immediately below the value
@@ -112,10 +112,8 @@ class CodeGenState BASE_EMBEDDED {
   explicit CodeGenState(CodeGenerator* owner);
 
   // Create a code generator state based on a code generator's current
-  // state.  The new state has its own typeof state and pair of branch
-  // labels.
+  // state.  The new state has its own pair of branch labels.
   CodeGenState(CodeGenerator* owner,
-               TypeofState typeof_state,
                JumpTarget* true_target,
                JumpTarget* false_target);
 
@@ -123,13 +121,11 @@ class CodeGenState BASE_EMBEDDED {
   // previous state.
   ~CodeGenState();
 
-  TypeofState typeof_state() const { return typeof_state_; }
   JumpTarget* true_target() const { return true_target_; }
   JumpTarget* false_target() const { return false_target_; }
 
  private:
   CodeGenerator* owner_;
-  TypeofState typeof_state_;
   JumpTarget* true_target_;
   JumpTarget* false_target_;
   CodeGenState* previous_;
@@ -147,6 +143,15 @@ class CodeGenerator: public AstVisitor {
                                Handle<Script> script,
                                bool is_eval);
 
+  // Printing of AST, etc. as requested by flags.
+  static void MakeCodePrologue(FunctionLiteral* fun);
+
+  // Allocate and install the code.
+  static Handle<Code> MakeCodeEpilogue(FunctionLiteral* fun,
+                                       MacroAssembler* masm,
+                                       Code::Flags flags,
+                                       Handle<Script> script);
+
 #ifdef ENABLE_LOGGING_AND_PROFILING
   static bool ShouldGenerateLog(Expression* type);
 #endif
@@ -156,10 +161,12 @@ class CodeGenerator: public AstVisitor {
                               bool is_toplevel,
                               Handle<Script> script);
 
+  static void RecordPositions(MacroAssembler* masm, int pos);
+
   // Accessors
   MacroAssembler* masm() { return masm_; }
-
   VirtualFrame* frame() const { return frame_; }
+  Handle<Script> script() { return script_; }
 
   bool has_valid_frame() const { return frame_ != NULL; }
 
@@ -195,7 +202,6 @@ class CodeGenerator: public AstVisitor {
 
   // State
   bool has_cc() const  { return cc_reg_ != al; }
-  TypeofState typeof_state() const { return state_->typeof_state(); }
   JumpTarget* true_target() const  { return state_->true_target(); }
   JumpTarget* false_target() const  { return state_->false_target(); }
 
@@ -227,7 +233,7 @@ class CodeGenerator: public AstVisitor {
   void LoadReference(Reference* ref);
   void UnloadReference(Reference* ref);
 
-  MemOperand ContextOperand(Register context, int index) const {
+  static MemOperand ContextOperand(Register context, int index) {
     return MemOperand(context, Context::SlotOffset(index));
   }
 
@@ -239,36 +245,36 @@ class CodeGenerator: public AstVisitor {
                                                JumpTarget* slow);
 
   // Expressions
-  MemOperand GlobalObject() const  {
+  static MemOperand GlobalObject()  {
     return ContextOperand(cp, Context::GLOBAL_INDEX);
   }
 
   void LoadCondition(Expression* x,
-                     TypeofState typeof_state,
                      JumpTarget* true_target,
                      JumpTarget* false_target,
                      bool force_cc);
-  void Load(Expression* x, TypeofState typeof_state = NOT_INSIDE_TYPEOF);
+  void Load(Expression* expr);
   void LoadGlobal();
   void LoadGlobalReceiver(Register scratch);
 
   // Generate code to push the value of an expression on top of the frame
   // and then spill the frame fully to memory.  This function is used
   // temporarily while the code generator is being transformed.
-  inline void LoadAndSpill(Expression* expression,
-                           TypeofState typeof_state = NOT_INSIDE_TYPEOF);
+  inline void LoadAndSpill(Expression* expression);
 
   // Call LoadCondition and then spill the virtual frame unless control flow
   // cannot reach the end of the expression (ie, by emitting only
   // unconditional jumps to the control targets).
   inline void LoadConditionAndSpill(Expression* expression,
-                                    TypeofState typeof_state,
                                     JumpTarget* true_target,
                                     JumpTarget* false_target,
                                     bool force_control);
 
   // Read a value from a slot and leave it on top of the expression stack.
   void LoadFromSlot(Slot* slot, TypeofState typeof_state);
+  // Store the value on top of the stack to a slot.
+  void StoreToSlot(Slot* slot, InitState init_state);
+
   void LoadFromGlobalSlotCheckExtensions(Slot* slot,
                                          TypeofState typeof_state,
                                          Register tmp,
@@ -315,10 +321,10 @@ class CodeGenerator: public AstVisitor {
                                       const InlineRuntimeLUT& new_entry,
                                       InlineRuntimeLUT* old_entry);
 
-  Handle<JSFunction> BuildBoilerplate(FunctionLiteral* node);
+  static Handle<Code> ComputeLazyCompile(int argc);
   void ProcessDeclarations(ZoneList<Declaration*>* declarations);
 
-  Handle<Code> ComputeCallInitialize(int argc, InLoopFlag in_loop);
+  static Handle<Code> ComputeCallInitialize(int argc, InLoopFlag in_loop);
 
   // Declare global variables and functions in the given array of
   // name/value pairs.
@@ -331,6 +337,8 @@ class CodeGenerator: public AstVisitor {
   void GenerateIsSmi(ZoneList<Expression*>* args);
   void GenerateIsNonNegativeSmi(ZoneList<Expression*>* args);
   void GenerateIsArray(ZoneList<Expression*>* args);
+  void GenerateIsObject(ZoneList<Expression*>* args);
+  void GenerateIsFunction(ZoneList<Expression*>* args);
 
   // Support for construct call checks.
   void GenerateIsConstructCall(ZoneList<Expression*>* args);
@@ -355,18 +363,33 @@ class CodeGenerator: public AstVisitor {
   // Fast support for Math.random().
   void GenerateRandomPositiveSmi(ZoneList<Expression*>* args);
 
-  // Fast support for Math.sin and Math.cos.
-  enum MathOp { SIN, COS };
-  void GenerateFastMathOp(MathOp op, ZoneList<Expression*>* args);
-  inline void GenerateMathSin(ZoneList<Expression*>* args);
-  inline void GenerateMathCos(ZoneList<Expression*>* args);
+  // Fast support for StringAdd.
+  void GenerateStringAdd(ZoneList<Expression*>* args);
+
+  // Fast support for SubString.
+  void GenerateSubString(ZoneList<Expression*>* args);
+
+  // Fast support for StringCompare.
+  void GenerateStringCompare(ZoneList<Expression*>* args);
+
+  // Support for direct calls from JavaScript to native RegExp code.
+  void GenerateRegExpExec(ZoneList<Expression*>* args);
+
+  // Simple condition analysis.
+  enum ConditionAnalysis {
+    ALWAYS_TRUE,
+    ALWAYS_FALSE,
+    DONT_KNOW
+  };
+  ConditionAnalysis AnalyzeCondition(Expression* cond);
 
   // Methods used to indicate which source code is generated for. Source
   // positions are collected by the assembler and emitted with the relocation
   // information.
   void CodeForFunctionPosition(FunctionLiteral* fun);
   void CodeForReturnPosition(FunctionLiteral* fun);
-  void CodeForStatementPosition(AstNode* node);
+  void CodeForStatementPosition(Statement* node);
+  void CodeForDoWhileConditionPosition(DoWhileStatement* stmt);
   void CodeForSourcePosition(int pos);
 
 #ifdef DEBUG
@@ -402,8 +425,31 @@ class CodeGenerator: public AstVisitor {
   friend class VirtualFrame;
   friend class JumpTarget;
   friend class Reference;
+  friend class FastCodeGenerator;
+  friend class CodeGenSelector;
 
   DISALLOW_COPY_AND_ASSIGN(CodeGenerator);
+};
+
+
+class CallFunctionStub: public CodeStub {
+ public:
+  CallFunctionStub(int argc, InLoopFlag in_loop)
+      : argc_(argc), in_loop_(in_loop) {}
+
+  void Generate(MacroAssembler* masm);
+
+ private:
+  int argc_;
+  InLoopFlag in_loop_;
+
+#if defined(DEBUG)
+  void Print() { PrintF("CallFunctionStub (argc %d)\n", argc_); }
+#endif  // defined(DEBUG)
+
+  Major MajorKey() { return CallFunction; }
+  int MinorKey() { return argc_; }
+  InLoopFlag InLoop() { return in_loop_; }
 };
 
 
@@ -415,13 +461,15 @@ class GenericBinaryOpStub : public CodeStub {
       : op_(op),
         mode_(mode),
         constant_rhs_(constant_rhs),
-        specialized_on_rhs_(RhsIsOneWeWantToOptimizeFor(op, constant_rhs)) { }
+        specialized_on_rhs_(RhsIsOneWeWantToOptimizeFor(op, constant_rhs)),
+        name_(NULL) { }
 
  private:
   Token::Value op_;
   OverwriteMode mode_;
   int constant_rhs_;
   bool specialized_on_rhs_;
+  char* name_;
 
   static const int kMaxKnownRhs = 0x40000000;
 
@@ -466,22 +514,7 @@ class GenericBinaryOpStub : public CodeStub {
     return key;
   }
 
-  const char* GetName() {
-    switch (op_) {
-      case Token::ADD: return "GenericBinaryOpStub_ADD";
-      case Token::SUB: return "GenericBinaryOpStub_SUB";
-      case Token::MUL: return "GenericBinaryOpStub_MUL";
-      case Token::DIV: return "GenericBinaryOpStub_DIV";
-      case Token::MOD: return "GenericBinaryOpStub_MOD";
-      case Token::BIT_OR: return "GenericBinaryOpStub_BIT_OR";
-      case Token::BIT_AND: return "GenericBinaryOpStub_BIT_AND";
-      case Token::BIT_XOR: return "GenericBinaryOpStub_BIT_XOR";
-      case Token::SAR: return "GenericBinaryOpStub_SAR";
-      case Token::SHL: return "GenericBinaryOpStub_SHL";
-      case Token::SHR: return "GenericBinaryOpStub_SHR";
-      default:         return "GenericBinaryOpStub";
-    }
-  }
+  const char* GetName();
 
 #ifdef DEBUG
   void Print() {

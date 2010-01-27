@@ -66,14 +66,36 @@ class Bootstrapper : public AllStatic {
   static bool IsActive();
 
   // Encoding/decoding support for fixup flags.
-  class FixupFlagsIsPCRelative: public BitField<bool, 0, 1> {};
-  class FixupFlagsUseCodeObject: public BitField<bool, 1, 1> {};
-  class FixupFlagsArgumentsCount: public BitField<uint32_t, 2, 32-2> {};
+  class FixupFlagsUseCodeObject: public BitField<bool, 0, 1> {};
+  class FixupFlagsArgumentsCount: public BitField<uint32_t, 1, 32-1> {};
 
   // Support for thread preemption.
   static int ArchiveSpacePerThread();
   static char* ArchiveState(char* to);
   static char* RestoreState(char* from);
+  static void FreeThreadResources();
+
+  // This will allocate a char array that is deleted when V8 is shut down.
+  // It should only be used for strictly finite allocations.
+  static char* AllocateAutoDeletedArray(int bytes);
+};
+
+
+class NativesExternalStringResource
+    : public v8::String::ExternalAsciiStringResource {
+ public:
+  explicit NativesExternalStringResource(const char* source);
+
+  const char* data() const {
+    return data_;
+  }
+
+  size_t length() const {
+    return length_;
+  }
+ private:
+  const char* data_;
+  size_t length_;
 };
 
 }}  // namespace v8::internal

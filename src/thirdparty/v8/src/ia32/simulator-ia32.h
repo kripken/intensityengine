@@ -28,25 +28,35 @@
 #ifndef V8_IA32_SIMULATOR_IA32_H_
 #define V8_IA32_SIMULATOR_IA32_H_
 
+#include "allocation.h"
 
 // Since there is no simulator for the ia32 architecture the only thing we can
 // do is to call the entry directly.
 #define CALL_GENERATED_CODE(entry, p0, p1, p2, p3, p4) \
   entry(p0, p1, p2, p3, p4);
 
-// Calculated the stack limit beyond which we will throw stack overflow errors.
-// This macro must be called from a C++ method. It relies on being able to take
-// the address of "this" to get a value on the current execution stack and then
-// calculates the stack limit based on that value.
-// NOTE: The check for overflow is not safe as there is no guarantee that the
-// running thread has its stack in all memory up to address 0x00000000.
-#define GENERATED_CODE_STACK_LIMIT(limit) \
-  (reinterpret_cast<uintptr_t>(this) >= limit ? \
-      reinterpret_cast<uintptr_t>(this) - limit : 0)
+// The stack limit beyond which we will throw stack overflow errors in
+// generated code. Because generated code on ia32 uses the C stack, we
+// just use the C stack limit.
+class SimulatorStack : public v8::internal::AllStatic {
+ public:
+  static inline uintptr_t JsLimitFromCLimit(uintptr_t c_limit) {
+    return c_limit;
+  }
+
+  static inline uintptr_t RegisterCTryCatch(uintptr_t try_catch_address) {
+    return try_catch_address;
+  }
+
+  static inline void UnregisterCTryCatch() { }
+};
 
 // Call the generated regexp code directly. The entry function pointer should
-// expect seven int/pointer sized arguments and return an int.
-#define CALL_GENERATED_REGEXP_CODE(entry, p0, p1, p2, p3, p4, p5, p6) \
-  entry(p0, p1, p2, p3, p4, p5, p6)
+// expect eight int/pointer sized arguments and return an int.
+#define CALL_GENERATED_REGEXP_CODE(entry, p0, p1, p2, p3, p4, p5, p6, p7) \
+  entry(p0, p1, p2, p3, p4, p5, p6, p7)
+
+#define TRY_CATCH_FROM_ADDRESS(try_catch_address) \
+  reinterpret_cast<TryCatch*>(try_catch_address)
 
 #endif  // V8_IA32_SIMULATOR_IA32_H_

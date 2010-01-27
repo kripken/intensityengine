@@ -32,10 +32,10 @@
 // These macros define the version number for the current version.
 // NOTE these macros are used by the SCons build script so their names
 // cannot be changed without changing the SCons build script.
-#define MAJOR_VERSION     1
-#define MINOR_VERSION     3
-#define BUILD_NUMBER      9
-#define PATCH_LEVEL       0
+#define MAJOR_VERSION     2
+#define MINOR_VERSION     0
+#define BUILD_NUMBER      6
+#define PATCH_LEVEL       4
 #define CANDIDATE_VERSION false
 
 // Define SONAME to have the SCons build the put a specific SONAME into the

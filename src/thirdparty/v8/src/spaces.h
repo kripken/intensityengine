@@ -65,20 +65,23 @@ namespace internal {
 
 // Some assertion macros used in the debugging mode.
 
-#define ASSERT_PAGE_ALIGNED(address)                  \
+#define ASSERT_PAGE_ALIGNED(address)                                           \
   ASSERT((OffsetFrom(address) & Page::kPageAlignmentMask) == 0)
 
-#define ASSERT_OBJECT_ALIGNED(address)                \
+#define ASSERT_OBJECT_ALIGNED(address)                                         \
   ASSERT((OffsetFrom(address) & kObjectAlignmentMask) == 0)
 
-#define ASSERT_OBJECT_SIZE(size)                      \
+#define ASSERT_MAP_ALIGNED(address)                                            \
+  ASSERT((OffsetFrom(address) & kMapAlignmentMask) == 0)
+
+#define ASSERT_OBJECT_SIZE(size)                                               \
   ASSERT((0 < size) && (size <= Page::kMaxHeapObjectSize))
 
-#define ASSERT_PAGE_OFFSET(offset)                    \
-  ASSERT((Page::kObjectStartOffset <= offset)         \
+#define ASSERT_PAGE_OFFSET(offset)                                             \
+  ASSERT((Page::kObjectStartOffset <= offset)                                  \
       && (offset <= Page::kPageSize))
 
-#define ASSERT_MAP_PAGE_INDEX(index)                            \
+#define ASSERT_MAP_PAGE_INDEX(index)                                           \
   ASSERT((0 <= index) && (index <= MapSpace::kMaxMapPageIndex))
 
 
@@ -106,11 +109,8 @@ class AllocationInfo;
 // For this reason we add an offset to get room for the Page data at the start.
 //
 // The mark-compact collector transforms a map pointer into a page index and a
-// page offset. The map space can have up to 1024 pages, and 8M bytes (1024 *
-// 8K) in total.  Because a map pointer is aligned to the pointer size (4
-// bytes), 11 bits are enough to encode the page offset. 21 bits (10 for the
-// page index + 11 for the offset in the page) are required to encode a map
-// pointer.
+// page offset. The excact encoding is described in the comments for
+// class MapWord in objects.h.
 //
 // The only way to get a page pointer is by calling factory methods:
 //   Page* p = Page::FromAddress(addr); or
@@ -172,7 +172,7 @@ class Page {
 
   // Returns the offset of a given address to this page.
   INLINE(int Offset(Address a)) {
-    int offset = a - address();
+    int offset = static_cast<int>(a - address());
     ASSERT_PAGE_OFFSET(offset);
     return offset;
   }
@@ -211,9 +211,6 @@ class Page {
   static bool is_rset_in_use() { return rset_state_ == IN_USE; }
   static void set_rset_state(RSetState state) { rset_state_ = state; }
 #endif
-
-  // 8K bytes per page.
-  static const int kPageSizeBits = 13;
 
   // Page size in bytes.  This must be a multiple of the OS page size.
   static const int kPageSize = 1 << kPageSizeBits;
@@ -308,9 +305,83 @@ class Space : public Malloced {
   virtual void Print() = 0;
 #endif
 
+  // After calling this we can allocate a certain number of bytes using only
+  // linear allocation (with a LinearAllocationScope and an AlwaysAllocateScope)
+  // without using freelists or causing a GC.  This is used by partial
+  // snapshots.  It returns true of space was reserved or false if a GC is
+  // needed.  For paged spaces the space requested must include the space wasted
+  // at the end of each when allocating linearly.
+  virtual bool ReserveSpace(int bytes) = 0;
+
  private:
   AllocationSpace id_;
   Executability executable_;
+};
+
+
+// ----------------------------------------------------------------------------
+// All heap objects containing executable code (code objects) must be allocated
+// from a 2 GB range of memory, so that they can call each other using 32-bit
+// displacements.  This happens automatically on 32-bit platforms, where 32-bit
+// displacements cover the entire 4GB virtual address space.  On 64-bit
+// platforms, we support this using the CodeRange object, which reserves and
+// manages a range of virtual memory.
+class CodeRange : public AllStatic {
+ public:
+  // Reserves a range of virtual memory, but does not commit any of it.
+  // Can only be called once, at heap initialization time.
+  // Returns false on failure.
+  static bool Setup(const size_t requested_size);
+
+  // Frees the range of virtual memory, and frees the data structures used to
+  // manage it.
+  static void TearDown();
+
+  static bool exists() { return code_range_ != NULL; }
+  static bool contains(Address address) {
+    if (code_range_ == NULL) return false;
+    Address start = static_cast<Address>(code_range_->address());
+    return start <= address && address < start + code_range_->size();
+  }
+
+  // Allocates a chunk of memory from the large-object portion of
+  // the code range.  On platforms with no separate code range, should
+  // not be called.
+  static void* AllocateRawMemory(const size_t requested, size_t* allocated);
+  static void FreeRawMemory(void* buf, size_t length);
+
+ private:
+  // The reserved range of virtual memory that all code objects are put in.
+  static VirtualMemory* code_range_;
+  // Plain old data class, just a struct plus a constructor.
+  class FreeBlock {
+   public:
+    FreeBlock(Address start_arg, size_t size_arg)
+        : start(start_arg), size(size_arg) {}
+    FreeBlock(void* start_arg, size_t size_arg)
+        : start(static_cast<Address>(start_arg)), size(size_arg) {}
+
+    Address start;
+    size_t size;
+  };
+
+  // Freed blocks of memory are added to the free list.  When the allocation
+  // list is exhausted, the free list is sorted and merged to make the new
+  // allocation list.
+  static List<FreeBlock> free_list_;
+  // Memory is allocated from the free blocks on the allocation list.
+  // The block at current_allocation_block_index_ is the current block.
+  static List<FreeBlock> allocation_list_;
+  static int current_allocation_block_index_;
+
+  // Finds a block on the allocation list that contains at least the
+  // requested amount of memory.  If none is found, sorts and merges
+  // the existing free memory blocks, and searches again.
+  // If none can be found, terminates V8 with FatalProcessOutOfMemory.
+  static void GetNextAllocationBlock(size_t requested);
+  // Compares the start addresses of two free blocks.
+  static int CompareFreeBlockAddress(const FreeBlock* left,
+                                     const FreeBlock* right);
 };
 
 
@@ -380,8 +451,9 @@ class MemoryAllocator : public AllStatic {
   // function returns an invalid page pointer (NULL). The caller must check
   // whether the returned page is valid (by calling Page::is_valid()).  It is
   // guaranteed that allocated pages have contiguous addresses.  The actual
-  // number of allocated page is returned in the output parameter
-  // allocated_pages.
+  // number of allocated pages is returned in the output parameter
+  // allocated_pages.  If the PagedSpace owner is executable and there is
+  // a code range, the pages are allocated from the code range.
   static Page* AllocatePages(int requested_pages, int* allocated_pages,
                              PagedSpace* owner);
 
@@ -395,6 +467,9 @@ class MemoryAllocator : public AllStatic {
   // Allocates and frees raw memory of certain size.
   // These are just thin wrappers around OS::Allocate and OS::Free,
   // but keep track of allocated bytes as part of heap.
+  // If the flag is EXECUTABLE and a code range exists, the requested
+  // memory is allocated from the code range.  If a code range exists
+  // and the freed memory is in it, the code range manages the freed memory.
   static void* AllocateRawMemory(const size_t requested,
                                  size_t* allocated,
                                  Executability executable);
@@ -444,13 +519,13 @@ class MemoryAllocator : public AllStatic {
 #endif
 
   // Due to encoding limitation, we can only have 8K chunks.
-  static const int kMaxNofChunks = 1 << Page::kPageSizeBits;
-  // If a chunk has at least 32 pages, the maximum heap size is about
-  // 8 * 1024 * 32 * 8K = 2G bytes.
-#if defined(ANDROID)
-  static const int kPagesPerChunk = 16;
+  static const int kMaxNofChunks = 1 << kPageSizeBits;
+  // If a chunk has at least 16 pages, the maximum heap size is about
+  // 8K * 8K * 16 = 1G bytes.
+#ifdef V8_TARGET_ARCH_X64
+  static const int kPagesPerChunk = 32;
 #else
-  static const int kPagesPerChunk = 64;
+  static const int kPagesPerChunk = 16;
 #endif
   static const int kChunkSize = kPagesPerChunk * Page::kPageSize;
 
@@ -792,6 +867,10 @@ class PagedSpace : public Space {
   // Current capacity without growing (Size() + Available() + Waste()).
   int Capacity() { return accounting_stats_.Capacity(); }
 
+  // Total amount of memory committed for this space.  For paged
+  // spaces this equals the capacity.
+  int CommittedMemory() { return Capacity(); }
+
   // Available bytes without growing.
   int Available() { return accounting_stats_.Available(); }
 
@@ -816,6 +895,10 @@ class PagedSpace : public Space {
   // collection.
   inline Object* MCAllocateRaw(int size_in_bytes);
 
+  virtual bool ReserveSpace(int bytes);
+
+  // Used by ReserveSpace.
+  virtual void PutRestOfCurrentPageOnFreeList(Page* current_page) = 0;
 
   // ---------------------------------------------------------------------------
   // Mark-compact collection support functions
@@ -899,6 +982,18 @@ class PagedSpace : public Space {
     return Page::FromAllocationTop(alloc_info.limit);
   }
 
+  int CountPagesToTop() {
+    Page* p = Page::FromAllocationTop(allocation_info_.top);
+    PageIterator it(this, PageIterator::ALL_PAGES);
+    int counter = 1;
+    while (it.has_next()) {
+      if (it.next() == p) return counter;
+      counter++;
+    }
+    UNREACHABLE();
+    return -1;
+  }
+
   // Expands the space by allocating a fixed number of pages. Returns false if
   // it cannot allocate requested number of pages from OS. Newly allocated
   // pages are append to the last_page;
@@ -922,6 +1017,9 @@ class PagedSpace : public Space {
   HeapObject* SlowMCAllocateRaw(int size_in_bytes);
 
 #ifdef DEBUG
+  // Returns the number of total pages in this space.
+  int CountTotalPages();
+
   void DoPrintRSet(const char* space_name);
 #endif
  private:
@@ -930,11 +1028,6 @@ class PagedSpace : public Space {
 
   // Returns a pointer to the page of the relocation pointer.
   Page* MCRelocationTopPage() { return TopPageOf(mc_forwarding_info_); }
-
-#ifdef DEBUG
-  // Returns the number of total pages in this space.
-  int CountTotalPages();
-#endif
 
   friend class PageIterator;
 };
@@ -1042,13 +1135,20 @@ class SemiSpace : public Space {
   }
 
   // The offset of an address from the beginning of the space.
-  int SpaceOffsetForAddress(Address addr) { return addr - low(); }
+  int SpaceOffsetForAddress(Address addr) {
+    return static_cast<int>(addr - low());
+  }
 
-  // If we don't have this here then SemiSpace will be abstract.  However
-  // it should never be called.
+  // If we don't have these here then SemiSpace will be abstract.  However
+  // they should never be called.
   virtual int Size() {
     UNREACHABLE();
     return 0;
+  }
+
+  virtual bool ReserveSpace(int bytes) {
+    UNREACHABLE();
+    return false;
   }
 
   bool is_committed() { return committed_; }
@@ -1181,12 +1281,20 @@ class NewSpace : public Space {
   }
 
   // Return the allocated bytes in the active semispace.
-  virtual int Size() { return top() - bottom(); }
+  virtual int Size() { return static_cast<int>(top() - bottom()); }
+
   // Return the current capacity of a semispace.
   int Capacity() {
     ASSERT(to_space_.Capacity() == from_space_.Capacity());
     return to_space_.Capacity();
   }
+
+  // Return the total amount of memory committed for new space.
+  int CommittedMemory() {
+    if (from_space_.is_committed()) return 2 * Capacity();
+    return Capacity();
+  }
+
   // Return the available bytes without growing in the active semispace.
   int Available() { return Capacity() - Size(); }
 
@@ -1265,6 +1373,8 @@ class NewSpace : public Space {
 
   bool ToSpaceContains(Address a) { return to_space_.Contains(a); }
   bool FromSpaceContains(Address a) { return from_space_.Contains(a); }
+
+  virtual bool ReserveSpace(int bytes);
 
 #ifdef ENABLE_HEAP_PROTECTION
   // Protect/unprotect the space by marking it read-only/writable.
@@ -1352,6 +1462,8 @@ class FreeListNode: public HeapObject {
   static FreeListNode* FromAddress(Address address) {
     return reinterpret_cast<FreeListNode*>(HeapObject::FromAddress(address));
   }
+
+  static inline bool IsFreeListNode(HeapObject* object);
 
   // Set the size in bytes, which can be read with HeapObject::Size().  This
   // function also writes a map to the first word of the block so that it
@@ -1550,6 +1662,8 @@ class OldSpace : public PagedSpace {
   // collection.
   virtual void MCCommitRelocationInfo();
 
+  virtual void PutRestOfCurrentPageOnFreeList(Page* current_page);
+
 #ifdef DEBUG
   // Reports statistics for the space
   void ReportStatistics();
@@ -1611,6 +1725,8 @@ class FixedSpace : public PagedSpace {
   // collection.
   virtual void MCCommitRelocationInfo();
 
+  virtual void PutRestOfCurrentPageOnFreeList(Page* current_page);
+
 #ifdef DEBUG
   // Reports statistic info of the space
   void ReportStatistics();
@@ -1626,6 +1742,10 @@ class FixedSpace : public PagedSpace {
   // Virtual function in the superclass.  Allocate linearly at the start of
   // the page after current_page (there is assumed to be one).
   HeapObject* AllocateInNextPage(Page* current_page, int size_in_bytes);
+
+  void ResetFreeList() {
+    free_list_.Reset();
+  }
 
  private:
   // The size of objects in this space.
@@ -1645,8 +1765,11 @@ class FixedSpace : public PagedSpace {
 class MapSpace : public FixedSpace {
  public:
   // Creates a map space object with a maximum capacity.
-  MapSpace(int max_capacity, AllocationSpace id)
-      : FixedSpace(max_capacity, id, Map::kSize, "map") {}
+  MapSpace(int max_capacity, int max_map_space_pages, AllocationSpace id)
+      : FixedSpace(max_capacity, id, Map::kSize, "map"),
+        max_map_space_pages_(max_map_space_pages) {
+    ASSERT(max_map_space_pages < kMaxMapPageIndex);
+  }
 
   // Prepares for a mark-compact GC.
   virtual void PrepareForMarkCompact(bool will_compact);
@@ -1654,8 +1777,71 @@ class MapSpace : public FixedSpace {
   // Given an index, returns the page address.
   Address PageAddress(int page_index) { return page_addresses_[page_index]; }
 
-  // Constants.
-  static const int kMaxMapPageIndex = (1 << MapWord::kMapPageIndexBits) - 1;
+  static const int kMaxMapPageIndex = 1 << MapWord::kMapPageIndexBits;
+
+  // Are map pointers encodable into map word?
+  bool MapPointersEncodable() {
+    if (!FLAG_use_big_map_space) {
+      ASSERT(CountPagesToTop() <= kMaxMapPageIndex);
+      return true;
+    }
+    return CountPagesToTop() <= max_map_space_pages_;
+  }
+
+  // Should be called after forced sweep to find out if map space needs
+  // compaction.
+  bool NeedsCompaction(int live_maps) {
+    return !MapPointersEncodable() && live_maps <= CompactionThreshold();
+  }
+
+  Address TopAfterCompaction(int live_maps) {
+    ASSERT(NeedsCompaction(live_maps));
+
+    int pages_left = live_maps / kMapsPerPage;
+    PageIterator it(this, PageIterator::ALL_PAGES);
+    while (pages_left-- > 0) {
+      it.has_next();  // Must be called for side-effects, see bug 586.
+      ASSERT(it.has_next());
+      it.next()->ClearRSet();
+    }
+    it.has_next();  // Must be called for side-effects, see bug 586.
+    ASSERT(it.has_next());
+    Page* top_page = it.next();
+    top_page->ClearRSet();
+    ASSERT(top_page->is_valid());
+
+    int offset = live_maps % kMapsPerPage * Map::kSize;
+    Address top = top_page->ObjectAreaStart() + offset;
+    ASSERT(top < top_page->ObjectAreaEnd());
+    ASSERT(Contains(top));
+
+    return top;
+  }
+
+  void FinishCompaction(Address new_top, int live_maps) {
+    Page* top_page = Page::FromAddress(new_top);
+    ASSERT(top_page->is_valid());
+
+    SetAllocationInfo(&allocation_info_, top_page);
+    allocation_info_.top = new_top;
+
+    int new_size = live_maps * Map::kSize;
+    accounting_stats_.DeallocateBytes(accounting_stats_.Size());
+    accounting_stats_.AllocateBytes(new_size);
+
+#ifdef DEBUG
+    if (FLAG_enable_slow_asserts) {
+      int actual_size = 0;
+      for (Page* p = first_page_; p != top_page; p = p->next_page())
+        actual_size += kMapsPerPage * Map::kSize;
+      actual_size += (new_top - top_page->ObjectAreaStart());
+      ASSERT(accounting_stats_.Size() == actual_size);
+    }
+#endif
+
+    Shrink();
+    ResetFreeList();
+  }
 
  protected:
 #ifdef DEBUG
@@ -1663,8 +1849,17 @@ class MapSpace : public FixedSpace {
 #endif
 
  private:
+  static const int kMapsPerPage = Page::kObjectAreaSize / Map::kSize;
+
+  // Do map space compaction if there is a page gap.
+  int CompactionThreshold() {
+    return kMapsPerPage * (max_map_space_pages_ - 1);
+  }
+
+  const int max_map_space_pages_;
+
   // An array of page start address in a map space.
-  Address page_addresses_[kMaxMapPageIndex + 1];
+  Address page_addresses_[kMaxMapPageIndex];
 
  public:
   TRACK_MEMORY("MapSpace")
@@ -1686,7 +1881,7 @@ class CellSpace : public FixedSpace {
 #endif
 
  public:
-  TRACK_MEMORY("MapSpace")
+  TRACK_MEMORY("CellSpace")
 };
 
 
@@ -1806,6 +2001,11 @@ class LargeObjectSpace : public Space {
 
   // Checks whether the space is empty.
   bool IsEmpty() { return first_chunk_ == NULL; }
+
+  // See the comments for ReserveSpace in the Space class.  This has to be
+  // called after ReserveSpace has been called on the paged spaces, since they
+  // may use some memory, leaving less for large objects.
+  virtual bool ReserveSpace(int bytes);
 
 #ifdef ENABLE_HEAP_PROTECTION
   // Protect/unprotect the space by marking it read-only/writable.

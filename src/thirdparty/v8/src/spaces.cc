@@ -92,6 +92,7 @@ bool HeapObjectIterator::HasNextInNextPage() {
   cur_addr_ = cur_page->ObjectAreaStart();
   cur_limit_ = (cur_page == end_page_) ? end_addr_ : cur_page->AllocationTop();
 
+  if (cur_addr_ == end_addr_) return false;
   ASSERT(cur_addr_ < cur_limit_);
 #ifdef DEBUG
   Verify();
@@ -143,6 +144,128 @@ PageIterator::PageIterator(PagedSpace* space, Mode mode) : space_(space) {
 #ifdef DEBUG
 Page::RSetState Page::rset_state_ = Page::IN_USE;
 #endif
+
+// -----------------------------------------------------------------------------
+// CodeRange
+
+List<CodeRange::FreeBlock> CodeRange::free_list_(0);
+List<CodeRange::FreeBlock> CodeRange::allocation_list_(0);
+int CodeRange::current_allocation_block_index_ = 0;
+VirtualMemory* CodeRange::code_range_ = NULL;
+
+
+bool CodeRange::Setup(const size_t requested) {
+  ASSERT(code_range_ == NULL);
+
+  code_range_ = new VirtualMemory(requested);
+  CHECK(code_range_ != NULL);
+  if (!code_range_->IsReserved()) {
+    delete code_range_;
+    code_range_ = NULL;
+    return false;
+  }
+
+  // We are sure that we have mapped a block of requested addresses.
+  ASSERT(code_range_->size() == requested);
+  LOG(NewEvent("CodeRange", code_range_->address(), requested));
+  allocation_list_.Add(FreeBlock(code_range_->address(), code_range_->size()));
+  current_allocation_block_index_ = 0;
+  return true;
+}
+
+
+int CodeRange::CompareFreeBlockAddress(const FreeBlock* left,
+                                       const FreeBlock* right) {
+  // The entire point of CodeRange is that the difference between two
+  // addresses in the range can be represented as a signed 32-bit int,
+  // so the cast is semantically correct.
+  return static_cast<int>(left->start - right->start);
+}
+
+
+void CodeRange::GetNextAllocationBlock(size_t requested) {
+  for (current_allocation_block_index_++;
+       current_allocation_block_index_ < allocation_list_.length();
+       current_allocation_block_index_++) {
+    if (requested <= allocation_list_[current_allocation_block_index_].size) {
+      return;  // Found a large enough allocation block.
+    }
+  }
+
+  // Sort and merge the free blocks on the free list and the allocation list.
+  free_list_.AddAll(allocation_list_);
+  allocation_list_.Clear();
+  free_list_.Sort(&CompareFreeBlockAddress);
+  for (int i = 0; i < free_list_.length();) {
+    FreeBlock merged = free_list_[i];
+    i++;
+    // Add adjacent free blocks to the current merged block.
+    while (i < free_list_.length() &&
+           free_list_[i].start == merged.start + merged.size) {
+      merged.size += free_list_[i].size;
+      i++;
+    }
+    if (merged.size > 0) {
+      allocation_list_.Add(merged);
+    }
+  }
+  free_list_.Clear();
+
+  for (current_allocation_block_index_ = 0;
+       current_allocation_block_index_ < allocation_list_.length();
+       current_allocation_block_index_++) {
+    if (requested <= allocation_list_[current_allocation_block_index_].size) {
+      return;  // Found a large enough allocation block.
+    }
+  }
+
+  // Code range is full or too fragmented.
+  V8::FatalProcessOutOfMemory("CodeRange::GetNextAllocationBlock");
+}
+
+
+
+void* CodeRange::AllocateRawMemory(const size_t requested, size_t* allocated) {
+  ASSERT(current_allocation_block_index_ < allocation_list_.length());
+  if (requested > allocation_list_[current_allocation_block_index_].size) {
+    // Find an allocation block large enough.  This function call may
+    // call V8::FatalProcessOutOfMemory if it cannot find a large enough block.
+    GetNextAllocationBlock(requested);
+  }
+  // Commit the requested memory at the start of the current allocation block.
+  *allocated = RoundUp(requested, Page::kPageSize);
+  FreeBlock current = allocation_list_[current_allocation_block_index_];
+  if (*allocated >= current.size - Page::kPageSize) {
+    // Don't leave a small free block, useless for a large object or chunk.
+    *allocated = current.size;
+  }
+  ASSERT(*allocated <= current.size);
+  if (!code_range_->Commit(current.start, *allocated, true)) {
+    *allocated = 0;
+    return NULL;
+  }
+  allocation_list_[current_allocation_block_index_].start += *allocated;
+  allocation_list_[current_allocation_block_index_].size -= *allocated;
+  if (*allocated == current.size) {
+    GetNextAllocationBlock(0);  // This block is used up, get the next one.
+  }
+  return current.start;
+}
+
+
+void CodeRange::FreeRawMemory(void* address, size_t length) {
+  free_list_.Add(FreeBlock(address, length));
+  code_range_->Uncommit(address, length);
+}
+
+
+void CodeRange::TearDown() {
+    delete code_range_;  // Frees all memory in the virtual memory range.
+    code_range_ = NULL;
+    free_list_.Free();
+    allocation_list_.Free();
+}
+
 
 // -----------------------------------------------------------------------------
 // MemoryAllocator
@@ -226,9 +349,13 @@ void* MemoryAllocator::AllocateRawMemory(const size_t requested,
                                          size_t* allocated,
                                          Executability executable) {
   if (size_ + static_cast<int>(requested) > capacity_) return NULL;
-
-  void* mem = OS::Allocate(requested, allocated, executable == EXECUTABLE);
-  int alloced = *allocated;
+  void* mem;
+  if (executable == EXECUTABLE  && CodeRange::exists()) {
+    mem = CodeRange::AllocateRawMemory(requested, allocated);
+  } else {
+    mem = OS::Allocate(requested, allocated, (executable == EXECUTABLE));
+  }
+  int alloced = static_cast<int>(*allocated);
   size_ += alloced;
   Counters::memory_allocated.Increment(alloced);
   return mem;
@@ -236,9 +363,13 @@ void* MemoryAllocator::AllocateRawMemory(const size_t requested,
 
 
 void MemoryAllocator::FreeRawMemory(void* mem, size_t length) {
-  OS::Free(mem, length);
-  Counters::memory_allocated.Decrement(length);
-  size_ -= length;
+  if (CodeRange::contains(static_cast<Address>(mem))) {
+    CodeRange::FreeRawMemory(mem, length);
+  } else {
+    OS::Free(mem, length);
+  }
+  Counters::memory_allocated.Decrement(static_cast<int>(length));
+  size_ -= static_cast<int>(length);
   ASSERT(size_ >= 0);
 }
 
@@ -257,7 +388,7 @@ void* MemoryAllocator::ReserveInitialChunk(const size_t requested) {
   // We are sure that we have mapped a block of requested addresses.
   ASSERT(initial_chunk_->size() == requested);
   LOG(NewEvent("InitialChunk", initial_chunk_->address(), requested));
-  size_ += requested;
+  size_ += static_cast<int>(requested);
   return initial_chunk_->address();
 }
 
@@ -267,8 +398,8 @@ static int PagesInChunk(Address start, size_t size) {
   // and the last page ends on the last page-aligned address before
   // start+size.  Page::kPageSize is a power of two so we can divide by
   // shifting.
-  return (RoundDown(start + size, Page::kPageSize)
-          - RoundUp(start, Page::kPageSize)) >> Page::kPageSizeBits;
+  return static_cast<int>((RoundDown(start + size, Page::kPageSize)
+      - RoundUp(start, Page::kPageSize)) >> kPageSizeBits);
 }
 
 
@@ -282,7 +413,7 @@ Page* MemoryAllocator::AllocatePages(int requested_pages, int* allocated_pages,
   if (size_ + static_cast<int>(chunk_size) > capacity_) {
     // Request as many pages as we can.
     chunk_size = capacity_ - size_;
-    requested_pages = chunk_size >> Page::kPageSizeBits;
+    requested_pages = static_cast<int>(chunk_size >> kPageSizeBits);
 
     if (requested_pages <= 0) return Page::FromAddress(NULL);
   }
@@ -315,7 +446,7 @@ Page* MemoryAllocator::CommitPages(Address start, size_t size,
   if (!initial_chunk_->Commit(start, size, owner->executable() == EXECUTABLE)) {
     return Page::FromAddress(NULL);
   }
-  Counters::memory_allocated.Increment(size);
+  Counters::memory_allocated.Increment(static_cast<int>(size));
 
   // So long as we correctly overestimated the number of chunks we should not
   // run out of chunk ids.
@@ -336,7 +467,7 @@ bool MemoryAllocator::CommitBlock(Address start,
   ASSERT(InInitialChunk(start + size - 1));
 
   if (!initial_chunk_->Commit(start, size, executable)) return false;
-  Counters::memory_allocated.Increment(size);
+  Counters::memory_allocated.Increment(static_cast<int>(size));
   return true;
 }
 
@@ -348,7 +479,7 @@ bool MemoryAllocator::UncommitBlock(Address start, size_t size) {
   ASSERT(InInitialChunk(start + size - 1));
 
   if (!initial_chunk_->Uncommit(start, size)) return false;
-  Counters::memory_allocated.Decrement(size);
+  Counters::memory_allocated.Decrement(static_cast<int>(size));
   return true;
 }
 
@@ -428,7 +559,7 @@ void MemoryAllocator::DeleteChunk(int chunk_id) {
     // TODO(1240712): VirtualMemory::Uncommit has a return value which
     // is ignored here.
     initial_chunk_->Uncommit(c.address(), c.size());
-    Counters::memory_allocated.Decrement(c.size());
+    Counters::memory_allocated.Decrement(static_cast<int>(c.size()));
   } else {
     LOG(DeleteEvent("PagedChunk", c.address()));
     FreeRawMemory(c.address(), c.size());
@@ -827,13 +958,7 @@ void PagedSpace::Verify(ObjectVisitor* visitor) {
         // have their remembered set bits set if required as determined
         // by the visitor.
         int size = object->Size();
-        if (object->IsCode()) {
-          Code::cast(object)->ConvertICTargetsFromAddressToObject();
-          object->IterateBody(map->instance_type(), size, visitor);
-          Code::cast(object)->ConvertICTargetsFromObjectToAddress();
-        } else {
-          object->IterateBody(map->instance_type(), size, visitor);
-        }
+        object->IterateBody(map->instance_type(), size, visitor);
 
         current += size;
       }
@@ -858,7 +983,7 @@ bool NewSpace::Setup(Address start, int size) {
   // To support fast containment testing in the new space, the size of
   // this chunk must be a power of two and it must be aligned to its size.
   int initial_semispace_capacity = Heap::InitialSemiSpaceSize();
-  int maximum_semispace_capacity = Heap::SemiSpaceSize();
+  int maximum_semispace_capacity = Heap::MaxSemiSpaceSize();
 
   ASSERT(initial_semispace_capacity <= maximum_semispace_capacity);
   ASSERT(IsPowerOf2(maximum_semispace_capacity));
@@ -874,7 +999,7 @@ bool NewSpace::Setup(Address start, int size) {
 #undef SET_NAME
 #endif
 
-  ASSERT(size == 2 * maximum_semispace_capacity);
+  ASSERT(size == 2 * Heap::ReservedSemiSpaceSize());
   ASSERT(IsAddressAligned(start, size, 0));
 
   if (!to_space_.Setup(start,
@@ -972,7 +1097,8 @@ void NewSpace::Grow() {
 
 void NewSpace::Shrink() {
   int new_capacity = Max(InitialCapacity(), 2 * Size());
-  int rounded_new_capacity = RoundUp(new_capacity, OS::AllocateAlignment());
+  int rounded_new_capacity =
+      RoundUp(new_capacity, static_cast<int>(OS::AllocateAlignment()));
   if (rounded_new_capacity < Capacity() &&
       to_space_.ShrinkTo(rounded_new_capacity))  {
     // Only shrink from space if we managed to shrink to space.
@@ -1110,7 +1236,7 @@ void SemiSpace::TearDown() {
 bool SemiSpace::Grow() {
   // Double the semispace size but only up to maximum capacity.
   int maximum_extra = maximum_capacity_ - capacity_;
-  int extra = Min(RoundUp(capacity_, OS::AllocateAlignment()),
+  int extra = Min(RoundUp(capacity_, static_cast<int>(OS::AllocateAlignment())),
                   maximum_extra);
   if (!MemoryAllocator::CommitBlock(high(), extra, executable())) {
     return false;
@@ -1403,7 +1529,9 @@ void FreeListNode::set_size(int size_in_bytes) {
   // correct size.
   if (size_in_bytes > ByteArray::kAlignedSize) {
     set_map(Heap::raw_unchecked_byte_array_map());
-    ByteArray::cast(this)->set_length(ByteArray::LengthFor(size_in_bytes));
+    // Can't use ByteArray::cast because it fails during deserialization.
+    ByteArray* this_as_byte_array = reinterpret_cast<ByteArray*>(this);
+    this_as_byte_array->set_length(ByteArray::LengthFor(size_in_bytes));
   } else if (size_in_bytes == kPointerSize) {
     set_map(Heap::raw_unchecked_one_pointer_filler_map());
   } else if (size_in_bytes == 2 * kPointerSize) {
@@ -1411,13 +1539,13 @@ void FreeListNode::set_size(int size_in_bytes) {
   } else {
     UNREACHABLE();
   }
-  ASSERT(Size() == size_in_bytes);
+  // We would like to ASSERT(Size() == size_in_bytes) but this would fail during
+  // deserialization because the byte array map is not done yet.
 }
 
 
 Address FreeListNode::next() {
-  ASSERT(map() == Heap::raw_unchecked_byte_array_map() ||
-         map() == Heap::raw_unchecked_two_pointer_filler_map());
+  ASSERT(IsFreeListNode(this));
   if (map() == Heap::raw_unchecked_byte_array_map()) {
     ASSERT(Size() >= kNextOffset + kPointerSize);
     return Memory::Address_at(address() + kNextOffset);
@@ -1428,8 +1556,7 @@ Address FreeListNode::next() {
 
 
 void FreeListNode::set_next(Address next) {
-  ASSERT(map() == Heap::raw_unchecked_byte_array_map() ||
-         map() == Heap::raw_unchecked_two_pointer_filler_map());
+  ASSERT(IsFreeListNode(this));
   if (map() == Heap::raw_unchecked_byte_array_map()) {
     ASSERT(Size() >= kNextOffset + kPointerSize);
     Memory::Address_at(address() + kNextOffset) = next;
@@ -1609,7 +1736,8 @@ void FixedSizeFreeList::Free(Address start) {
     Memory::Address_at(start + i) = kZapValue;
   }
 #endif
-  ASSERT(!FLAG_always_compact);  // We only use the freelists with mark-sweep.
+  // We only use the freelists with mark-sweep.
+  ASSERT(!MarkCompactCollector::IsCompacting());
   FreeListNode* node = FreeListNode::FromAddress(start);
   node->set_size(object_size_);
   node->set_next(head_);
@@ -1672,12 +1800,14 @@ void OldSpace::MCCommitRelocationInfo() {
   while (it.has_next()) {
     Page* p = it.next();
     // Space below the relocation pointer is allocated.
-    computed_size += p->mc_relocation_top - p->ObjectAreaStart();
+    computed_size +=
+        static_cast<int>(p->mc_relocation_top - p->ObjectAreaStart());
     if (it.has_next()) {
       // Free the space at the top of the page.  We cannot use
       // p->mc_relocation_top after the call to Free (because Free will clear
       // remembered set bits).
-      int extra_size = p->ObjectAreaEnd() - p->mc_relocation_top;
+      int extra_size =
+          static_cast<int>(p->ObjectAreaEnd() - p->mc_relocation_top);
       if (extra_size > 0) {
         int wasted_bytes = free_list_.Free(p->mc_relocation_top, extra_size);
         // The bytes we have just "freed" to add to the free list were
@@ -1690,6 +1820,50 @@ void OldSpace::MCCommitRelocationInfo() {
   // Make sure the computed size - based on the used portion of the pages in
   // use - matches the size obtained while computing forwarding addresses.
   ASSERT(computed_size == Size());
+}
+
+
+bool NewSpace::ReserveSpace(int bytes) {
+  // We can't reliably unpack a partial snapshot that needs more new space
+  // space than the minimum NewSpace size.
+  ASSERT(bytes <= InitialCapacity());
+  Address limit = allocation_info_.limit;
+  Address top = allocation_info_.top;
+  return limit - top >= bytes;
+}
+
+
+bool PagedSpace::ReserveSpace(int bytes) {
+  Address limit = allocation_info_.limit;
+  Address top = allocation_info_.top;
+  if (limit - top >= bytes) return true;
+
+  // There wasn't enough space in the current page.  Lets put the rest
+  // of the page on the free list and start a fresh page.
+  PutRestOfCurrentPageOnFreeList(TopPageOf(allocation_info_));
+
+  Page* reserved_page = TopPageOf(allocation_info_);
+  int bytes_left_to_reserve = bytes;
+  while (bytes_left_to_reserve > 0) {
+    if (!reserved_page->next_page()->is_valid()) {
+      if (Heap::OldGenerationAllocationLimitReached()) return false;
+      Expand(reserved_page);
+    }
+    bytes_left_to_reserve -= Page::kPageSize;
+    reserved_page = reserved_page->next_page();
+    if (!reserved_page->is_valid()) return false;
+  }
+  ASSERT(TopPageOf(allocation_info_)->next_page()->is_valid());
+  SetAllocationInfo(&allocation_info_,
+                    TopPageOf(allocation_info_)->next_page());
+  return true;
+}
+
+
+// You have to call this last, since the implementation from PagedSpace
+// doesn't know that memory was 'promised' to large object space.
+bool LargeObjectSpace::ReserveSpace(int bytes) {
+  return Heap::OldGenerationSpaceAvailable() >= bytes;
 }
 
 
@@ -1706,13 +1880,16 @@ HeapObject* OldSpace::SlowAllocateRaw(int size_in_bytes) {
     return AllocateInNextPage(current_page, size_in_bytes);
   }
 
-  // There is no next page in this space.  Try free list allocation.
-  int wasted_bytes;
-  Object* result = free_list_.Allocate(size_in_bytes, &wasted_bytes);
-  accounting_stats_.WasteBytes(wasted_bytes);
-  if (!result->IsFailure()) {
-    accounting_stats_.AllocateBytes(size_in_bytes);
-    return HeapObject::cast(result);
+  // There is no next page in this space.  Try free list allocation unless that
+  // is currently forbidden.
+  if (!Heap::linear_allocation()) {
+    int wasted_bytes;
+    Object* result = free_list_.Allocate(size_in_bytes, &wasted_bytes);
+    accounting_stats_.WasteBytes(wasted_bytes);
+    if (!result->IsFailure()) {
+      accounting_stats_.AllocateBytes(size_in_bytes);
+      return HeapObject::cast(result);
+    }
   }
 
   // Free list allocation failed and there is no next page.  Fail if we have
@@ -1733,18 +1910,37 @@ HeapObject* OldSpace::SlowAllocateRaw(int size_in_bytes) {
 }
 
 
+void OldSpace::PutRestOfCurrentPageOnFreeList(Page* current_page) {
+  int free_size =
+      static_cast<int>(current_page->ObjectAreaEnd() - allocation_info_.top);
+  if (free_size > 0) {
+    int wasted_bytes = free_list_.Free(allocation_info_.top, free_size);
+    accounting_stats_.WasteBytes(wasted_bytes);
+  }
+}
+
+
+void FixedSpace::PutRestOfCurrentPageOnFreeList(Page* current_page) {
+  int free_size =
+      static_cast<int>(current_page->ObjectAreaEnd() - allocation_info_.top);
+  // In the fixed space free list all the free list items have the right size.
+  // We use up the rest of the page while preserving this invariant.
+  while (free_size >= object_size_in_bytes_) {
+    free_list_.Free(allocation_info_.top);
+    allocation_info_.top += object_size_in_bytes_;
+    free_size -= object_size_in_bytes_;
+    accounting_stats_.WasteBytes(object_size_in_bytes_);
+  }
+}
+
+
 // Add the block at the top of the page to the space's free list, set the
 // allocation info to the next page (assumed to be one), and allocate
 // linearly there.
 HeapObject* OldSpace::AllocateInNextPage(Page* current_page,
                                          int size_in_bytes) {
   ASSERT(current_page->next_page()->is_valid());
-  // Add the block at the top of this page to the free list.
-  int free_size = current_page->ObjectAreaEnd() - allocation_info_.top;
-  if (free_size > 0) {
-    int wasted_bytes = free_list_.Free(allocation_info_.top, free_size);
-    accounting_stats_.WasteBytes(wasted_bytes);
-  }
+  PutRestOfCurrentPageOnFreeList(current_page);
   SetAllocationInfo(&allocation_info_, current_page->next_page());
   return AllocateLinearly(&allocation_info_, size_in_bytes);
 }
@@ -1840,7 +2036,7 @@ static void CollectCommentStatistics(RelocIterator* it) {
     if (it->rinfo()->rmode() == RelocInfo::COMMENT) {
       const char* const txt =
           reinterpret_cast<const char*>(it->rinfo()->data());
-      flat_delta += it->rinfo()->pc() - prev_pc;
+      flat_delta += static_cast<int>(it->rinfo()->pc() - prev_pc);
       if (txt[0] == ']') break;  // End of nested  comment
       // A new comment
       CollectCommentStatistics(it);
@@ -1868,7 +2064,7 @@ void PagedSpace::CollectCodeStatistics() {
       const byte* prev_pc = code->instruction_start();
       while (!it.done()) {
         if (it.rinfo()->rmode() == RelocInfo::COMMENT) {
-          delta += it.rinfo()->pc() - prev_pc;
+          delta += static_cast<int>(it.rinfo()->pc() - prev_pc);
           CollectCommentStatistics(&it);
           prev_pc = it.rinfo()->pc();
         }
@@ -1877,7 +2073,7 @@ void PagedSpace::CollectCodeStatistics() {
 
       ASSERT(code->instruction_start() <= prev_pc &&
              prev_pc <= code->relocation_start());
-      delta += code->relocation_start() - prev_pc;
+      delta += static_cast<int>(code->relocation_start() - prev_pc);
       EnterComment("NoComment", delta);
     }
   }
@@ -1906,7 +2102,8 @@ void OldSpace::ReportStatistics() {
       int rset = Memory::int_at(rset_addr);
       if (rset != 0) {
         // Bits were set
-        int intoff = rset_addr - p->address();
+        int intoff =
+            static_cast<int>(rset_addr - p->address() - Page::kRSetOffset);
         int bitoff = 0;
         for (; bitoff < kBitsPerInt; ++bitoff) {
           if ((rset & (1 << bitoff)) != 0) {
@@ -2083,9 +2280,10 @@ void FixedSpace::MCCommitRelocationInfo() {
   while (it.has_next()) {
     Page* page = it.next();
     Address page_top = page->AllocationTop();
-    computed_size += page_top - page->ObjectAreaStart();
+    computed_size += static_cast<int>(page_top - page->ObjectAreaStart());
     if (it.has_next()) {
-      accounting_stats_.WasteBytes(page->ObjectAreaEnd() - page_top);
+      accounting_stats_.WasteBytes(
+          static_cast<int>(page->ObjectAreaEnd() - page_top));
     }
   }
 
@@ -2108,10 +2306,10 @@ HeapObject* FixedSpace::SlowAllocateRaw(int size_in_bytes) {
     return AllocateInNextPage(current_page, size_in_bytes);
   }
 
-  // There is no next page in this space.  Try free list allocation.
-  // The fixed space free list implicitly assumes that all free blocks
-  // are of the fixed size.
-  if (size_in_bytes == object_size_in_bytes_) {
+  // There is no next page in this space.  Try free list allocation unless
+  // that is currently forbidden.  The fixed space free list implicitly assumes
+  // that all free blocks are of the fixed size.
+  if (!Heap::linear_allocation()) {
     Object* result = free_list_.Allocate();
     if (!result->IsFailure()) {
       accounting_stats_.AllocateBytes(size_in_bytes);
@@ -2171,7 +2369,8 @@ void FixedSpace::ReportStatistics() {
       int rset = Memory::int_at(rset_addr);
       if (rset != 0) {
         // Bits were set
-        int intoff = rset_addr - p->address();
+        int intoff =
+            static_cast<int>(rset_addr - p->address() - Page::kRSetOffset);
         int bitoff = 0;
         for (; bitoff < kBitsPerInt; ++bitoff) {
           if ((rset & (1 << bitoff)) != 0) {
@@ -2292,7 +2491,7 @@ LargeObjectChunk* LargeObjectChunk::New(int size_in_bytes,
 
 
 int LargeObjectChunk::ChunkSizeFor(int size_in_bytes) {
-  int os_alignment = OS::AllocateAlignment();
+  int os_alignment = static_cast<int>(OS::AllocateAlignment());
   if (os_alignment < Page::kPageSize)
     size_in_bytes += (Page::kPageSize - os_alignment);
   return size_in_bytes + Page::kObjectStartOffset;
@@ -2371,7 +2570,7 @@ Object* LargeObjectSpace::AllocateRawInternal(int requested_size,
     return Failure::RetryAfterGC(requested_size, identity());
   }
 
-  size_ += chunk_size;
+  size_ += static_cast<int>(chunk_size);
   page_count_++;
   chunk->set_next(first_chunk_);
   chunk->set_size(chunk_size);
@@ -2522,7 +2721,7 @@ void LargeObjectSpace::FreeUnmarkedObjects() {
       if (object->IsCode()) {
         LOG(CodeDeleteEvent(object->address()));
       }
-      size_ -= chunk_size;
+      size_ -= static_cast<int>(chunk_size);
       page_count_--;
       MemoryAllocator::FreeRawMemory(chunk_address, chunk_size);
       LOG(DeleteEvent("LargeObjectChunk", chunk_address));
@@ -2561,10 +2760,12 @@ void LargeObjectSpace::Verify() {
     ASSERT(map->IsMap());
     ASSERT(Heap::map_space()->Contains(map));
 
-    // We have only code, sequential strings, fixed arrays, and byte arrays
-    // in large object space.
-    ASSERT(object->IsCode() || object->IsSeqString()
-           || object->IsFixedArray() || object->IsByteArray());
+    // We have only code, sequential strings, external strings
+    // (sequential strings that have been morphed into external
+    // strings), fixed arrays, and byte arrays in large object space.
+    ASSERT(object->IsCode() || object->IsSeqString() ||
+           object->IsExternalString() || object->IsFixedArray() ||
+           object->IsByteArray());
 
     // The object itself should look OK.
     object->Verify();
@@ -2572,11 +2773,9 @@ void LargeObjectSpace::Verify() {
     // Byte arrays and strings don't have interior pointers.
     if (object->IsCode()) {
       VerifyPointersVisitor code_visitor;
-      Code::cast(object)->ConvertICTargetsFromAddressToObject();
       object->IterateBody(map->instance_type(),
                           object->Size(),
                           &code_visitor);
-      Code::cast(object)->ConvertICTargetsFromObjectToAddress();
     } else if (object->IsFixedArray()) {
       // We loop over fixed arrays ourselves, rather then using the visitor,
       // because the visitor doesn't support the start/offset iteration

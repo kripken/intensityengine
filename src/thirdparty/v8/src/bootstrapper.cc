@@ -36,6 +36,7 @@
 #include "global-handles.h"
 #include "macro-assembler.h"
 #include "natives.h"
+#include "snapshot.h"
 
 namespace v8 {
 namespace internal {
@@ -92,14 +93,41 @@ class SourceCodeCache BASE_EMBEDDED {
 
 static SourceCodeCache natives_cache(Script::TYPE_NATIVE);
 static SourceCodeCache extensions_cache(Script::TYPE_EXTENSION);
+// This is for delete, not delete[].
+static List<char*>* delete_these_non_arrays_on_tear_down = NULL;
+// This is for delete[]
+static List<char*>* delete_these_arrays_on_tear_down = NULL;
+
+
+NativesExternalStringResource::NativesExternalStringResource(const char* source)
+    : data_(source), length_(StrLength(source)) {
+  if (delete_these_non_arrays_on_tear_down == NULL) {
+    delete_these_non_arrays_on_tear_down = new List<char*>(2);
+  }
+  // The resources are small objects and we only make a fixed number of
+  // them, but let's clean them up on exit for neatness.
+  delete_these_non_arrays_on_tear_down->
+      Add(reinterpret_cast<char*>(this));
+}
 
 
 Handle<String> Bootstrapper::NativesSourceLookup(int index) {
   ASSERT(0 <= index && index < Natives::GetBuiltinsCount());
   if (Heap::natives_source_cache()->get(index)->IsUndefined()) {
-    Handle<String> source_code =
-      Factory::NewStringFromAscii(Natives::GetScriptSource(index));
-    Heap::natives_source_cache()->set(index, *source_code);
+    if (!Snapshot::IsEnabled() || FLAG_new_snapshot) {
+      // We can use external strings for the natives.
+      NativesExternalStringResource* resource =
+          new NativesExternalStringResource(
+              Natives::GetScriptSource(index).start());
+      Handle<String> source_code =
+          Factory::NewExternalStringFromAscii(resource);
+      Heap::natives_source_cache()->set(index, *source_code);
+    } else {
+      // Old snapshot code can't cope with external strings at all.
+      Handle<String> source_code =
+        Factory::NewStringFromAscii(Natives::GetScriptSource(index));
+      Heap::natives_source_cache()->set(index, *source_code);
+    }
   }
   Handle<Object> cached_source(Heap::natives_source_cache()->get(index));
   return Handle<String>::cast(cached_source);
@@ -124,7 +152,41 @@ void Bootstrapper::Initialize(bool create_heap_objects) {
 }
 
 
+char* Bootstrapper::AllocateAutoDeletedArray(int bytes) {
+  char* memory = new char[bytes];
+  if (memory != NULL) {
+    if (delete_these_arrays_on_tear_down == NULL) {
+      delete_these_arrays_on_tear_down = new List<char*>(2);
+    }
+    delete_these_arrays_on_tear_down->Add(memory);
+  }
+  return memory;
+}
+
+
 void Bootstrapper::TearDown() {
+  if (delete_these_non_arrays_on_tear_down != NULL) {
+    int len = delete_these_non_arrays_on_tear_down->length();
+    ASSERT(len < 20);  // Don't use this mechanism for unbounded allocations.
+    for (int i = 0; i < len; i++) {
+      delete delete_these_non_arrays_on_tear_down->at(i);
+      delete_these_non_arrays_on_tear_down->at(i) = NULL;
+    }
+    delete delete_these_non_arrays_on_tear_down;
+    delete_these_non_arrays_on_tear_down = NULL;
+  }
+
+  if (delete_these_arrays_on_tear_down != NULL) {
+    int len = delete_these_arrays_on_tear_down->length();
+    ASSERT(len < 1000);  // Don't use this mechanism for unbounded allocations.
+    for (int i = 0; i < len; i++) {
+      delete[] delete_these_arrays_on_tear_down->at(i);
+      delete_these_arrays_on_tear_down->at(i) = NULL;
+    }
+    delete delete_these_arrays_on_tear_down;
+    delete_these_arrays_on_tear_down = NULL;
+  }
+
   natives_cache.Initialize(false);  // Yes, symmetrical
   extensions_cache.Initialize(false);
 }
@@ -201,20 +263,13 @@ bool PendingFixups::Process(Handle<JSBuiltinsObject> builtins) {
     }
     Code* code = Code::cast(code_[i]);
     Address pc = code->instruction_start() + pc_[i];
-    bool is_pc_relative = Bootstrapper::FixupFlagsIsPCRelative::decode(flags);
+    RelocInfo target(pc, RelocInfo::CODE_TARGET, 0);
     bool use_code_object = Bootstrapper::FixupFlagsUseCodeObject::decode(flags);
-
     if (use_code_object) {
-      if (is_pc_relative) {
-        Assembler::set_target_address_at(
-            pc, reinterpret_cast<Address>(f->code()));
-      } else {
-        *reinterpret_cast<Object**>(pc) = f->code();
-      }
+      target.set_target_object(f->code());
     } else {
-      Assembler::set_target_address_at(pc, f->code()->instruction_start());
+      target.set_target_address(f->code()->instruction_start());
     }
-
     LOG(StringEvent("resolved", name));
   }
   Clear();
@@ -323,8 +378,11 @@ Genesis* Genesis::current_ = NULL;
 
 void Bootstrapper::Iterate(ObjectVisitor* v) {
   natives_cache.Iterate(v);
+  v->Synchronize("NativesCache");
   extensions_cache.Iterate(v);
+  v->Synchronize("Extensions");
   PendingFixups::Iterate(v);
+  v->Synchronize("PendingFixups");
 }
 
 
@@ -474,7 +532,7 @@ void Genesis::CreateRoots(v8::Handle<v8::ObjectTemplate> global_template,
   // Please note that the prototype property for function instances must be
   // writable.
   Handle<DescriptorArray> function_map_descriptors =
-      ComputeFunctionInstanceDescriptor(false, true);
+      ComputeFunctionInstanceDescriptor(false, false);
   fm->set_instance_descriptors(*function_map_descriptors);
 
   // Allocate the function map first and then patch the prototype later
@@ -654,6 +712,8 @@ void Genesis::CreateRoots(v8::Handle<v8::ObjectTemplate> global_template,
         InstallFunction(global, "Array", JS_ARRAY_TYPE, JSArray::kSize,
                         Top::initial_object_prototype(), Builtins::ArrayCode,
                         true);
+    array_function->shared()->set_construct_stub(
+        Builtins::builtin(Builtins::ArrayConstructCode));
     array_function->shared()->DontAdaptArguments();
 
     // This seems a bit hackish, but we need to make sure Array.length
@@ -932,6 +992,7 @@ void Genesis::InstallNativeFunctions() {
   INSTALL_NATIVE(JSFunction, "ToUint32", to_uint32_fun);
   INSTALL_NATIVE(JSFunction, "ToInt32", to_int32_fun);
   INSTALL_NATIVE(JSFunction, "ToBoolean", to_boolean_fun);
+  INSTALL_NATIVE(JSFunction, "GlobalEval", global_eval_fun);
   INSTALL_NATIVE(JSFunction, "Instantiate", instantiate_fun);
   INSTALL_NATIVE(JSFunction, "ConfigureTemplateInstance",
                  configure_instance_fun);
@@ -1077,21 +1138,29 @@ bool Genesis::InstallNatives() {
             Factory::LookupAsciiSymbol("context_data"),
             proxy_context_data,
             common_attributes);
-    Handle<Proxy> proxy_eval_from_function =
-        Factory::NewProxy(&Accessors::ScriptEvalFromFunction);
+    Handle<Proxy> proxy_eval_from_script =
+        Factory::NewProxy(&Accessors::ScriptEvalFromScript);
     script_descriptors =
         Factory::CopyAppendProxyDescriptor(
             script_descriptors,
-            Factory::LookupAsciiSymbol("eval_from_function"),
-            proxy_eval_from_function,
+            Factory::LookupAsciiSymbol("eval_from_script"),
+            proxy_eval_from_script,
             common_attributes);
-    Handle<Proxy> proxy_eval_from_position =
-        Factory::NewProxy(&Accessors::ScriptEvalFromPosition);
+    Handle<Proxy> proxy_eval_from_script_position =
+        Factory::NewProxy(&Accessors::ScriptEvalFromScriptPosition);
     script_descriptors =
         Factory::CopyAppendProxyDescriptor(
             script_descriptors,
-            Factory::LookupAsciiSymbol("eval_from_position"),
-            proxy_eval_from_position,
+            Factory::LookupAsciiSymbol("eval_from_script_position"),
+            proxy_eval_from_script_position,
+            common_attributes);
+    Handle<Proxy> proxy_eval_from_function_name =
+        Factory::NewProxy(&Accessors::ScriptEvalFromFunctionName);
+    script_descriptors =
+        Factory::CopyAppendProxyDescriptor(
+            script_descriptors,
+            Factory::LookupAsciiSymbol("eval_from_function_name"),
+            proxy_eval_from_function_name,
             common_attributes);
 
     Handle<Map> script_map = Handle<Map>(script_fun->initial_map());
@@ -1304,8 +1373,6 @@ bool Genesis::InstallExtension(v8::RegisteredExtension* current) {
   ASSERT(Top::has_pending_exception() != result);
   if (!result) {
     Top::clear_pending_exception();
-    v8::Utils::ReportApiFailure(
-        "v8::Context::New()", "Error installing extension");
   }
   current->set_state(v8::INSTALLED);
   return result;
@@ -1471,7 +1538,7 @@ void Genesis::MakeFunctionInstancePrototypeWritable() {
   HandleScope scope;
 
   Handle<DescriptorArray> function_map_descriptors =
-      ComputeFunctionInstanceDescriptor(false, true);
+      ComputeFunctionInstanceDescriptor(false);
   Handle<Map> fm = Factory::CopyMapDropDescriptors(Top::function_map());
   fm->set_instance_descriptors(*function_map_descriptors);
   Top::context()->global_context()->set_function_map(*fm);
@@ -1581,6 +1648,12 @@ char* Bootstrapper::ArchiveState(char* to) {
 // Restore statics that are thread local.
 char* Bootstrapper::RestoreState(char* from) {
   return Genesis::RestoreState(from);
+}
+
+
+// Called when the top-level V8 mutex is destroyed.
+void Bootstrapper::FreeThreadResources() {
+  ASSERT(Genesis::current() == NULL);
 }
 
 

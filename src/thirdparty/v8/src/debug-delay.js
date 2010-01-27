@@ -25,8 +25,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-// jsminify this file, js2c: jsmin
-
 // Default number of frames to include in the response to backtrace request.
 const kDefaultBacktraceLength = 10;
 
@@ -35,7 +33,7 @@ const Debug = {};
 // Regular expression to skip "crud" at the beginning of a source line which is
 // not really code. Currently the regular expression matches whitespace and
 // comments.
-const sourceLineBeginningSkip = /^(?:[ \v\h]*(?:\/\*.*?\*\/)*)*/;
+const sourceLineBeginningSkip = /^(?:\s*(?:\/\*.*?\*\/)*)*/;
 
 // Debug events which can occour in the V8 JavaScript engine. These originate
 // from the API include file debug.h.
@@ -350,7 +348,7 @@ ScriptBreakPoint.prototype.set = function (script) {
     if (!script.sourceColumnStart_) {
       script.sourceColumnStart_ = new Array(script.lineCount());
     }
-    
+
     // Fill cache if needed and get column where the actual source starts.
     if (IS_UNDEFINED(script.sourceColumnStart_[line])) {
       script.sourceColumnStart_[line] =
@@ -361,11 +359,11 @@ ScriptBreakPoint.prototype.set = function (script) {
 
   // Convert the line and column into an absolute position within the script.
   var pos = Debug.findScriptSourcePosition(script, this.line(), column);
-  
+
   // If the position is not found in the script (the script might be shorter
   // than it used to be) just ignore it.
   if (pos === null) return;
-  
+
   // Create a break point object and set the break point.
   break_point = MakeBreakPoint(pos, this.line(), this.column(), this);
   break_point.setIgnoreCount(this.ignoreCount());
@@ -492,7 +490,7 @@ Debug.findFunctionSourceLocation = function(func, opt_line, opt_column) {
 // Returns the character position in a script based on a line number and an
 // optional position within that line.
 Debug.findScriptSourcePosition = function(script, opt_line, opt_column) {
-  var location = script.locationFromLine(opt_line, opt_column);  
+  var location = script.locationFromLine(opt_line, opt_column);
   return location ? location.position : null;
 }
 
@@ -797,8 +795,8 @@ ExecutionState.prototype.selectedFrame = function() {
   return this.selected_frame;
 };
 
-ExecutionState.prototype.debugCommandProcessor = function(protocol) {
-  return new DebugCommandProcessor(this, protocol);
+ExecutionState.prototype.debugCommandProcessor = function(opt_is_running) {
+  return new DebugCommandProcessor(this, opt_is_running);
 };
 
 
@@ -944,7 +942,7 @@ ExceptionEvent.prototype.toJSONProtocol = function() {
   o.body = { uncaught: this.uncaught_,
              exception: MakeMirror(this.exception_)
            };
-           
+
   // Exceptions might happen whithout any JavaScript frames.
   if (this.exec_state_.frameCount() > 0) {
     o.body.sourceLine = this.sourceLine();
@@ -1083,9 +1081,9 @@ function MakeScriptObject_(script, include_source) {
 };
 
 
-function DebugCommandProcessor(exec_state) {
+function DebugCommandProcessor(exec_state, opt_is_running) {
   this.exec_state_ = exec_state;
-  this.running_ = false;
+  this.running_ = opt_is_running || false;
 };
 
 
@@ -1097,7 +1095,7 @@ DebugCommandProcessor.prototype.processDebugRequest = function (request) {
 function ProtocolMessage(request) {
   // Update sequence number.
   this.seq = next_response_seq++;
-  
+
   if (request) {
     // If message is based on a request this is a response. Fill the initial
     // response from the request.
@@ -1109,7 +1107,8 @@ function ProtocolMessage(request) {
     this.type = 'event';
   }
   this.success = true;
-  this.running = false;
+  // Handler may set this field to control debugger state.
+  this.running = undefined;
 }
 
 
@@ -1170,11 +1169,7 @@ ProtocolMessage.prototype.toJSONProtocol = function() {
   if (this.message) {
     json.message = this.message;
   }
-  if (this.running) {
-    json.running = true;
-  } else {
-    json.running = false;
-  }
+  json.running = this.running;
   return JSON.stringify(json);
 }
 
@@ -1246,6 +1241,12 @@ DebugCommandProcessor.prototype.processDebugJSONRequest = function(json_request)
         this.scriptsRequest_(request, response);
       } else if (request.command == 'threads') {
         this.threadsRequest_(request, response);
+      } else if (request.command == 'suspend') {
+        this.suspendRequest_(request, response);
+      } else if (request.command == 'version') {
+        this.versionRequest_(request, response);
+      } else if (request.command == 'profile') {
+        this.profileRequest_(request, response);
       } else {
         throw new Error('Unknown command "' + request.command + '" in request');
       }
@@ -1260,7 +1261,11 @@ DebugCommandProcessor.prototype.processDebugJSONRequest = function(json_request)
 
     // Return the response as a JSON encoded string.
     try {
-      this.running_ = response.running;  // Store the running state.
+      if (!IS_UNDEFINED(response.running)) {
+        // Response controls running state.
+        this.running_ = response.running;
+      }
+      response.running = this.running_; 
       return response.toJSONProtocol();
     } catch (e) {
       // Failed to generate response - return generic error.
@@ -1487,7 +1492,7 @@ DebugCommandProcessor.prototype.clearBreakPointGroupRequest_ = function(request,
     response.failed('Missing argument "groupId"');
     return;
   }
-  
+
   var cleared_break_points = [];
   var new_script_break_points = [];
   for (var i = 0; i < script_break_points.length; i++) {
@@ -1603,7 +1608,7 @@ DebugCommandProcessor.prototype.frameRequest_ = function(request, response) {
     if (index < 0 || this.exec_state_.frameCount() <= index) {
       return response.failed('Invalid frame number');
     }
-    
+
     this.exec_state_.setSelectedFrame(request.arguments.number);
   }
   response.body = this.exec_state_.frame();
@@ -1633,7 +1638,7 @@ DebugCommandProcessor.prototype.scopesRequest_ = function(request, response) {
 
   // Get the frame for which the scopes are requested.
   var frame = this.frameForScopeRequest_(request);
-  
+
   // Fill all scopes for this frame.
   var total_scopes = frame.scopeCount();
   var scopes = [];
@@ -1750,7 +1755,7 @@ DebugCommandProcessor.prototype.lookupRequest_ = function(request, response) {
     includeSource = %ToBoolean(request.arguments.includeSource);
     response.setOption('includeSource', includeSource);
   }
-  
+
   // Lookup handles.
   var mirrors = {};
   for (var i = 0; i < handles.length; i++) {
@@ -1906,6 +1911,37 @@ DebugCommandProcessor.prototype.threadsRequest_ = function(request, response) {
     totalThreads: total_threads,
     threads: threads
   }
+};
+
+
+DebugCommandProcessor.prototype.suspendRequest_ = function(request, response) {
+  response.running = false;
+};
+
+
+DebugCommandProcessor.prototype.versionRequest_ = function(request, response) {
+  response.body = {
+    V8Version: %GetV8Version()
+  }
+};
+
+
+DebugCommandProcessor.prototype.profileRequest_ = function(request, response) {
+  if (!request.arguments) {
+    return response.failed('Missing arguments');
+  }
+  var modules = parseInt(request.arguments.modules);
+  if (isNaN(modules)) {
+    return response.failed('Modules is not an integer');
+  }
+  if (request.arguments.command == 'resume') {
+    %ProfilerResume(modules);
+  } else if (request.arguments.command == 'pause') {
+    %ProfilerPause(modules);
+  } else {
+    return response.failed('Unknown command');
+  }
+  response.body = {};
 };
 
 

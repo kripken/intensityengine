@@ -81,7 +81,13 @@ void RelocInfo::set_target_address(Address target) {
 
 Object* RelocInfo::target_object() {
   ASSERT(IsCodeTarget(rmode_) || rmode_ == EMBEDDED_OBJECT);
-  return reinterpret_cast<Object*>(Assembler::target_address_at(pc_));
+  return Memory::Object_at(Assembler::target_address_address_at(pc_));
+}
+
+
+Handle<Object> RelocInfo::target_object_handle(Assembler* origin) {
+  ASSERT(IsCodeTarget(rmode_) || rmode_ == EMBEDDED_OBJECT);
+  return Memory::Object_Handle_at(Assembler::target_address_address_at(pc_));
 }
 
 
@@ -104,41 +110,46 @@ Address* RelocInfo::target_reference_address() {
 
 
 Address RelocInfo::call_address() {
-  ASSERT(IsCallInstruction());
-  UNIMPLEMENTED();
-  return NULL;
+  ASSERT(IsPatchedReturnSequence());
+  // The 2 instructions offset assumes patched return sequence.
+  ASSERT(IsJSReturn(rmode()));
+  return Memory::Address_at(pc_ + 2 * Assembler::kInstrSize);
 }
 
 
 void RelocInfo::set_call_address(Address target) {
-  ASSERT(IsCallInstruction());
-  UNIMPLEMENTED();
+  ASSERT(IsPatchedReturnSequence());
+  // The 2 instructions offset assumes patched return sequence.
+  ASSERT(IsJSReturn(rmode()));
+  Memory::Address_at(pc_ + 2 * Assembler::kInstrSize) = target;
 }
 
 
 Object* RelocInfo::call_object() {
-  ASSERT(IsCallInstruction());
-  UNIMPLEMENTED();
-  return NULL;
+  return *call_object_address();
 }
 
 
 Object** RelocInfo::call_object_address() {
-  ASSERT(IsCallInstruction());
-  UNIMPLEMENTED();
-  return NULL;
+  ASSERT(IsPatchedReturnSequence());
+  // The 2 instructions offset assumes patched return sequence.
+  ASSERT(IsJSReturn(rmode()));
+  return reinterpret_cast<Object**>(pc_ + 2 * Assembler::kInstrSize);
 }
 
 
 void RelocInfo::set_call_object(Object* target) {
-  ASSERT(IsCallInstruction());
-  UNIMPLEMENTED();
+  *call_object_address() = target;
 }
 
 
-bool RelocInfo::IsCallInstruction() {
-  UNIMPLEMENTED();
-  return false;
+bool RelocInfo::IsPatchedReturnSequence() {
+  // On ARM a "call instruction" is actually two instructions.
+  //   mov lr, pc
+  //   ldr pc, [pc, #XXX]
+  return (Assembler::instr_at(pc_) == kMovLrPc)
+          && ((Assembler::instr_at(pc_ + Assembler::kInstrSize) & kLdrPCPattern)
+              == kLdrPCPattern);
 }
 
 
@@ -218,19 +229,35 @@ void Assembler::emit(Instr x) {
 
 
 Address Assembler::target_address_address_at(Address pc) {
-  Instr instr = Memory::int32_at(pc);
-  // Verify that the instruction at pc is a ldr<cond> <Rd>, [pc +/- offset_12].
+  Address target_pc = pc;
+  Instr instr = Memory::int32_at(target_pc);
+  // If we have a bx instruction, the instruction before the bx is
+  // what we need to patch.
+  static const int32_t kBxInstMask = 0x0ffffff0;
+  static const int32_t kBxInstPattern = 0x012fff10;
+  if ((instr & kBxInstMask) == kBxInstPattern) {
+    target_pc -= kInstrSize;
+    instr = Memory::int32_at(target_pc);
+  }
+  // Verify that the instruction to patch is a
+  // ldr<cond> <Rd>, [pc +/- offset_12].
   ASSERT((instr & 0x0f7f0000) == 0x051f0000);
   int offset = instr & 0xfff;  // offset_12 is unsigned
   if ((instr & (1 << 23)) == 0) offset = -offset;  // U bit defines offset sign
   // Verify that the constant pool comes after the instruction referencing it.
   ASSERT(offset >= -4);
-  return pc + offset + 8;
+  return target_pc + offset + 8;
 }
 
 
 Address Assembler::target_address_at(Address pc) {
   return Memory::Address_at(target_address_address_at(pc));
+}
+
+
+void Assembler::set_target_at(Address constant_pool_entry,
+                              Address target) {
+  Memory::Address_at(constant_pool_entry) = target;
 }
 
 

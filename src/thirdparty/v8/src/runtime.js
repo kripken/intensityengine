@@ -114,21 +114,33 @@ function STRICT_EQUALS(x) {
 // ECMA-262, section 11.8.5, page 53. The 'ncr' parameter is used as
 // the result when either (or both) the operands are NaN.
 function COMPARE(x, ncr) {
-  // Fast case for numbers and strings.
-  if (IS_NUMBER(this) && IS_NUMBER(x)) {
-    return %NumberCompare(this, x, ncr);
-  }
-  if (IS_STRING(this) && IS_STRING(x)) {
-    return %StringCompare(this, x);
+  var left;
+
+  // Fast cases for string, numbers and undefined compares.
+  if (IS_STRING(this)) {
+    if (IS_STRING(x)) return %_StringCompare(this, x);
+    if (IS_UNDEFINED(x)) return ncr;
+    left = this;
+  } else if (IS_NUMBER(this)) {
+    if (IS_NUMBER(x)) return %NumberCompare(this, x, ncr);
+    if (IS_UNDEFINED(x)) return ncr;
+    left = this;
+  } else if (IS_UNDEFINED(this)) {
+    return ncr;
+  } else {
+    if (IS_UNDEFINED(x)) return ncr;
+    left = %ToPrimitive(this, NUMBER_HINT);
   }
 
   // Default implementation.
-  var a = %ToPrimitive(this, NUMBER_HINT);
-  var b = %ToPrimitive(x, NUMBER_HINT);
-  if (IS_STRING(a) && IS_STRING(b)) {
-    return %StringCompare(a, b);
+  var right = %ToPrimitive(x, NUMBER_HINT);
+  if (IS_STRING(left) && IS_STRING(right)) {
+    return %_StringCompare(left, right);
   } else {
-    return %NumberCompare(%ToNumber(a), %ToNumber(b), ncr);
+    var left_number = %ToNumber(left);
+    var right_number = %ToNumber(right);
+    if (NUMBER_IS_NAN(left_number) || NUMBER_IS_NAN(right_number)) return ncr;
+    return %NumberCompare(left_number, right_number, ncr);
   }
 }
 
@@ -143,16 +155,16 @@ function COMPARE(x, ncr) {
 function ADD(x) {
   // Fast case: Check for number operands and do the addition.
   if (IS_NUMBER(this) && IS_NUMBER(x)) return %NumberAdd(this, x);
-  if (IS_STRING(this) && IS_STRING(x)) return %StringAdd(this, x);
+  if (IS_STRING(this) && IS_STRING(x)) return %_StringAdd(this, x);
 
   // Default implementation.
   var a = %ToPrimitive(this, NO_HINT);
   var b = %ToPrimitive(x, NO_HINT);
 
   if (IS_STRING(a)) {
-    return %StringAdd(a, %ToString(b));
+    return %_StringAdd(a, %ToString(b));
   } else if (IS_STRING(b)) {
-    return %StringAdd(%ToString(a), b);
+    return %_StringAdd(%ToString(a), b);
   } else {
     return %NumberAdd(%ToNumber(a), %ToNumber(b));
   }
@@ -170,7 +182,7 @@ function STRING_ADD_LEFT(y) {
           : %ToString(%ToPrimitive(y, NO_HINT));
     }
   }
-  return %StringAdd(this, y);
+  return %_StringAdd(this, y);
 }
 
 
@@ -186,7 +198,7 @@ function STRING_ADD_RIGHT(y) {
           : %ToString(%ToPrimitive(x, NO_HINT));
     }
   }
-  return %StringAdd(x, y);
+  return %_StringAdd(x, y);
 }
 
 
@@ -462,6 +474,17 @@ function TO_NUMBER() {
 // Convert the receiver to a string - forward to ToString.
 function TO_STRING() {
   return %ToString(this);
+}
+
+
+// Specialized version of String.charAt. It assumes string as
+// the receiver type and that the index is a number.
+function STRING_CHAR_AT(pos) {
+  var char_code = %_FastCharCodeAt(this, pos);
+  if (!%_IsSmi(char_code)) {
+    return %StringCharAt(this, pos);
+  }
+  return %CharFromCode(char_code);
 }
 
 
