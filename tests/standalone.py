@@ -88,6 +88,11 @@ class TestMaster(unittest.TestCase):
 #        print "   Input barrier:", barrier_counter
         return 'okapi%dipako' % barrier_counter
 
+    def make_unique(self):
+        global barrier_counter
+        barrier_counter += 1
+        return 'xyz%d_zyx' % barrier_counter
+
     def inject_mouse_click(self, proc, x, y, button=1):
 #        print "Inject mouse click", x, y, button
 
@@ -172,14 +177,21 @@ class TestMaster(unittest.TestCase):
 
     def run_command(self, procs, command, barrier=None):
         if barrier is None:
-            barrier = 'xyzfeefifofumyzy'
+            barrier = self.make_barrier()
             command += ' ; print "%s"' % barrier
 
         if type(procs) not in [list, tuple]:
             procs = [procs]
         ret = []
         for proc in procs:
-            proc.sendline(command)
+            unique = self.make_unique()
+            proc.sendline('''
+
+def doit_%s(): %s
+
+main_actionqueue.add_action(doit_%s)
+
+''' % (unique, command, unique))
             self.assertEquals(proc.expect(barrier, 4.0), 0)
             ret += [proc.readline().replace('\n', '').replace('\r', '')]
         if len(ret) == 1:
