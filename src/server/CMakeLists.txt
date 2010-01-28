@@ -2,9 +2,8 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
    add_definitions (-fsigned-char)
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
-include_directories(../thirdparty/v8/include)
-link_directories(../../../src/thirdparty/v8)
-link_directories(../../src/thirdparty/v8)
+include_directories(${CMAKE_SOURCE_DIR}/src/thirdparty/v8/include)
+link_directories(${CMAKE_SOURCE_DIR}/src/thirdparty/v8)
 
 #add_definitions(-DUSE_JPEG2000)
 
@@ -15,4 +14,8 @@ target_link_libraries(Intensity_CServer enet v8 ${PYTHON_LIBRARIES} ${Boost_Pyth
 if(${WIN32})
     target_link_libraries(ws2_32 winmm msvcrt opengl32)
 endif(${WIN32})
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "BSD")
+    target_link_libraries(Intensity_CServer execinfo)
+endif(${CMAKE_SYSTEM_NAME} MATCHES "BSD")
 

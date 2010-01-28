@@ -32,10 +32,14 @@ import os, sys, __main__, ConfigParser, shutil
 ## Base module - foundational stuff
 
 WINDOWS = sys.platform.find("win32") != -1 or sys.platform.find("win64") != -1 # ??? FIXME
+
 LINUX = sys.platform.find("linux") != -1
 OSX = sys.platform.find("darwin") != -1
+BSD = sys.platform.find("bsd") != -1
 
-assert(WINDOWS or LINUX or OSX)
+UNIX = LINUX or OSX or BSD
+
+assert(WINDOWS or UNIX)
 
 #
 # Version
@@ -102,7 +106,7 @@ def get_home_subdir():
 
     # Use default value if none given to us
     if HOME_SUBDIR is None:
-        if LINUX or OSX:
+        if UNIX:
             HOME_SUBDIR = os.path.join( os.path.expanduser('~'), '.intensityengine_'+suffix )
         elif WINDOWS:
             HOME_SUBDIR = os.path.join( os.path.expanduser('~'), 'intensityengine_'+suffix )

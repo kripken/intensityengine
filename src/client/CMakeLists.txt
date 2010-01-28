@@ -2,9 +2,8 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
    add_definitions (-fsigned-char)
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
-include_directories(../thirdparty/v8/include)
-link_directories(../../../src/thirdparty/v8)
-link_directories(../../src/thirdparty/v8)
+include_directories(${CMAKE_SOURCE_DIR}/src/thirdparty/v8/include)
+link_directories(${CMAKE_SOURCE_DIR}/src/thirdparty/v8)
 
 #add_definitions(-DUSE_JPEG2000)
 
@@ -13,6 +12,10 @@ add_executable(Intensity_CClient ../engine/3dgui ../engine/blob ../engine/blend 
 target_link_libraries(Intensity_CClient enet v8 ${PYTHON_LIBRARIES} ${Boost_Python_Library} ${SDL_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLIMAGE_LIBRARY} ${SDLSOUND_LIBRARY} ${OPENGL_LIBRARIES} ${ZLIB_LIBRARIES})
 
 if(${WIN32})
-    target_link_libraries(opengl32 glu32 ws2_32 winmm msvcrt user32 imagehlp)
+    target_link_libraries(opengl32 glu32 ws2_32 winmm msvcrt user32 imagehlp) # Intensity_CClient?
 endif(${WIN32})
+
+if(${CMAKE_SYSTEM_NAME} MATCHES "BSD")
+    target_link_libraries(Intensity_CClient execinfo)
+endif(${CMAKE_SYSTEM_NAME} MATCHES "BSD")
 

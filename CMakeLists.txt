@@ -10,11 +10,11 @@
 cmake_minimum_required(VERSION 2.6)
 project(Intensity)
 
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "BSD")
     message(STATUS "...Linux...")
     add_definitions (-DLINUX)
     set(CMAKE_CXX_FLAGS "-g -O1 -Wall -Werror")
-else(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+else(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "BSD")
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     message(STATUS "...OS X...")
@@ -43,7 +43,7 @@ else(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     message(STATUS "Set up SDKs at: ${PLATFORM_SDK_A};${PLATFORM_SDK_B}")
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
-endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "BSD")
 
 add_subdirectory(src)
 

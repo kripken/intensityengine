@@ -300,3 +300,10 @@ Some things to be aware of:
 
       The relevant file is windows_runtime.zip.
 
+
+FreeBSD
+=======
+
+Compiling on FreeBSD should work by following the instructions for Linux
+as written above.
+
