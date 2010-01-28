@@ -54,6 +54,7 @@ catch(boost::python::error_already_set const &)                                 
     printf("Error in Python execution of: \r\n%s\r\n", std::string(command).c_str());                                             \
     PyErr_Print();                                                                                                                \
     assert(0 && "Halting on Python error");                                                                                       \
+    throw;                                                                                                                        \
 }
 
 //! Store the output of command in var_name, which has type output_type
@@ -73,6 +74,7 @@ catch(boost::python::error_already_set const &)                                 
     printf("Error in Python execution of: \r\n%s\r\n", std::string(command).c_str());       \
     PyErr_Print();                                                                          \
     assert(0 && "Halting on Python error");                                                 \
+    throw;                                                                                  \
 }
 
 //! Get a value from python, of a particular type. Can be a variable name, or even a complete expression
@@ -109,5 +111,6 @@ catch(boost::python::error_already_set const &)                \
     printf("Error in Python execution of exposeToPython\r\n"); \
     PyErr_Print();                                             \
     assert(0 && "Halting on Python error");                    \
+    throw;                                                     \
 }
 

@@ -1,6 +1,5 @@
 *.pyc
 debugit*
 out
-src/thirdparty/v8/*
 *~
 

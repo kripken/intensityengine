@@ -120,8 +120,8 @@ std::string Utility::readFile(std::string name)
         printf("Error in Python execution of readFile\r\n");
         PyErr_Print();
         assert(0 && "Halting on Python error");
+        throw;
     }
-
 }
 
 
