@@ -671,6 +671,12 @@ namespace server
                 if (ci->uniqueId == DUMMY_SINGLETON_CLIENT_UNIQUE_ID) continue;
                 if (ci->local) continue; // No need for NPCs created during the map script - they already exist
 
+//                REFLECT_PYTHON( Clients );
+//                EVAL_PYTHON(bool, loggedIn, Utility::toString(i) + " in Clients._map");
+//                if (!loggedIn) continue; // Only create entities for people actually logged in, not those
+//                                         // pending login. Also, they will create their own entities when
+//                                         // the login finishes, so it would be a bug to do it here as well.
+
                 Logging::log(Logging::DEBUG, "scriptingEntities creation: Adding %d\r\n", i);
 
                 createScriptingEntity(i);

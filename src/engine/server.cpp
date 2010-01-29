@@ -369,12 +369,7 @@ void localclienttoserver(int chan, ENetPacket *packet, int cn) // INTENSITY: Add
 
 client &addclient()
 {
-    // INTENSITY: Also check that getclient returns false. Otherwise in rare cases
-    // we may think a clientnum is free, because at this level it is, but the
-    // game::clients is not yet updated - perhaps because the game is being restarted,
-    // or assets downloaded, etc. And in any case, there is no downside to doing
-    // this check
-    loopv(clients) if(clients[i]->type==ST_EMPTY && !game::getclient(clients[i]->num))
+    loopv(clients) if(clients[i]->type==ST_EMPTY)
     {
         clients[i]->info = server::newclientinfo();
         return *clients[i];

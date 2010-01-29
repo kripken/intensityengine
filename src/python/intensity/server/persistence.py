@@ -108,6 +108,8 @@ def do_login(code, client_number, ip_addr):
     if Clients.count() >= get_max_clients():
         return fail("Login failure: instance is at its maximum number of clients (%d)" % get_max_clients())
 
+    curr_scenario_code = World.scenario_code
+
     # All contact to the master server is done in the side thread, here
     def side_operations():
         auth.update_master()
@@ -123,6 +125,10 @@ def do_login(code, client_number, ip_addr):
                 log(logging.WARNING, "Should flush network messages, but not doing so") #CModule.force_network_flush()
                 CModule.disconnect_client(client_number, 3) # DISC_KICK... most relevant for now
                 return
+
+            if World.scenario_code != curr_scenario_code:
+                log(logging.WARNING, "Scenario code has changed since client %d began login" % client_number)
+#                return fail("Instance has begun a new scenario. Try connecting again") XXX - do we want this?
 
             user_id = response['user_id']
 
@@ -158,6 +164,7 @@ def do_login(code, client_number, ip_addr):
             else:
                 admin = False
 
+            # Also creates a scripting logic entity
             MessageSystem.send(client_number,
                                 CModule.LoginResponse,
                                 1, 0); # success, non-local

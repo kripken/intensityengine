@@ -72,7 +72,9 @@ class WorldClass:
     scenario_code = None
 
     def start_scenario(self):
-        self.scenario_code = str(uuid.uuid4())
+        old_scenario_code = self.scenario_code
+        while old_scenario_code == self.scenario_code:
+            self.scenario_code = str(uuid.uuid4())
 
     def running_map(self):
         return self.scenario_code is not None
