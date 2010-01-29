@@ -56,8 +56,9 @@ The following are the shared aspects.
 
    Another possible reason for a 'skipping incompatible' error as
    mentioned above is if V8 builds itself in 32-bit mode on a 64-bit
-   system. This shouldn't happen but seems to occur on some systems.
-   To fix it, compile V8 yourself by doing
+   system. This appears to be the default setting at present with V8,
+   but should change eventually. Meanwhile, to fix it, compile V8
+   by doing
 
        scons arch=x64
 
