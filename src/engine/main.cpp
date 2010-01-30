@@ -563,8 +563,8 @@ void screenres(int *w, int *h)
 
 COMMAND(screenres, "ii");
 
-#if 0 // INTENSITY
-int gamma = 100; // INTENSITY: The other way causes crash, sometimes 
+#ifdef INTENSITY_PLUGIN // INTENSITY
+int gamma = 100; // INTENSITY: Otherwise as a shared library the other way will crash us
 #else
 VARFP(gamma, 30, 100, 300,
 {
