@@ -128,6 +128,16 @@ Notes on reporting crashing bugs:
     before, etc.
 
 
+Packaging / Systemwide Install
+------------------------------
+
+The Intensity Engine will work fine if installed for all users. It
+only writes to the user's home directory, not anywhere else, so it
+can be installed in a read-only central (systemwide) location. The
+only thing you should do in such a case is change directory to
+where it is installed and run it from there.
+
+
 Notes
 =====
 
