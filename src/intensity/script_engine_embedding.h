@@ -198,10 +198,10 @@ EXTENT_ACCESSORS(getAttr4, setAttr4, attr4);
 
 #define EXTENT_LE_ACCESSORS(getterName, setterName, attribName) \
 V8_FUNC_T(__script__##getterName, , { \
-    V8_RETURN_INT(self->attribName); \
+    V8_RETURN_DOUBLE(self->attribName); \
 }); \
  \
-V8_FUNC_T(__script__##setterName, i, { \
+V8_FUNC_T(__script__##setterName, d, { \
     Logging::log(Logging::DEBUG, "ACCESSOR: Setting %s to %d\r\n", #setterName, arg2); \
     assert(self->staticEntity); \
     if (!WorldSystem::loadingWorld) removeentity(self->staticEntity); /* Need to remove, then add, to the octa world on each change. */ \
