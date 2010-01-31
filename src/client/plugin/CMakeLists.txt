@@ -41,11 +41,27 @@ add_library(IntensityPlugin SHARED
     base/file_util_linux.cc
     base/file_util_posix.cc
     base/file_path.cc
+    base/ref_counted.cc
+    base/thread_collision_warner.cc
+    base/message_loop.cc
+    base/message_pump_libevent.cc
+    base/histogram.cc
+    base/pickle.cc
+    base/dynamic_annotations.cc
+    base/at_exit.cc
+    base/lazy_instance.cc
+    base/thread_local_posix.cc
+    base/tracked.cc
+    base/tracked_objects.cc
+    ipc/ipc_switches.cc
+    ipc/ipc_channel_posix.cc
+    ipc/ipc_message.cc
+    ipc/ipc_logging.cc
     plugin/cross/main.cc
     plugin/linux/main_linux.cc
     third_party/nixysa/static_glue/npapi/npn_api.cc
     third_party/nixysa/static_glue/npapi/common.cc
     intensity_plugin.cpp
 )
-target_link_libraries(IntensityPlugin ${CLIENT_LIBRARIES})
+target_link_libraries(IntensityPlugin ${CLIENT_LIBRARIES} ${CMAKE_SOURCE_DIR}/src/client/plugin/third_party/libevent/.libs/libevent.so)
 

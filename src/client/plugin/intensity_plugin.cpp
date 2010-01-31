@@ -26,21 +26,48 @@
 #include "intensity_plugin.h"
 
 #include "base/file_util.h"
+#include "base/message_loop.h"
 
 
 bool PluginObject::setWindow(NPWindow *window)
 {
-    if (initialized) return true;
-    initialized = true;
+    printf("setWindow\r\n");
+
+    if (!initialized)
+    {
+        initialize(window);
+        initialized = true;
+    }
+
+    printf("update window\r\n");
+
+    savedWindow = window;
+
+    printf("SetWindow: %d, %d\r\n", window->width, window->height);
+    IPC::Message* message = new IPC::Message(0, 2, IPC::Message::PRIORITY_HIGH);
+    message->WriteString("setwindow");
+    message->WriteInt(window->width);
+    message->WriteInt(window->height);
+    channel->Send(message);
+
+    return true;
+}
+
+void PluginObject::initialize(NPWindow *window)
+{
+    printf("initialize\r\n");
+
+    setupComm();
 
     // SDL_WINDOWID hack
    	char* buffer = new char[1000];
     sprintf(buffer, "SDL_WINDOWID=%lu",(unsigned long)(window->window));
     putenv(buffer);
+    printf("env: %s\r\n", buffer);
 
     // Start engine in other process
+    printf("Launching process in %s\r\n", INTENSITY_INSTALL_ROOT);
     file_util::SetCurrentDirectory(FilePath(INTENSITY_INSTALL_ROOT));
-printf("In %s, running client\r\n", INTENSITY_INSTALL_ROOT);
     std::vector<std::string> argv;
     #ifdef LINUX
         argv.push_back("./intensity_client.sh");
@@ -49,9 +76,22 @@ printf("In %s, running client\r\n", INTENSITY_INSTALL_ROOT);
     #endif
     base::LaunchApp(CommandLine(argv), false, false, &processHandle);
 
-    // Clean up
     delete[] buffer;
+}
 
-    return true;
-};
+void PluginObject::setupComm()
+{
+    printf("setupComm\r\n");
+
+    new MessageLoop(MessageLoop::TYPE_IO);
+    printf("setupComm 2\r\n");
+
+    listener = new PluginObject::Listener();
+    channel = new IPC::Channel(INTENSITY_CHANNEL, IPC::Channel::MODE_SERVER, listener);
+    channel->Connect();
+    printf("setupComm 3\r\n");
+
+    MessageLoop::current()->RunAllPending();
+    printf("setupComm 4\r\n");
+}
 

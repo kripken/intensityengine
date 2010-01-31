@@ -50,6 +50,9 @@
 using o3d::Event;
 
 namespace {
+
+base::AtExitManager g_at_exit_manager;
+
 bool g_xembed_support = false;
 
 #ifdef O3D_PLUGIN_ENV_VARS_FILE
