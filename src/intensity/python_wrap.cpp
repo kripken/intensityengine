@@ -61,7 +61,12 @@ void initPython(int argc, char **argv)
     // Set up general stuff to allow Python to be used
     EXEC_PYTHON("import sys, os");
     // TODO: remove sys.path in binary builds, leave only a tiny subset of all of CPy
+    #ifdef INTENSITY_INSTALL_ROOT
+        printf("Changing directory to install root: %s\r\n", INTENSITY_INSTALL_ROOT);
+        EXEC_PYTHON("os.chdir('" + std::string(INTENSITY_INSTALL_ROOT) + "')");
+    #endif
     EXEC_PYTHON("sys.path = ['', 'src', os.path.join('src', 'python') ] + sys.path");
+    EXEC_PYTHON("print 'Python path:', sys.path");
     EXEC_PYTHON("from intensity.c_module import *");
 
     #if 0 //def WINDOWS - TODO: Probably need to place in BAT file

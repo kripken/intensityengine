@@ -45,9 +45,7 @@
 #include "plugin/linux/envvars.h"
 #include "core/cross/event.h"
 
-class PluginObject
-{
-};
+#include "intensity_plugin.h"
 
 using o3d::Event;
 
@@ -696,7 +694,7 @@ NPError EXPORT_SYMBOL OSCALL NP_Shutdown(void) {
   HANDLE_CRASHES;
   DLOG(INFO) << "NP_Shutdown";
 
-  CommandLine::Reset();
+//  CommandLine::Reset();
 
   return NPERR_NO_ERROR;
 }
@@ -779,8 +777,9 @@ NPError NPP_Destroy(NPP instance, NPSavedData **save) {
 
 NPError NPP_SetWindow(NPP instance, NPWindow *window) {
   HANDLE_CRASHES;
-/*
   PluginObject *obj = static_cast<PluginObject*>(instance->pdata);
+  obj->setWindow(window);
+/*
 
   NPSetWindowCallbackStruct *cb_struct =
       static_cast<NPSetWindowCallbackStruct *>(window->ws_info);

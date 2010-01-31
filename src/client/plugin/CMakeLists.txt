@@ -1,4 +1,6 @@
 add_definitions (-DINTENSITY_PLUGIN)
+add_definitions (-DINTENSITY_INSTALL_ROOT="${CMAKE_SOURCE_DIR}")
+message(STATUS "install root:" ${CMAKE_SOURCE_DIR})
 
 set(PLUGIN_SOURCES "")
 foreach(source ${CLIENT_SOURCES})
@@ -18,10 +20,9 @@ include_directories(. ./third_party/npapi/include)
 
 add_definitions(-DO3D_PLUGIN_NAME="IntensityEngine")
 add_definitions(-DO3D_PLUGIN_DESCRIPTION="The open source Intensity Engine plugin lets you play 3D games in your browser.")
-add_definitions(-DO3D_PLUGIN_MIME_TYPE="application/x-intensityengine:ie:IntensityEngine media")
+add_definitions(-DO3D_PLUGIN_MIME_TYPE="application/x-intensityengine:int:IntensityEngine media")
 
 add_library(IntensityPlugin SHARED
-    ${PLUGIN_SOURCES}
     base/logging.cc
     base/command_line.cc
     base/base_switches.cc
@@ -32,10 +33,19 @@ add_library(IntensityPlugin SHARED
     base/string16.cc
     base/atomicops_internals_x86_gcc.cc
     base/lock_impl_posix.cc
+    base/process_posix.cc
+    base/process_util_linux.cc
+    base/process_util_posix.cc
+    base/file_descriptor_shuffle.cc
+    base/file_util.cc
+    base/file_util_linux.cc
+    base/file_util_posix.cc
+    base/file_path.cc
     plugin/cross/main.cc
     plugin/linux/main_linux.cc
     third_party/nixysa/static_glue/npapi/npn_api.cc
     third_party/nixysa/static_glue/npapi/common.cc
+    intensity_plugin.cpp
 )
 target_link_libraries(IntensityPlugin ${CLIENT_LIBRARIES})
 
