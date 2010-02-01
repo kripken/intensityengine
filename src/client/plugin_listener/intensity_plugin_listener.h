@@ -43,29 +43,33 @@ public:
     SimpleChannel() : index(0), data(NULL), segment(NULL) { };
     void write(std::string message)
     {
+        printf("Write from %d\r\n", index);
         for (unsigned int i = 0; i < message.size(); i++)
         {
+            assert((*data)[index] == '\0');
             (*data)[index] = message.c_str()[i];
             index++;
             index = index % CHANNEL_SIZE;
         }
-        (*data)[index] = '\0';
+        assert((*data)[index] == '\0');
         index++;
         index = index % CHANNEL_SIZE;
     }
     std::string read()
     {
+        if ((*data)[index] == '\0') return ""; // Nothing new
+
+        printf("Read from %d\r\n", index);
         std::string message = "";
-        unsigned int i = 0;
-        while ((*data)[i] != '\0')
+        while ((*data)[index] != '\0')
         {
-            message += (*data)[i];
-            (*data)[i] = '\0';
-            i++;
-            i = i % CHANNEL_SIZE;
+            message += (*data)[index];
+            (*data)[index] = '\0';
+            index++;
+            index = index % CHANNEL_SIZE;
         }
-        i++; // Skip last \0 symbol in this message
-        i = i % CHANNEL_SIZE;
+        index++; // Skip last \0 symbol in this message
+        index = index % CHANNEL_SIZE;
         return message;
     }
 };
