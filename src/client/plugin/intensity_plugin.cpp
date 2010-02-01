@@ -33,10 +33,6 @@
 
 using namespace boost;
 
-interprocess::managed_shared_memory *segment;
-MyVector *instance;
-
-
 #define TO_STRING(type)                  \
 std::string _toString(type val)          \
 {                                        \
@@ -50,7 +46,7 @@ TO_STRING(int)
 TO_STRING(long)
 TO_STRING(double)
 
-
+ServerChannel *channel;
 
 bool PluginObject::setWindow(NPWindow *window)
 {
@@ -65,8 +61,9 @@ bool PluginObject::setWindow(NPWindow *window)
 
     printf("SetWindow: %d, %d\r\n", window->width, window->height);
     std::string message = "setwindow|" + _toString((int)window->width) + "|" + _toString((int)window->height);
-    (*instance)[0] = window->width;
-    printf("Sending: %s ::: %d\r\n", message.c_str(), (*instance)[0]);
+    channel->write(message);
+
+    printf("Sending: %s (%d)\r\n", message.c_str(), message.size());
 
     if (!initialized)
     {
@@ -105,26 +102,6 @@ void PluginObject::initialize(NPWindow *window)
 void PluginObject::setupComm()
 {
     printf("setupComm\r\n");
-
-    interprocess::shared_memory_object::remove(INTENSITY_CHANNEL);
-    segment = new interprocess::managed_shared_memory(
-        interprocess::create_only,
-        INTENSITY_CHANNEL,
-        65536
-    );
-
-
-      //Initialize shared memory STL-compatible allocator
-      const ShmemAllocator alloc_inst (segment->get_segment_manager());
-
-      //Construct a shared memory
-      instance = 
-         segment->construct<MyVector>("MyVector") //object name
-                                    (alloc_inst);//first ctor parameter
-
-      //Insert data in the vector
-      for(int i = 0; i < 100; ++i){
-         instance->push_back(i);
-      }
+    channel = new ServerChannel();
 }
 

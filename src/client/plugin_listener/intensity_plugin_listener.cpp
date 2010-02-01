@@ -47,18 +47,11 @@ namespace PluginListener
 
 base::AtExitManager g_at_exit_manager;
 
-interprocess::managed_shared_memory *segment;
-MyVector *instance;
+ClientChannel *channel;
 
 void setupComm()
 {
-    segment = new interprocess::managed_shared_memory(
-        interprocess::open_only,
-        INTENSITY_CHANNEL
-    );
-
-    instance = segment->find<MyVector>("MyVector").first;
-    assert(instance);
+    channel = new ClientChannel();
 }
 
 bool initialized = false;
@@ -83,7 +76,8 @@ void frameTrigger()
 {
     if (initialized)
     {
-        printf("Seeing: %d\r\n", (*instance)[0]);
+        printf("Seeing?\r\n");
+        printf("Seeing: %s\r\n", channel->read().c_str());
     }
 }
 

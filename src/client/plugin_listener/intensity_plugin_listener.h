@@ -28,15 +28,83 @@
 #include <boost/interprocess/allocators/allocator.hpp>
 
 #define INTENSITY_CHANNEL "IntensityChannel"
+#define CHANNEL_SIZE 65530
 
-      //Alias an STL compatible allocator of ints that allocates ints from the managed
-      //shared memory segment.  This allocator will allow to place containers
-      //in managed shared memory segments
-      typedef boost::interprocess::allocator<int, boost::interprocess::managed_shared_memory::segment_manager> 
-         ShmemAllocator;
+typedef boost::interprocess::allocator<char, boost::interprocess::managed_shared_memory::segment_manager> ShmemAllocator;
+typedef boost::interprocess::vector<char, ShmemAllocator> ChannelVector;
 
-      //Alias a vector that uses the previous STL-like allocator
-      typedef boost::interprocess::vector<int, ShmemAllocator> MyVector;
+class SimpleChannel
+{
+    unsigned int index;
+protected:
+    ChannelVector *data;
+    boost::interprocess::managed_shared_memory *segment;
+public:
+    SimpleChannel() : index(0), data(NULL), segment(NULL) { };
+    void write(std::string message)
+    {
+        for (unsigned int i = 0; i < message.size(); i++)
+        {
+            (*data)[index] = message.c_str()[i];
+            index++;
+            index = index % CHANNEL_SIZE;
+        }
+        (*data)[index] = '\0';
+        index++;
+        index = index % CHANNEL_SIZE;
+    }
+    std::string read()
+    {
+        std::string message = "";
+        unsigned int i = 0;
+        while ((*data)[i] != '\0')
+        {
+            message += (*data)[i];
+            (*data)[i] = '\0';
+            i++;
+            i = i % CHANNEL_SIZE;
+        }
+        i++; // Skip last \0 symbol in this message
+        i = i % CHANNEL_SIZE;
+        return message;
+    }
+};
+
+class ServerChannel : public SimpleChannel
+{
+public:
+    ServerChannel() : SimpleChannel()
+    {
+        boost::interprocess::shared_memory_object::remove(INTENSITY_CHANNEL);
+        segment = new boost::interprocess::managed_shared_memory(
+            boost::interprocess::create_only,
+            INTENSITY_CHANNEL,
+            CHANNEL_SIZE*10
+        );
+
+        const ShmemAllocator alloc_inst (segment->get_segment_manager());
+
+        data = segment->construct<ChannelVector>("MyVector")(alloc_inst);
+
+        for(int i = 0; i < CHANNEL_SIZE; ++i){
+            data->push_back('\0');
+        }
+    }
+};
+
+class ClientChannel : public SimpleChannel
+{
+public:
+    ClientChannel() : SimpleChannel()
+    {
+        segment = new boost::interprocess::managed_shared_memory(
+            boost::interprocess::open_only,
+            INTENSITY_CHANNEL
+        );
+
+        data = segment->find<ChannelVector>("MyVector").first;
+    }
+};
 
 namespace PluginListener
 {
