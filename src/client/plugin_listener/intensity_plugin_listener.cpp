@@ -25,10 +25,15 @@
 
 #include "ipc/ipc_channel.h"
 #include "ipc/ipc_message.h"
+#include "base/process.h"
+#include "base/process_util.h"
+#include "ipc/ipc_channel.h"
+#include "ipc/ipc_message.h"
 
-#include "intensity_plugin.h"
+#include "intensity_plugin_listener.h"
 
 #include "base/file_util.h"
+#include "base/at_exit.h"
 #include "base/message_loop.h"
 #include "ipc/ipc_message_utils.h"
 
@@ -37,6 +42,8 @@ extern void screenres(int *w, int *h);
 
 namespace PluginListener
 {
+
+base::AtExitManager g_at_exit_manager;
 
 #define INTENSITY_CHANNEL "I1"
 
@@ -51,12 +58,16 @@ public:
         {
             int width = iter.NextInt();
             int height = iter.NextInt();
-
+            printf("    %d,%d\r\n", width, height);
             screenres(&width, &height);
         } else {
             assert(0);
         }
     }
+
+    virtual void OnChannelError()
+        { printf("!Channel error!\r\n"); };
+
 };
 
 Listener *listener;
@@ -64,22 +75,34 @@ IPC::Channel *channel;
 
 void setupComm()
 {
-    printf("setupComm\r\n");
+    printf("PluginListener::setupComm\r\n");
 
-    new MessageLoop(MessageLoop::TYPE_IO);
-    printf("setupComm 2\r\n");
+    new MessageLoopForIO(); // XXX
+    printf("PluginListener::setupComm 2*\r\n");
 
     listener = new Listener::Listener();
+    printf("PluginListener::setupComm 3\r\n");
     channel = new IPC::Channel(INTENSITY_CHANNEL, IPC::Channel::MODE_CLIENT, listener);
-    channel->Connect();
-    printf("setupComm 3\r\n");
+    printf("PluginListener::setupComm 4\r\n");
+    bool success = channel->Connect();
+    printf("PluginListener::setupComm 5: %d\r\n", success);
 }
 
 bool initialized = false;
 
 void initialize()
 {
+    CommandLine::Init(0, NULL);
+
+    InitLogging("listener_debug.log",
+                logging::LOG_TO_BOTH_FILE_AND_SYSTEM_DEBUG_LOG,
+                logging::DONT_LOCK_LOG_FILE,
+                logging::APPEND_TO_OLD_LOG_FILE);
+
+    DLOG(INFO) << "IntensityListener::initialize";
+
     setupComm();
+
     initialized = true;
 }
 

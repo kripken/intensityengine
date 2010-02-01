@@ -37,6 +37,8 @@ class PluginObject
     class Listener : public IPC::Channel::Listener {
     public:
         virtual void OnMessageReceived(const IPC::Message& message) { };
+        virtual void OnChannelError()
+            { printf("Channel error!\r\n"); };
     };
 
     bool initialized;

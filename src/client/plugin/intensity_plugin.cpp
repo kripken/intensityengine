@@ -84,13 +84,13 @@ void PluginObject::setupComm()
 {
     printf("setupComm\r\n");
 
-    new MessageLoop(MessageLoop::TYPE_IO);
-    printf("setupComm 2\r\n");
+    new MessageLoopForIO(); // XXX
+    printf("setupComm 2*\r\n");
 
     listener = new PluginObject::Listener();
     channel = new IPC::Channel(INTENSITY_CHANNEL, IPC::Channel::MODE_SERVER, listener);
-    channel->Connect();
-    printf("setupComm 3\r\n");
+    bool success = channel->Connect();
+    printf("setupComm 3: %d\r\n", success);
 
     MessageLoop::current()->RunAllPending();
     printf("setupComm 4\r\n");
