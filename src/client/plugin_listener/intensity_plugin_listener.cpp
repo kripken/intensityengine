@@ -23,19 +23,9 @@
  */
 
 
-#include "ipc/ipc_channel.h"
-#include "ipc/ipc_message.h"
-#include "base/process.h"
-#include "base/process_util.h"
-#include "ipc/ipc_channel.h"
-#include "ipc/ipc_message.h"
+#include "python_wrap.h"
 
 #include "intensity_plugin_listener.h"
-
-#include "base/file_util.h"
-#include "base/at_exit.h"
-#include "base/message_loop.h"
-#include "ipc/ipc_message_utils.h"
 
 
 using namespace boost;
@@ -44,8 +34,6 @@ extern void screenres(int *w, int *h);
 
 namespace PluginListener
 {
-
-base::AtExitManager g_at_exit_manager;
 
 ClientChannel *channel;
 
@@ -58,15 +46,6 @@ bool initialized = false;
 
 void initialize()
 {
-    CommandLine::Init(0, NULL);
-
-    InitLogging("listener_debug.log",
-                logging::LOG_TO_BOTH_FILE_AND_SYSTEM_DEBUG_LOG,
-                logging::DONT_LOCK_LOG_FILE,
-                logging::APPEND_TO_OLD_LOG_FILE);
-
-    DLOG(INFO) << "IntensityListener::initialize";
-
     setupComm();
 
     initialized = true;
@@ -76,29 +55,30 @@ void frameTrigger()
 {
     if (initialized)
     {
-        printf("Seeing?\r\n");
-        printf("Seeing: %s\r\n", channel->read().c_str());
-    }
-}
+        std::string message = channel->read();
+        if (message == "") return;
 
-/*
-        const std::string command = iter.NextString();
+        printf("Seeing: %s\r\n", message.c_str());
+
+        python::object split = python::object(message).attr("split")("|");
+        std::string command = python::extract<std::string>(split[0]);
         printf("Processing command: %s\r\n", command.c_str());
+
+        std::string temp;
+
         if (command == "setwindow")
         {
-            int width = iter.NextInt();
-            int height = iter.NextInt();
+            temp = python::extract<std::string>(split[1]);
+            int width = atoi(temp.c_str());
+            temp = python::extract<std::string>(split[2]);
+            int height = atoi(temp.c_str());
             printf("    %d,%d\r\n", width, height);
             screenres(&width, &height);
         } else {
             assert(0);
         }
     }
-
-    virtual void OnChannelError()
-        { printf("!Channel error!\r\n"); };
-    }
-*/
+}
 
 }
 
