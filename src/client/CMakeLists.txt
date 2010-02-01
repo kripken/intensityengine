@@ -107,12 +107,11 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "BSD")
 endif(${CMAKE_SYSTEM_NAME} MATCHES "BSD")
 
 # Experimental plugin - Linux only for now
-if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    set(INTENSITY_PLUGIN 1)
-    add_definitions(-DINTENSITY_PLUGIN)
-endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-
 if(${INTENSITY_PLUGIN})
+    message(STATUS "*** Building with experimental browser plugin ***")
+
+    add_definitions(-DINTENSITY_PLUGIN)
+
     add_subdirectory(plugin)
     add_subdirectory(plugin_listener)
 

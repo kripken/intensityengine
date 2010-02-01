@@ -308,3 +308,13 @@ FreeBSD
 Compiling on FreeBSD should work by following the instructions for Linux
 as written above.
 
+
+Advanced Usage
+==============
+
+To compile the experimental browser plugin, use
+
+    cmake .. -DINTENSITY_PLUGIN=1
+
+instead of "cmake ..".
+
