@@ -38,6 +38,8 @@
 #include "ipc/ipc_message_utils.h"
 
 
+using namespace boost;
+
 extern void screenres(int *w, int *h);
 
 namespace PluginListener
@@ -45,47 +47,18 @@ namespace PluginListener
 
 base::AtExitManager g_at_exit_manager;
 
-#define INTENSITY_CHANNEL "I1"
-
-class Listener : public IPC::Channel::Listener {
-public:
-    virtual void OnMessageReceived(const IPC::Message& message)
-    {
-        IPC::MessageIterator iter(message);
-        const std::string command = iter.NextString();
-        printf("Processing command: %s\r\n", command.c_str());
-        if (command == "setwindow")
-        {
-            int width = iter.NextInt();
-            int height = iter.NextInt();
-            printf("    %d,%d\r\n", width, height);
-            screenres(&width, &height);
-        } else {
-            assert(0);
-        }
-    }
-
-    virtual void OnChannelError()
-        { printf("!Channel error!\r\n"); };
-
-};
-
-Listener *listener;
-IPC::Channel *channel;
+interprocess::managed_shared_memory *segment;
+MyVector *instance;
 
 void setupComm()
 {
-    printf("PluginListener::setupComm\r\n");
+    segment = new interprocess::managed_shared_memory(
+        interprocess::open_only,
+        INTENSITY_CHANNEL
+    );
 
-    new MessageLoopForIO(); // XXX
-    printf("PluginListener::setupComm 2*\r\n");
-
-    listener = new Listener::Listener();
-    printf("PluginListener::setupComm 3\r\n");
-    channel = new IPC::Channel(INTENSITY_CHANNEL, IPC::Channel::MODE_CLIENT, listener);
-    printf("PluginListener::setupComm 4\r\n");
-    bool success = channel->Connect();
-    printf("PluginListener::setupComm 5: %d\r\n", success);
+    instance = segment->find<MyVector>("MyVector").first;
+    assert(instance);
 }
 
 bool initialized = false;
@@ -109,8 +82,29 @@ void initialize()
 void frameTrigger()
 {
     if (initialized)
-        MessageLoop::current()->RunAllPending();
+    {
+        printf("Seeing: %d\r\n", (*instance)[0]);
+    }
 }
+
+/*
+        const std::string command = iter.NextString();
+        printf("Processing command: %s\r\n", command.c_str());
+        if (command == "setwindow")
+        {
+            int width = iter.NextInt();
+            int height = iter.NextInt();
+            printf("    %d,%d\r\n", width, height);
+            screenres(&width, &height);
+        } else {
+            assert(0);
+        }
+    }
+
+    virtual void OnChannelError()
+        { printf("!Channel error!\r\n"); };
+    }
+*/
 
 }
 

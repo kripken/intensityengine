@@ -24,9 +24,32 @@
 
 
 #include "intensity_plugin.h"
+#include "intensity_plugin_listener.h"
 
 #include "base/file_util.h"
 #include "base/message_loop.h"
+
+
+
+using namespace boost;
+
+interprocess::managed_shared_memory *segment;
+MyVector *instance;
+
+
+#define TO_STRING(type)                  \
+std::string _toString(type val)          \
+{                                        \
+    std::stringstream ss;                \
+    std::string ret;                     \
+    ss << val;                           \
+    return ss.str();                     \
+}
+
+TO_STRING(int)
+TO_STRING(long)
+TO_STRING(double)
+
 
 
 bool PluginObject::setWindow(NPWindow *window)
@@ -34,21 +57,22 @@ bool PluginObject::setWindow(NPWindow *window)
     printf("setWindow\r\n");
 
     if (!initialized)
-    {
-        initialize(window);
-        initialized = true;
-    }
+        setupComm();
 
     printf("update window\r\n");
 
     savedWindow = window;
 
     printf("SetWindow: %d, %d\r\n", window->width, window->height);
-    IPC::Message* message = new IPC::Message(0, 2, IPC::Message::PRIORITY_HIGH);
-    message->WriteString("setwindow");
-    message->WriteInt(window->width);
-    message->WriteInt(window->height);
-    channel->Send(message);
+    std::string message = "setwindow|" + _toString((int)window->width) + "|" + _toString((int)window->height);
+    (*instance)[0] = window->width;
+    printf("Sending: %s ::: %d\r\n", message.c_str(), (*instance)[0]);
+
+    if (!initialized)
+    {
+        initialize(window);
+        initialized = true;
+    }
 
     return true;
 }
@@ -56,8 +80,6 @@ bool PluginObject::setWindow(NPWindow *window)
 void PluginObject::initialize(NPWindow *window)
 {
     printf("initialize\r\n");
-
-    setupComm();
 
     // SDL_WINDOWID hack
    	char* buffer = new char[1000];
@@ -84,15 +106,25 @@ void PluginObject::setupComm()
 {
     printf("setupComm\r\n");
 
-    new MessageLoopForIO(); // XXX
-    printf("setupComm 2*\r\n");
+    interprocess::shared_memory_object::remove(INTENSITY_CHANNEL);
+    segment = new interprocess::managed_shared_memory(
+        interprocess::create_only,
+        INTENSITY_CHANNEL,
+        65536
+    );
 
-    listener = new PluginObject::Listener();
-    channel = new IPC::Channel(INTENSITY_CHANNEL, IPC::Channel::MODE_SERVER, listener);
-    bool success = channel->Connect();
-    printf("setupComm 3: %d\r\n", success);
 
-    MessageLoop::current()->RunAllPending();
-    printf("setupComm 4\r\n");
+      //Initialize shared memory STL-compatible allocator
+      const ShmemAllocator alloc_inst (segment->get_segment_manager());
+
+      //Construct a shared memory
+      instance = 
+         segment->construct<MyVector>("MyVector") //object name
+                                    (alloc_inst);//first ctor parameter
+
+      //Insert data in the vector
+      for(int i = 0; i < 100; ++i){
+         instance->push_back(i);
+      }
 }
 

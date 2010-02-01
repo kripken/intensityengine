@@ -16,7 +16,7 @@ endforeach(source)
     add_definitions(-DMOZ_X11)
 # endif
 
-include_directories(. ./third_party/npapi/include)
+include_directories(. ./third_party/npapi/include ${CMAKE_SOURCE_DIR}/src/client/plugin_listener)
 
 add_definitions(-DO3D_PLUGIN_NAME="IntensityEngine")
 add_definitions(-DO3D_PLUGIN_DESCRIPTION="The open source Intensity Engine plugin lets you play 3D games in your browser.")

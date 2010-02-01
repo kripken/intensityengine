@@ -178,10 +178,14 @@ VAR(can_edit, 0, 0, 1);
 
 void ClientSystem::frameTrigger(int curtime)
 {
-    PlayerControl::handleExtraPlayerMovements(curtime);
-    TargetingControl::determineMouseTarget();
-    can_edit = int(isAdmin());
-    IntensityTexture::doBackgroundLoading();
+    if (scenarioStarted())
+    {
+        PlayerControl::handleExtraPlayerMovements(curtime);
+        TargetingControl::determineMouseTarget();
+        can_edit = int(isAdmin());
+        IntensityTexture::doBackgroundLoading();
+    }
+
     #ifdef INTENSITY_PLUGIN
         PluginListener::frameTrigger();
     #endif

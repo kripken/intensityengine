@@ -27,28 +27,14 @@
 
 #include "base/process.h"
 #include "base/process_util.h"
-#include "ipc/ipc_channel.h"
-#include "ipc/ipc_message.h"
-
-#define INTENSITY_CHANNEL "I1"
 
 class PluginObject
 {
-    class Listener : public IPC::Channel::Listener {
-    public:
-        virtual void OnMessageReceived(const IPC::Message& message) { };
-        virtual void OnChannelError()
-            { printf("Channel error!\r\n"); };
-    };
-
     bool initialized;
     base::ProcessHandle processHandle;
-    IPC::Channel *channel;
     NPWindow *savedWindow;
-    Listener *listener;
 public:
-    PluginObject() : initialized(false), channel(NULL), savedWindow(NULL),
-        listener(NULL) { };
+    PluginObject() : initialized(false), savedWindow(NULL) { };
     bool setWindow(NPWindow *window);
 protected:
     void initialize(NPWindow *window);

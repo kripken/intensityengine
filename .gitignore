@@ -2,4 +2,4 @@
 debugit*
 out
 *~
-
+src/client/plugin/third_party/libevent/*

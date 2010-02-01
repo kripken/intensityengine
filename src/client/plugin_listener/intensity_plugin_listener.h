@@ -23,6 +23,21 @@
  */
 
 
+#include <boost/interprocess/managed_shared_memory.hpp>
+#include <boost/interprocess/containers/vector.hpp>
+#include <boost/interprocess/allocators/allocator.hpp>
+
+#define INTENSITY_CHANNEL "IntensityChannel"
+
+      //Alias an STL compatible allocator of ints that allocates ints from the managed
+      //shared memory segment.  This allocator will allow to place containers
+      //in managed shared memory segments
+      typedef boost::interprocess::allocator<int, boost::interprocess::managed_shared_memory::segment_manager> 
+         ShmemAllocator;
+
+      //Alias a vector that uses the previous STL-like allocator
+      typedef boost::interprocess::vector<int, ShmemAllocator> MyVector;
+
 namespace PluginListener
 {
     void initialize();
