@@ -39,6 +39,9 @@
 #include "intensity_gui.h"
 #include "intensity_texture.h"
 #include "master.h"
+#ifdef INTENSITY_PLUGIN
+    #include "intensity_plugin_listener.h"
+#endif
 
 #include "client_system.h"
 
@@ -179,6 +182,9 @@ void ClientSystem::frameTrigger(int curtime)
     TargetingControl::determineMouseTarget();
     can_edit = int(isAdmin());
     IntensityTexture::doBackgroundLoading();
+    #ifdef INTENSITY_PLUGIN
+        PluginListener::frameTrigger();
+    #endif
 }
 
 void ClientSystem::gotoLoginScreen()

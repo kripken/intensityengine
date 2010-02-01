@@ -74,6 +74,7 @@ void PluginObject::initialize(NPWindow *window)
     #else
         argv.push_back("intensity_client.bat");
     #endif
+    argv.push_back("-P"); // Tell child process it should talk to us
     base::LaunchApp(CommandLine(argv), false, false, &processHandle);
 
     delete[] buffer;

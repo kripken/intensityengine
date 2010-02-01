@@ -106,11 +106,23 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "BSD")
     set(CLIENT_LIBRARIES ${CLIENT_LIBRARIES} execinfo)
 endif(${CMAKE_SYSTEM_NAME} MATCHES "BSD")
 
-add_executable(Intensity_CClient ${CLIENT_SOURCES})
-target_link_libraries(Intensity_CClient ${CLIENT_LIBRARIES})
-
 # Experimental plugin - Linux only for now
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-    add_subdirectory(plugin)
+    set(INTENSITY_PLUGIN 1)
+    add_definitions(-DINTENSITY_PLUGIN)
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+
+if(${INTENSITY_PLUGIN})
+    add_subdirectory(plugin)
+    add_subdirectory(plugin_listener)
+
+    include_directories(${CMAKE_SOURCE_DIR}/src/client/plugin_listener)
+    set(CLIENT_LIBRARIES ${CLIENT_LIBRARIES}
+        pluginlistener
+    )
+    link_directories(./plugin_listener)
+endif(${INTENSITY_PLUGIN})
+
+add_executable(Intensity_CClient ${CLIENT_SOURCES})
+target_link_libraries(Intensity_CClient ${CLIENT_LIBRARIES})
 

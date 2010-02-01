@@ -23,3 +23,9 @@
  */
 
 
+namespace PluginListener
+{
+    void initialize();
+    void frameTrigger();
+}
+

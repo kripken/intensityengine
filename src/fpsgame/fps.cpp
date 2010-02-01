@@ -35,6 +35,7 @@
 #ifdef CLIENT
     #include "client_system.h"
     #include "character_render.h"
+    #include "intensity_plugin_listener.h"
 #else // SERVER
     #include "server_system.h"
 #endif
@@ -790,6 +791,16 @@ namespace game
 
     void parseoptions(vector<const char *> &args)
     {
+        loopv(args)
+        {
+            #ifdef INTENSITY_PLUGIN
+                const char* arg = args[i];
+                if (*arg == 'P')
+                {
+                    PluginListener::initialize();
+                }
+            #endif
+        }
     }
 
     bool serverinfoentry(g3d_gui *g, int i, const char *name, int port, const char *desc, const char *map, int ping, const vector<int> &attr, int np) { assert(0); return false; }
