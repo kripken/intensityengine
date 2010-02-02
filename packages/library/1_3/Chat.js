@@ -139,24 +139,26 @@ log(ERROR, "call 2");
             clientActivate: function() {
                 this.skypeAttempts = 0;
                 // Keep asking for handle until we get it
-                GameManager.getSingleton().eventManager.add({
-                    secondsBefore: 2,
-                    secondsBetween: 2,
-                    func: bind(function() {
-                        if (this !== getPlayerEntity()) return false;
+                Global.queuedActions.push(bind(function() {
+                    GameManager.getSingleton().eventManager.add({
+                        secondsBefore: 2,
+                        secondsBetween: 2,
+                        func: bind(function() {
+                            if (this !== getPlayerEntity()) return false;
 
-                        if (this.skypeHandle) return false; // stop now
-                        this.skypeAttempts += 1;
-                        if (this.skypeAttempts === 10) return false; // give up
+                            if (this.skypeHandle) return false; // stop now
+                            this.skypeAttempts += 1;
+                            if (this.skypeAttempts === 10) return false; // give up
 
-                        log(WARNING, "Requesting Skype handle");
+                            log(WARNING, "Requesting Skype handle");
 
-                        CAPI.signalComponent('Skype', 'whoami|' + Tools.callbacks.add(bind(function(handle) {
-                            this.skypeHandle = handle;
-                        }, this)));
-                    }, this),
-                    entity: this,
-                });
+                            CAPI.signalComponent('Skype', 'whoami|' + Tools.callbacks.add(bind(function(handle) {
+                                this.skypeHandle = handle;
+                            }, this)));
+                        }, this),
+                        entity: this,
+                    });
+                }, this));
 
                 this.connect('voice.call', function(entity) {
 log(ERROR, "call 3");

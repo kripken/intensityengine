@@ -269,7 +269,16 @@ Global.currTimeDelta = 1.0; //!< Current frame time. Initialized to 1.0 just to 
 Global.lastmillis = 0; //<! Sauer-relevant value of lastmillis, useful for basetime of animations, etc.
 Global.profiling = null; //!< To enable, place something like { interval: 1.0 } in this
 
+Global.queuedActions = []; //!< Add actions here, that will be run the first time manageActions
+                           //!< is called. That is only done *after* all entities are loaded
+                           //!< and the scenario has started. So it is useful e.g. if you need
+                           //!< to rely on a combination of entities to be present (like the
+                           //!< GameManager)
+
 manageActions = function(seconds, lastmillis) {
+    forEach(Global.queuedActions, function(action) { action(); });
+    Global.queuedActions = [];
+
     Global.time += seconds;
     Global.currTimeDelta = seconds;
     Global.lastmillis = lastmillis;
