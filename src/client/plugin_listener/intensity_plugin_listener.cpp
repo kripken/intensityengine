@@ -23,8 +23,6 @@
  */
 
 
-#include "python_wrap.h"
-
 #include "intensity_plugin_listener.h"
 
 
@@ -55,23 +53,18 @@ void frameTrigger()
 {
     if (initialized)
     {
-        std::string message = channel->read();
-        if (message == "") return;
+        std::vector<std::string> parsed = channel->readParsed();
 
-        printf("Seeing: %s\r\n", message.c_str());
+        if (parsed.size() == 0) return;
 
-        python::object split = python::object(message).attr("split")("|");
-        std::string command = python::extract<std::string>(split[0]);
+        std::string command = parsed[0];
         printf("Processing command: %s\r\n", command.c_str());
-
-        std::string temp;
 
         if (command == "setwindow")
         {
-            temp = python::extract<std::string>(split[1]);
-            int width = atoi(temp.c_str());
-            temp = python::extract<std::string>(split[2]);
-            int height = atoi(temp.c_str());
+            assert(parsed.size() == 3);
+            int width = atoi(parsed[1].c_str());
+            int height = atoi(parsed[2].c_str());
             printf("    %d,%d\r\n", width, height);
             screenres(&width, &height);
         } else {

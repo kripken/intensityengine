@@ -23,6 +23,8 @@
  */
 
 
+#include <vector>
+
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/containers/vector.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
@@ -71,6 +73,25 @@ public:
         index++; // Skip last \0 symbol in this message
         index = index % CHANNEL_SIZE;
         return message;
+    }
+    std::vector<std::string> readParsed()
+    {
+        std::vector<std::string> parsed;
+        std::string message = read();
+        if (message == "") return parsed;
+        printf("Read for parsing: %s\r\n", message.c_str());
+        message = message + "|"; // Final barrier
+        std::string curr = "";
+        for (unsigned int i = 0; i < message.size(); i++)
+        {
+            if (message[i] == '|')
+            {
+                parsed.push_back(curr);
+                curr = "";
+            } else
+                curr += message[i];
+        }
+        return parsed;
     }
 };
 
