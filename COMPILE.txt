@@ -318,3 +318,15 @@ To compile the experimental browser plugin, use
 
 instead of "cmake ..".
 
+Note that you will need some things like GTK development headers, etc. (I
+will document things better later on, after I clean up the build files there).
+
+Then copy the browser plugin to where it will be found, using something
+like
+
+    sudo cp cbuild/src/client/plugin/libIntensityPlugin.so /usr/lib/mozilla/plugins/
+
+Then restart your browser and open
+
+    src/client/plugin/test.html
+
