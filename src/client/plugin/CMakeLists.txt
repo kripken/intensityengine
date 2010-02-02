@@ -57,6 +57,7 @@ add_library(IntensityPlugin SHARED
     ipc/ipc_channel_posix.cc
     ipc/ipc_message.cc
     ipc/ipc_logging.cc
+    plugin/cross/o3d_glue.cc
     plugin/cross/main.cc
     plugin/linux/main_linux.cc
     third_party/nixysa/static_glue/npapi/npn_api.cc

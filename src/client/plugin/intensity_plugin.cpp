@@ -48,7 +48,7 @@ TO_STRING(double)
 
 ServerChannel *channel;
 
-bool PluginObject::setWindow(NPWindow *window)
+bool IntensityPluginObject::setWindow(NPWindow *window)
 {
     printf("setWindow\r\n");
 
@@ -57,7 +57,7 @@ bool PluginObject::setWindow(NPWindow *window)
 
     printf("update window\r\n");
 
-    savedWindow = window;
+    window_ = window;
 
     printf("SetWindow: %d, %d\r\n", window->width, window->height);
     std::string message = "setwindow|" + _toString((int)window->width) + "|" + _toString((int)window->height);
@@ -74,7 +74,7 @@ bool PluginObject::setWindow(NPWindow *window)
     return true;
 }
 
-void PluginObject::initialize(NPWindow *window)
+void IntensityPluginObject::initialize(NPWindow *window)
 {
     printf("initialize\r\n");
 
@@ -99,7 +99,7 @@ void PluginObject::initialize(NPWindow *window)
     delete[] buffer;
 }
 
-void PluginObject::setupComm()
+void IntensityPluginObject::setupComm()
 {
     printf("setupComm\r\n");
     channel = new ServerChannel();

@@ -69,6 +69,8 @@
 //#include "client_glue.h"
 #include "third_party/nixysa/static_glue/npapi/common.h"
 
+#include "intensity_plugin.h" // INTENSITY
+
 namespace o3d {
 class Client;
 class Renderer;
@@ -158,20 +160,20 @@ class PluginObject: public NPObject {
       NPToClientClassMap;
 
   NPP npp_;
-  ServiceLocator service_locator_;
-  EvaluationCounter evaluation_counter_;
-  ClassManager class_manager_;
-  ClientInfoManager client_info_manager_;
-  ObjectManager object_manager_;
-  Profiler profiler_;
-  MainThreadTaskPoster main_thread_task_poster_;
+//  ServiceLocator service_locator_;
+//  EvaluationCounter evaluation_counter_;
+//  ClassManager class_manager_;
+//  ClientInfoManager client_info_manager_;
+//  ObjectManager object_manager_;
+//  Profiler profiler_;
+//  MainThreadTaskPoster main_thread_task_poster_;
   bool fullscreen_;  // Are we rendered fullscreen or in the plugin region?
-  Renderer *renderer_;
-  Client *client_;
-  Features* features_;
-  ClientObjectMap object_map_;
-  ClientToNPClassMap client_to_np_class_map_;
-  NPToClientClassMap np_to_client_class_map_;
+//  Renderer *renderer_;
+//  Client *client_;
+//  Features* features_;
+//  ClientObjectMap object_map_;
+//  ClientToNPClassMap client_to_np_class_map_;
+//  NPToClientClassMap np_to_client_class_map_;
   NPObject *globals_npobject_;
   std::string user_agent_;
   Renderer::InitStatus renderer_init_status_;
@@ -184,9 +186,11 @@ class PluginObject: public NPObject {
   int prev_width_;
   int prev_height_;
 
-  scoped_ptr<StreamManager> stream_manager_;
+//  scoped_ptr<StreamManager> stream_manager_;
 
  public:
+  IntensityPluginObject* intensityObject; // INTENSITY
+
 #ifdef OS_WIN
   void SetHWnd(HWND hWnd) {
     hWnd_ = hWnd;
@@ -302,9 +306,9 @@ class PluginObject: public NPObject {
   ~PluginObject();
   void Init(int argc, char* argn[], char* argv[]);
   void TearDown();
-  ServiceLocator* service_locator() { return &service_locator_; }
-  Client *client() { return client_; }
-  Renderer *renderer() { return renderer_; }
+//  ServiceLocator* service_locator() { return &service_locator_; }
+//  Client *client() { return client_; }
+//  Renderer *renderer() { return renderer_; }
   NPP npp() { return npp_; }
   void RegisterType(const ObjectBase::Class *clientclass, NPClass *npclass);
   bool CheckObject(NPObject *npobject,
@@ -320,7 +324,7 @@ class PluginObject: public NPObject {
 
   static PluginObject *Create(NPP npp);
 
-  StreamManager *stream_manager() const { return stream_manager_.get(); }
+//  StreamManager *stream_manager() const { return stream_manager_.get(); }
 
   static void LogAssertHandlerFunction(const std::string& str);
 

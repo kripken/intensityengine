@@ -28,13 +28,13 @@
 #include "base/process.h"
 #include "base/process_util.h"
 
-class PluginObject
+class IntensityPluginObject
 {
     bool initialized;
     base::ProcessHandle processHandle;
-    NPWindow *savedWindow;
+    NPWindow *window_;
 public:
-    PluginObject() : initialized(false), savedWindow(NULL) { };
+    IntensityPluginObject() : initialized(false), window_(NULL) { };
     bool setWindow(NPWindow *window);
 protected:
     void initialize(NPWindow *window);
