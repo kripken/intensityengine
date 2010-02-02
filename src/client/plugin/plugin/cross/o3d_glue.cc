@@ -550,6 +550,8 @@ static void PluginDeallocate(NPObject *object) {
 }
 
 static bool PluginHasMethod(NPObject *header, NPIdentifier name) {
+return false;
+/*
   DebugScopedId id(name);
   PluginObject *plugin_object = static_cast<PluginObject *>(header);
   for (int i = 0; i < kNumMethodIds; ++i) {
@@ -560,6 +562,7 @@ static bool PluginHasMethod(NPObject *header, NPIdentifier name) {
 
   NPObject *globals = plugin_object->globals_npobject();
   return globals->_class->hasMethod(globals, name);
+*/
 }
 
 static bool PluginInvoke(NPObject *header, NPIdentifier name,
@@ -599,13 +602,18 @@ static bool PluginInvoke(NPObject *header, NPIdentifier name,
 
 static bool PluginInvokeDefault(NPObject *header, const NPVariant *args,
                                 uint32_t arg_count, NPVariant *result) {
+return false;
+/*
   PluginObject *plugin_object = static_cast<PluginObject *>(header);
   NPP npp = plugin_object->npp();
   NPObject *globals = plugin_object->globals_npobject();
   return globals->_class->invokeDefault(globals, args, arg_count, result);
+*/
 }
 
 static bool PluginHasProperty(NPObject *header, NPIdentifier name) {
+return false;
+/*
   DebugScopedId id(name);
   PluginObject *plugin_object = static_cast<PluginObject *>(header);
   NPP npp = plugin_object->npp();
@@ -614,6 +622,7 @@ static bool PluginHasProperty(NPObject *header, NPIdentifier name) {
   }
   NPObject *globals = plugin_object->globals_npobject();
   return globals->_class->hasProperty(globals, name);
+*/
 }
 
 static bool PluginGetProperty(NPObject *header, NPIdentifier name,

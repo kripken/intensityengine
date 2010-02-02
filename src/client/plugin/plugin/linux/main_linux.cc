@@ -399,6 +399,7 @@ extern "C" {
 
 NPError EXPORT_SYMBOL OSCALL NP_Initialize(NPNetscapeFuncs *browserFuncs,
                                            NPPluginFuncs *pluginFuncs) {
+printf("Init\r\n");
   NPError retval = InitializeNPNApi(browserFuncs);
   if (retval != NPERR_NO_ERROR) return retval;
   NP_GetEntryPoints(pluginFuncs);
@@ -406,6 +407,8 @@ NPError EXPORT_SYMBOL OSCALL NP_Initialize(NPNetscapeFuncs *browserFuncs,
 }
 
 NPError EXPORT_SYMBOL OSCALL NP_Shutdown(void) {
+printf("Shutdown\r\n");
+
   HANDLE_CRASHES;
   DLOG(INFO) << "NP_Shutdown";
 
@@ -445,6 +448,7 @@ NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
 }
 
 NPError NPP_Destroy(NPP instance, NPSavedData **save) {
+printf("Destroy\r\n");
   HANDLE_CRASHES;
   PluginObject *obj = static_cast<PluginObject*>(instance->pdata);
   if (obj) {
@@ -492,7 +496,6 @@ NPError NPP_SetWindow(NPP instance, NPWindow *window) {
   HANDLE_CRASHES;
   PluginObject *obj = static_cast<PluginObject*>(instance->pdata);
 //  obj->intensityObject->setWindow(window);
-
   NPSetWindowCallbackStruct *cb_struct =
       static_cast<NPSetWindowCallbackStruct *>(window->ws_info);
   Window xwindow = reinterpret_cast<Window>(window->window);
