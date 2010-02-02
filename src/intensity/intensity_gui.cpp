@@ -130,6 +130,20 @@ ICOMMAND(getentityclass, "i", (int *index), {
     {
         if (immediate)
         {
+            float curr_x, curr_y;
+            g3d_cursorpos(curr_x, curr_y);
+            float xrel = x - curr_x;
+            float yrel = y - curr_y;
+            xrel *= 500;
+            yrel *= 500;
+//printf("curr: %f, %f\r\n", curr_x, curr_y);
+//printf("next: %f, %f\r\n", x, y);
+//printf("RELS: %f, %f       \r\n", xrel, yrel);
+            if(!g3d_movecursor(0, 0))
+            {
+                mousemove(xrel, yrel);
+                SDL_WarpMouse(screen->w / 2, screen->h / 2);
+            }
             cursorx = x;
             cursory = y;
             return;
