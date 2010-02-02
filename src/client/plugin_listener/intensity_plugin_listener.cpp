@@ -25,6 +25,8 @@
 
 #include "intensity_plugin_listener.h"
 
+#include "intensity_gui.h"
+
 
 using namespace boost;
 
@@ -53,22 +55,38 @@ void frameTrigger()
 {
     if (initialized)
     {
-        std::vector<std::string> parsed = channel->readParsed();
-
-        if (parsed.size() == 0) return;
-
-        std::string command = parsed[0];
-        printf("Processing command: %s\r\n", command.c_str());
-
-        if (command == "setwindow")
+        while (true)
         {
-            assert(parsed.size() == 3);
-            int width = atoi(parsed[1].c_str());
-            int height = atoi(parsed[2].c_str());
-            printf("    %d,%d\r\n", width, height);
-            screenres(&width, &height);
-        } else {
-            assert(0);
+            std::vector<std::string> parsed = channel->readParsed();
+            if (parsed.size() == 0) break;
+
+            std::string command = parsed[0];
+            printf("Processing command: %s\r\n", command.c_str());
+
+            if (command == "sw")
+            {
+                assert(parsed.size() == 3);
+                int width = atoi(parsed[1].c_str());
+                int height = atoi(parsed[2].c_str());
+                printf("    %d,%d\r\n", width, height);
+                screenres(&width, &height);
+            } else if (command == "mm")
+            {
+                assert(parsed.size() == 3);
+                double x = atof(parsed[1].c_str());
+                double y = atof(parsed[2].c_str());
+                printf("    %f,%f\r\n", x, y);
+                IntensityGUI::injectMousePosition(x, y, true);
+            } else if (command == "mb")
+            {
+                assert(parsed.size() == 3);
+                int button = atoi(parsed[1].c_str());
+                bool down = atoi(parsed[2].c_str());
+                printf("    %d,%d\r\n", button, down);
+                IntensityGUI::injectMouseClick(button, down);
+            } else {
+                assert(0);
+            }
         }
     }
 }

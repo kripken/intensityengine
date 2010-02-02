@@ -28,13 +28,13 @@
 
 #include "base/file_util.h"
 #include "base/message_loop.h"
-
+#include "base/time.h"
 
 
 using namespace boost;
 
-#define TO_STRING(type)                  \
-std::string _toString(type val)          \
+#define TO_STRING(type, post)                  \
+std::string _toString##post(type val)          \
 {                                        \
     std::stringstream ss;                \
     std::string ret;                     \
@@ -42,9 +42,17 @@ std::string _toString(type val)          \
     return ss.str();                     \
 }
 
-TO_STRING(int)
-TO_STRING(long)
-TO_STRING(double)
+TO_STRING(int,)
+TO_STRING(long,)
+TO_STRING(double,_)
+
+std::string _toString(double val)
+{
+    std::string ret = _toString_(val);
+    size_t i = ret.find(".");
+    if (i < 0) return ret;
+    return ret.substr(0, i+4);
+}
 
 ServerChannel *channel;
 
@@ -60,10 +68,8 @@ bool IntensityPluginObject::setWindow(NPWindow *window)
     window_ = window;
 
     printf("SetWindow: %d, %d\r\n", window->width, window->height);
-    std::string message = "setwindow|" + _toString((int)window->width) + "|" + _toString((int)window->height);
+    std::string message = "sw|" + _toString((int)window->width) + "|" + _toString((int)window->height);
     channel->write(message);
-
-    printf("Sending: %s (%d)\r\n", message.c_str(), message.size());
 
     if (!initialized)
     {
@@ -103,5 +109,20 @@ void IntensityPluginObject::setupComm()
 {
     printf("setupComm\r\n");
     channel = new ServerChannel();
+}
+
+void IntensityPluginObject::onMouseMove(double x, double y)
+{
+    double now = base::Time::Now().ToDoubleT();
+    if (now - lastMouseMove < 0.02) return;
+    lastMouseMove = now;
+    std::string message = "mm|" + _toString(x/window_->width) + "|" + _toString(y/window_->height);
+    channel->write(message);
+}
+
+void IntensityPluginObject::onMouseButton(int button, bool down)
+{
+    std::string message = "mb|" + _toString(button) + "|" + _toString(down);
+    channel->write(message);
 }
 

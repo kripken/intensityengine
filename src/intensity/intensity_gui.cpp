@@ -35,6 +35,8 @@
 #include "intensity_gui.h"
 
 
+extern float cursorx, cursory;
+
 namespace EditingSystem
 {
     extern std::vector<std::string> entityClasses;
@@ -124,8 +126,27 @@ ICOMMAND(getentityclass, "i", (int *index), {
         return false;
     }
 
-    void injectMousePosition(float x, float y)
+    void injectMousePosition(float x, float y, bool immediate)
     {
+        if (immediate)
+        {
+            cursorx = x;
+            cursory = y;
+            return;
+        }
+
+/*
+            float curr_x, curr_y;
+            g3d_cursorpos(curr_x, curr_y);
+            float xrel = x - curr_x;
+            float yrel = y - curr_y;
+            xrel *= 1000;
+            yrel *= 1000;
+printf("rels: %f, %f        %f,%f\r\n", xrel, yrel, x, curr_x);
+            if(!g3d_movecursor(xrel, yrel))
+                mousemove(xrel, yrel);
+*/
+
         g3d_resetcursor(); // now at 0.5,0.5
         float curr_x, curr_y;
         float factor = 400;

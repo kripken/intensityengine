@@ -45,7 +45,7 @@ public:
     SimpleChannel() : index(0), data(NULL), segment(NULL) { };
     void write(std::string message)
     {
-        printf("Write from %d\r\n", index);
+        printf("Write %s from %d\r\n", message.c_str(), index);
         for (unsigned int i = 0; i < message.size(); i++)
         {
             assert((*data)[index] == '\0');

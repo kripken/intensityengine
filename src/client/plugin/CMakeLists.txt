@@ -53,6 +53,8 @@ add_library(IntensityPlugin SHARED
     base/thread_local_posix.cc
     base/tracked.cc
     base/tracked_objects.cc
+    base/time.cc
+    base/time_posix.cc
     ipc/ipc_switches.cc
     ipc/ipc_channel_posix.cc
     ipc/ipc_message.cc

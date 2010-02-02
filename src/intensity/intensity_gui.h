@@ -34,7 +34,7 @@ namespace IntensityGUI
 
     //! Simulates the user moving the mouse to position (x,y), in [0,1] coordinates
     //! (set logging level to DEBUG to see the SDL events from your interaction, which you can then plug in here)
-    void injectMousePosition(float x, float y);
+    void injectMousePosition(float x, float y, bool immediate=false);
 
     //! Simulates the user clicking the mouse
     //! (set logging level to DEBUG to see the SDL events from your interaction, which you can then plug in here)

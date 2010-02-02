@@ -269,14 +269,14 @@ static int GetGtkModifierState(int gtk_state) {
 static gboolean GtkHandleMouseMove(GtkWidget *widget,
                                    GdkEventMotion *motion_event,
                                    PluginObject *obj) {
-printf("Mousemove!\r\n");
+  obj->intensityObject->onMouseMove(motion_event->x, motion_event->y);
   return TRUE;
 }
 
 static gboolean GtkHandleMouseButton(GtkWidget *widget,
                                      GdkEventButton *button_event,
                                      PluginObject *obj) {
-printf("MouseB!\r\n");
+  obj->intensityObject->onMouseButton(button_event->button, button_event->type == GDK_BUTTON_PRESS);
   return TRUE;
 }
 

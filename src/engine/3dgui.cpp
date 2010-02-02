@@ -21,7 +21,7 @@ static int fieldmode = FIELDSHOW;
 static bool fieldsactive = false;
 
 static bool hascursor;
-static float cursorx = 0.5f, cursory = 0.5f;
+float cursorx = 0.5f, cursory = 0.5f; // INTENSITY: removed 'static'
 
 #define SHADOW 4
 #define ICON_SIZE (FONTH-SHADOW)

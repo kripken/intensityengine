@@ -33,9 +33,15 @@ class IntensityPluginObject
     bool initialized;
     base::ProcessHandle processHandle;
     NPWindow *window_;
+
+    double lastMouseMove;
+
 public:
-    IntensityPluginObject() : initialized(false), window_(NULL) { };
+    IntensityPluginObject() : initialized(false), window_(NULL), lastMouseMove(0) { };
     bool setWindow(NPWindow *window);
+    void onMouseMove(double x, double y);
+    void onMouseButton(int button, bool down);
+
 protected:
     void initialize(NPWindow *window);
     void setupComm();
