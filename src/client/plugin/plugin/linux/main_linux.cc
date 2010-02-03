@@ -284,8 +284,12 @@ static gboolean GtkHandleMouseButton(GtkWidget *widget,
 static gboolean GtkHandleKey(GtkWidget *widget,
                              GdkEventKey *key_event,
                              PluginObject *obj) {
-  obj->intensityObject->onKeyboard(KeySymToDOMKeyCode(key_event->keyval), key_event->type == GDK_KEY_PRESS);
-  return TRUE;
+    obj->intensityObject->onKeyboard(
+        KeySymToDOMKeyCode(key_event->keyval),
+        gdk_keyval_to_unicode(key_event->keyval),
+        key_event->type == GDK_KEY_PRESS
+    );
+    return TRUE;
 }
 
 static gboolean GtkHandleScroll(GtkWidget *widget,

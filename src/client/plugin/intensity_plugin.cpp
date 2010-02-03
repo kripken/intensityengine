@@ -54,6 +54,22 @@ std::string _toString(double val)
     return ret.substr(0, i+4);
 }
 
+SDLKey DOMSymToSDL(int key)
+{
+    if (key >= 65 && key <= 65+25)
+        return (SDLKey)(key + 32);
+    #define TRANS(k, v) case k: return v; break;
+    switch(key)
+    {
+        TRANS(37, SDLK_LEFT)
+        TRANS(38, SDLK_UP)
+        TRANS(39, SDLK_RIGHT)
+        TRANS(40, SDLK_DOWN)
+        TRANS(191, SDLK_SLASH)
+    }
+    return (SDLKey)key;
+}
+
 ServerChannel *channel;
 
 bool IntensityPluginObject::setWindow(NPWindow *window)
@@ -126,9 +142,10 @@ void IntensityPluginObject::onMouseButton(int button, bool down)
     channel->write(message);
 }
 
-void IntensityPluginObject::onKeyboard(int key, bool down)
+void IntensityPluginObject::onKeyboard(int key, int unicode, bool down)
 {
-    std::string message = "kb|" + _toString(key) + "|" + _toString(down);
+    key = DOMSymToSDL(key);
+    std::string message = "kb|" + _toString(key) + "|" + _toString(unicode) + "|" + _toString(down);
     channel->write(message);
 }
 
