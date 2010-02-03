@@ -126,3 +126,9 @@ void IntensityPluginObject::onMouseButton(int button, bool down)
     channel->write(message);
 }
 
+void IntensityPluginObject::onKeyboard(int key, bool down)
+{
+    std::string message = "kb|" + _toString(key) + "|" + _toString(down);
+    channel->write(message);
+}
+

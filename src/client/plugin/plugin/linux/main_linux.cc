@@ -212,6 +212,7 @@ static int KeySymToDOMKeyCode(KeySym key_sym) {
 }
 
 static int GetXModifierState(int x_state) {
+    return 0;
 }
 
 void LinuxKeyHandler(Widget w,
@@ -283,7 +284,7 @@ static gboolean GtkHandleMouseButton(GtkWidget *widget,
 static gboolean GtkHandleKey(GtkWidget *widget,
                              GdkEventKey *key_event,
                              PluginObject *obj) {
-printf("Btn!\r\n");
+  obj->intensityObject->onKeyboard(KeySymToDOMKeyCode(key_event->keyval), key_event->type == GDK_KEY_PRESS);
   return TRUE;
 }
 
@@ -291,6 +292,14 @@ static gboolean GtkHandleScroll(GtkWidget *widget,
                                 GdkEventScroll *scroll_event,
                                 PluginObject *obj) {
   return TRUE;
+}
+
+void GtkHandleEventCrossing(GtkWidget *widget, GdkEventCrossing *crossing_event)
+{
+printf("\r\n\r\ gtk FFFFFFFFFFFFFFFFFFFOCUS\r\n\r\n");
+//    gdk_window_focus(gtk_widget_get_window(widget), crossing_event->time);
+    gtk_widget_set_can_focus(widget, true);
+    gtk_widget_grab_focus(widget);
 }
 
 static gboolean GtkEventCallback(GtkWidget *widget,
@@ -307,6 +316,7 @@ printf("Event: %d\r\n", event->type);
       }
       return TRUE;
     case GDK_ENTER_NOTIFY:
+      GtkHandleEventCrossing(widget, &event->crossing);
       obj->set_in_plugin(true);
       return TRUE;
     case GDK_LEAVE_NOTIFY:

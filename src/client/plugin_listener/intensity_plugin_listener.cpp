@@ -84,6 +84,13 @@ void frameTrigger()
                 bool down = atoi(parsed[2].c_str());
                 printf("    %d,%d\r\n", button, down);
                 IntensityGUI::injectMouseClick(button, down);
+            } else if (command == "kb")
+            {
+                assert(parsed.size() == 3);
+                int key = atoi(parsed[1].c_str());
+                bool down = atoi(parsed[2].c_str());
+                printf("    %d,%d\r\n", key, down);
+                IntensityGUI::injectKeyPress(key, key, down);
             } else {
                 assert(0);
             }
