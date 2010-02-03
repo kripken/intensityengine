@@ -275,7 +275,7 @@ def upload_asset(asset_id, backup_postfix = None, num_backups = 0, num_backups_t
 def upload_asset_by_location(location):
     try:
         upload_asset(AssetMetadata.get_by_path('packages/' +location).asset_id)
-        log(logging.DEBUG, "Asset uploaded successfully")
+        print "Asset %s uploaded successfully" % location
     except Exception, e:
         CModule.show_message("Error", "Could not upload the asset to the asset server: " + str(e))
 
