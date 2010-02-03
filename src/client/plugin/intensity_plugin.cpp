@@ -23,6 +23,8 @@
  */
 
 
+#include "SDL.h"
+
 #include "intensity_plugin.h"
 #include "intensity_plugin_listener.h"
 

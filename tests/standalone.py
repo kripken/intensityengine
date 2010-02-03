@@ -97,7 +97,7 @@ class TestMaster(unittest.TestCase):
 #        print "Inject mouse click", x, y, button
 
         barrier = self.make_barrier()
-        proc.sendline('CModule.inject_mouse_position(%f, %f); CModule.flush_input_events(); print "%s"' % (x, y, barrier))
+        proc.sendline('CModule.inject_mouse_position(%f, %f, True); CModule.flush_input_events(); print "%s"' % (x, y, barrier))
         self.assertExpect(proc, barrier)
 
         barrier = self.make_barrier()
