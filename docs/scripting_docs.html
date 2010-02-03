@@ -50,6 +50,7 @@ body {
   font-family: Verdana, sans-serif;
   font-size: 10pt;
   background-color: #ffffff;
+  color: #000;
 }
 
 
@@ -102,7 +103,6 @@ img {
     top: 0;
     left: 0;
   }
-  
   
 
   
@@ -280,7 +280,6 @@ ol[type="disc"], ol[type="circle"], ol[type="square"] {
 
 
   /* default print css */
-  
   @media print {
     body {
       padding: 0;
@@ -446,7 +445,7 @@ body {
     
 <div class=google_header id=google_header style=TEXT-ALIGN:right>
   <p>
-    <font size=1>&nbsp;Intensity Engine Scripting API Documentation. (C) 2009 Alon Zakai. License: CC-BY-SA-NC.</font>
+    <font size=1>&nbsp;Intensity Engine Scripting API Documentation. (C) 2010 Alon Zakai. License: CC-BY-SA-NC.</font>
   </p>
 </div>
 <div>
@@ -520,6 +519,25 @@ body {
   </div>
   <p>
     <br>
+  </p>
+  <p>
+    <b><font size=3><font size=4><br>
+    </font></font></b>
+  </p>
+  <p style=TEXT-ALIGN:center>
+    <b><font size=3><font size=4>***<br>
+    </font></font></b>
+  </p>
+  <p style=TEXT-ALIGN:center>
+    <b><font size=3><font size=4>NOTE</font>: The Intensity Engine scripting system is progressing rapidly, and this document may be out of date by the time you read it. So while this doc should give you a good overview, it is recommended to learn about the scripting API also from the working code samples, primarily those in packages/library/1_3/ (and in particular under /mapscripts in that directory).<br>
+    </font></b>
+  </p>
+  <p style=TEXT-ALIGN:center>
+    <font size=3>***</font>
+  </p>
+  <p>
+    <font size=3><br>
+    </font>
   </p>
   <h1>
     <a id=Introduction_17609788435643015 name=Introduction_17609788435643015></a>Introduction
@@ -659,50 +677,56 @@ body {
   <p style="FONT-FAMILY:Courier New">
   </p>
   <div style=MARGIN-LEFT:40px>
-    <span style="FONT-FAMILY:Courier New">// Default materials, etc.</span><br style="FONT-FAMILY:Courier New">
-    <br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">Library.include('library/MapDefaults');</span><br style="FONT-FAMILY:Courier New">
-    <br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">// Textures</span><br style="FONT-FAMILY:Courier New">
-    <br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">Library.include('yo_frankie/');</span><br style="FONT-FAMILY:Courier New">
-    <br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">// Map settings</span><br style="FONT-FAMILY:Courier New">
-    <br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">Map.fogColor(0, 0, 0);</span><br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">Map.fog(9999);</span><br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">Map.loadSky("skyboxes/philo/sky3");</span><br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">Map.skylight(100, 100, 100);</span><br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">Map.ambient(20);</span><br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">Map.shadowmapAmbient("0x505050");</span><br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">Map.shadowmapAngle(300);</span><br style="FONT-FAMILY:Courier New">
-    <br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">//// Player class</span><br style="FONT-FAMILY:Courier New">
-    <br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">registerEntityClass(Player.extend({</span><br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; _class: "GamePlayer",</span><br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">}));</span><br style="FONT-FAMILY:Courier New">
-    <br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">//// Application</span><br style="FONT-FAMILY:Courier New">
-    <br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">ApplicationManager.setApplicationClass(Application.extend({</span><br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; _class: "GameApplication",</span><br style="FONT-FAMILY:Courier New">
-    <br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; getPcClass: function() {</span><br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return "GamePlayer";</span><br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; },</span><br style="FONT-FAMILY:Courier New">
-    <br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; clientOnEntityOffMap: function(entity) {</span><br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; entity.position = [600,600,600];</span><br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; }</span><br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">}));</span><br style="FONT-FAMILY:Courier New">
-    <br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">//// Load permanent entities</span><br style="FONT-FAMILY:Courier New">
-    <br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">if (Global.SERVER) {</span><br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; var entities = CAPI.readFile("./entities.json");</span><br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; loadEntities(entities);</span><br style="FONT-FAMILY:Courier New">
-    <span style="FONT-FAMILY:Courier New">}</span><br>
+    Library.include('library/1_3/');<br>
+    Library.include('library/' + Global.LIBRARY_VERSION + '/__CorePatches');<br>
+    Library.include('library/' + Global.LIBRARY_VERSION + '/Plugins');<br>
+    <br>
+    Library.include('library/' + Global.LIBRARY_VERSION + '/MapDefaults');<br>
+    Library.include('yo_frankie/');<br>
+    <br>
+    Map.fogColor(0, 0, 0);<br>
+    Map.fog(9999);<br>
+    Map.loadSky("skyboxes/philo/sky3");<br>
+    Map.skylight(100, 100, 100);<br>
+    Map.ambient(20);<br>
+    Map.shadowmapAmbient("0x000000");<br>
+    Map.shadowmapAngle(300);<br>
+    <br>
+    //// Player class<br>
+    <br>
+    GamePlayer = registerEntityClass(<br>
+    &nbsp;&nbsp;&nbsp; bakePlugins(<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Player,<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; _class: "GamePlayer",<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; },<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ]<br>
+    &nbsp;&nbsp;&nbsp; )<br>
+    );<br>
+    <br>
+    //// Application<br>
+    <br>
+    ApplicationManager.setApplicationClass(Application.extend({<br>
+    &nbsp;&nbsp;&nbsp; _class: "GameApplication",<br>
+    <br>
+    &nbsp;&nbsp;&nbsp; getPcClass: function() {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return "GamePlayer";<br>
+    &nbsp;&nbsp;&nbsp; },<br>
+    <br>
+    &nbsp;&nbsp;&nbsp; // Replace this with appropriate behaviour for when a player falls of the map<br>
+    &nbsp;&nbsp;&nbsp; clientOnEntityOffMap: function(entity) {<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; entity.position = [600,600,600];<br>
+    &nbsp;&nbsp;&nbsp; },<br>
+    }));<br>
+    <br>
+    // Setup game<br>
+    <br>
+    if (Global.SERVER) {<br>
+    &nbsp;&nbsp;&nbsp; var entities = CAPI.readFile("./entities.json");<br>
+    &nbsp;&nbsp;&nbsp; loadEntities(entities);<br>
+    }<br>
+    <br>
   </div>
   <p>
     <br>
@@ -715,31 +739,21 @@ body {
   </p>
   <ul>
     <li>
-      <span style="FONT-FAMILY:Courier New"><font size=3>Library.include('library/MapDefaults');<br>
+      <span style="FONT-FAMILY:Courier New"><font size=3>Library.include, etc.<br>
       <font face=Verdana><br>
-      This <i>includes</i> a library (Library.include is sort of like #include in C/C++ or import in Python). Includes are always relative to packages/, the directory containing content (of which there are two directories - one in the installation of the engine, and one in your home directory. The latter contains downloaded content, etc.). In this case Library.include will run a .js (JavaScript) file called packages/library/MapDefaults.js. This basic script is included in most activities, it sets up general stuff like textures for water.<br>
+      This <i>includes</i> a library (Library.include is sort of like #include in C/C++ or import in Python). Includes are always relative to packages/, the directory containing content (of which there are two directories - one in the installation of the engine, and one in your home directory. The latter contains downloaded content, etc.). In this script we load the 1.3 version of the library, and then two modules in it, __CorePatches and Plugins, which are almost always included in every map. We also include MapDefaults.js, which sets up general stuff like textures for water, and yo_frankie, a texture package.<br>
       <br>
       </font></font></span>
     </li>
     <li>
-      <font size=3><span style="FONT-FAMILY:Courier New">Library.include('yo_frankie/');<br>
-      </span></font><span style="FONT-FAMILY:Courier New"><font size=3><font face=Verdana><br>
-      When given a directory (as you can see by the trailing slash), Library.include will look for a Package.js file in that directory (this is a naming convention). In this case, yo_frankie/ contains some content from the open game Yo Frankie!, a nice project by the Blender Foundation. By including this file, we can use some textures from there in our map.<br>
-      <br>
-      </font></font></span>
-    </li>
-    <li>
-      <span style="FONT-FAMILY:Courier New"><font size=3>Map.fogColor(0, 0, 0);<br>
-      etc.<br>
+      <span style="FONT-FAMILY:Courier New"><font size=3>Map.fogColor(0, 0, 0), etc.<br>
       <br>
       <font face=Verdana>These commands define visual settings for the map, like the fog color and distance, shadow color and angle, and so forth.<br>
       <br>
       </font></font></span>
     </li>
     <li>
-      <font size=3><span style="FONT-FAMILY:Courier New">registerEntityClass(Player.extend({</span><br style="FONT-FAMILY:Courier New">
-      <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; _class: "GamePlayer",</span><br style="FONT-FAMILY:Courier New">
-      <span style="FONT-FAMILY:Courier New">}));</span></font><br>
+      <font size=3><span style="FONT-FAMILY:Courier New">registerEntityClass, etc.</span></font><br>
       <span style="FONT-FAMILY:Courier New"><font size=3><font face=Verdana><br>
       This is where things start getting more involved.<br>
       <br>
@@ -747,7 +761,7 @@ body {
       <br>
       In the core language it of course does not. But it is a very flexible language, and many libraries can provide class-like functionality in JavaScript. The Intensity Engine uses a simple system based on some code by John Resig (in src/javascript/SimpleInheritance.js). This allows expressions like <span style="FONT-FAMILY:Courier New">Player.extend({ _class: "GamePlayer" })</span>, which takes an existing class - Player - and extends it, basically producing a subclass. In the code above, the subclass only has one new attribute, _class, but you can add any number of attributes as well as functions (more on that later).<br>
       <br>
-      So basically, in this bit of code we create a GamePlayer class, which is simply a subclass of Player but with a new name, and we register it in the system.<br>
+      Instead of using extend() as just mentioned, we use a slightly more complex method, but which also has a lot more flexibility, with bakePlugins(). bakePlugins() takes a class and a list of plugins and creates a new class. This isn't used to great effect in this code, but it lets you easily mix and match functionality.<br>
       <br>
       </font></font></span>
     </li>
@@ -883,8 +897,8 @@ body {
   </font><font size=3><br>
   </font>
   <div style=MARGIN-LEFT:40px>
-    <font size=3><span style="FONT-FAMILY:Courier New">Library.include('library/Plugins');</span><br style="FONT-FAMILY:Courier New">
-    <br>
+    <font size=3><span style=FONT-FAMILY:Verdana>Library.include('library/' + Global.LIBRARY_VERSION + '/Plugins');</span><br style=FONT-FAMILY:Verdana>
+    </font><font size=3><br>
     </font><font size=3><span style="FONT-FAMILY:Courier New">var Door = bakePlugins(<br>
     &nbsp;&nbsp; &nbsp;Mapmodel,<br>
     &nbsp;&nbsp; &nbsp;[<br>
@@ -991,8 +1005,8 @@ body {
   <br>
   If each script runs in its own thread, or multiple threads handle events in parallel, that can definitely help throughput, if multiple CPU cores are available. (It can also lead to simpler code in some cases, but not others.) But the price is less predictability and responsiveness, in the sense that we can't time script code to occur exactly in sync with our frames (unless we handle events that occur once per frame - which is exactly what act and clientAct do). In fast-paced games, we <b>do</b> need such predictability and responsiveness: If a player clicks, the effects of that click should occur in the very next frame; likewise, if some event is occurring (say, the player is under a spell), we may want to be able to have a visual effect signal the end of the event on the exact same frame that happens. In both cases, frame-based coding can work, but a complicated multithreaded system that schedules scripts might not.<br>
   <br>
-  One consequence of frame-based coding is that we need to be careful what we run in each frame - if we spend too much time in act or clientAct for a particular entity, the entire frame will take too long, which may be noticeable to the player. One way to be careful about this is to schedule code to only occur every so often, for example, a bot might look for new targets only once per second. This can be done in a simple way using a RepeatingTimer, which we will see examples of below.</font><br>
-  <font size=3>&nbsp;</font><br>
+  One consequence of frame-based coding is that we need to be careful what we run in each frame - if we spend too much time in act or clientAct for a particular entity, the entire frame will take too long, which may be noticeable to the player. One way to be careful about this is to schedule code to only occur every so often, for example, a bot might look for new targets only once per second. This can be done in a simple way using a RepeatingTimer, which we will see examples of below. You can also use the GameManager's eventList plugin for more general things here.</font><br>
+  <br>
   <br>
   <h2>
     <a id=Types_of_State_Variables_83779 name=Types_of_State_Variables_83779></a><font size=3><b>Types of State Variables</b></font>
@@ -1233,10 +1247,10 @@ body {
   </h1>
   <font size=3>In this chapter we will look over an example of plugin, specifically a 'stunball gun' - a weapon that shoots projectiles that explode and stun their targets, making them move more slowly for a short time. Here is the code, taken from packages/library/guns/Stunball.js:<br>
   <br>
+  </font>/* We must have done this earlier on: Library.include('library/1_3/'); */<br>
   <br>
-  </font><span style="FONT-FAMILY:Courier New">Library.include('library/Firing');</span><br style="FONT-FAMILY:Courier New">
-  <span style="FONT-FAMILY:Courier New">Library.include('library/Projectiles');</span><br style="FONT-FAMILY:Courier New">
-  <br style="FONT-FAMILY:Courier New">
+  Library.include('library/' + Global.LIBRARY_VERSION + '/Firing');<br>
+  Library.include('library/' + Global.LIBRARY_VERSION + '/Projectiles');<br style="FONT-FAMILY:Courier New">
   <br style="FONT-FAMILY:Courier New">
   <span style="FONT-FAMILY:Courier New">Stunball = Projectiles.Projectile.extend({</span><br style="FONT-FAMILY:Courier New">
   <span style="FONT-FAMILY:Courier New">&nbsp;&nbsp;&nbsp; radius: 4,</span><br style="FONT-FAMILY:Courier New">
@@ -1438,7 +1452,9 @@ body {
   <h1>
     <a id=Complete_Working_Activity_Sket name=Complete_Working_Activity_Sket></a>Complete Working Activity: Sketch World<br>
   </h1>
-  <font size=3>In this chapter we will look over a complete working example activity: Sketch World. If you haven't seen it in action, it can be summarized as an activity where every player can 'write' on the scenery, in a different color, in streaks of light (but you should really see it in action before reading this!). Here is the code:<br>
+  <font size=3>*** NOTE: This code is for the 1.0 version of the main library, so it is out of date! ***<br>
+  <br>
+  In this chapter we will look over a complete working example activity: Sketch World. If you haven't seen it in action, it can be summarized as an activity where every player can 'write' on the scenery, in a different color, in streaks of light (but you should really see it in action before reading this!). Here is the code:<br>
   <br>
   </font><span style="FONT-FAMILY:Courier New">Library.include('library/Plugins');</span><br style="FONT-FAMILY:Courier New">
   <span style="FONT-FAMILY:Courier New">Library.include('library/PlayerList');</span><br style="FONT-FAMILY:Courier New">
