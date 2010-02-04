@@ -143,8 +143,8 @@ ICOMMAND(getentityclass, "i", (int *index), {
             g3d_cursorpos(curr_x, curr_y);
             float xrel = x - curr_x;
             float yrel = y - curr_y;
-            xrel *= 500;
-            yrel *= 500;
+            xrel *= max(screen->w, screen->h);
+            yrel *= max(screen->w, screen->h);
 //printf("curr: %f, %f\r\n", curr_x, curr_y);
 //printf("next: %f, %f\r\n", x, y);
 //printf("RELS: %f, %f       \r\n", xrel, yrel);

@@ -132,7 +132,7 @@ void IntensityPluginObject::setupComm()
 void IntensityPluginObject::onMouseMove(double x, double y)
 {
     double now = base::Time::Now().ToDoubleT();
-    if (now - lastMouseMove < 0.02) return;
+    if (now - lastMouseMove < 0.005) return; // Max 200fps of mouse movements
     lastMouseMove = now;
     std::string message = "mm|" + _toString(x/window_->width) + "|" + _toString(y/window_->height);
     channel->write(message);
