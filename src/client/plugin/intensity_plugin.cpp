@@ -60,6 +60,9 @@ SDLKey DOMSymToSDL(int key)
 {
     if (key >= 65 && key <= 65+25)
         return (SDLKey)(key + 32);
+    if (key >= 112 && key <= 112+11)
+        return (SDLKey)(SDLK_F1 + key - 112);
+
     #define TRANS(k, v) case k: return v; break;
     switch(key)
     {
