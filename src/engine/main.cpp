@@ -789,8 +789,10 @@ COMMAND(resetgl, "");
 
 void keyrepeat(bool on)
 {
-    SDL_EnableKeyRepeat(on ? SDL_DEFAULT_REPEAT_DELAY : 0,
-                             SDL_DEFAULT_REPEAT_INTERVAL);
+    IntensityGUI::setKeyRepeat(
+        on ? SDL_DEFAULT_REPEAT_DELAY : 0,
+        SDL_DEFAULT_REPEAT_INTERVAL
+    );
 }
 
 static int ignoremouse = 5, grabmouse = 0;

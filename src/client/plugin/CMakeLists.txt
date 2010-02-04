@@ -12,6 +12,11 @@ endforeach(source)
     pkg_check_modules(GTK gtk+-2.0)
     include_directories(${GTK_INCLUDE_DIRS})
 
+    find_package(PkgConfig)
+    pkg_check_modules(XT xt)
+    message(STATUS "XT libs:" ${XT_LIBRARIES})
+    include_directories(${XT_INCLUDE_DIRS})
+
     add_definitions(-DXP_UNIX)
     add_definitions(-DMOZ_X11)
 # endif
@@ -55,10 +60,6 @@ add_library(IntensityPlugin SHARED
     base/tracked_objects.cc
     base/time.cc
     base/time_posix.cc
-    ipc/ipc_switches.cc
-    ipc/ipc_channel_posix.cc
-    ipc/ipc_message.cc
-    ipc/ipc_logging.cc
     plugin/cross/o3d_glue.cc
     plugin/cross/main.cc
     plugin/linux/main_linux.cc
@@ -66,5 +67,5 @@ add_library(IntensityPlugin SHARED
     third_party/nixysa/static_glue/npapi/common.cc
     intensity_plugin.cpp
 )
-target_link_libraries(IntensityPlugin ${CLIENT_LIBRARIES} ${CMAKE_SOURCE_DIR}/src/client/plugin/third_party/libevent/.libs/libevent.so)
+target_link_libraries(IntensityPlugin ${CLIENT_LIBRARIES} ${XT_LIBRARIES})
 

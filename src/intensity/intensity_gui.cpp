@@ -44,6 +44,15 @@ namespace EditingSystem
 
 namespace IntensityGUI
 {
+int keyRepeatDelay, keyRepeatInterval;
+
+void setKeyRepeat(int delay, int interval)
+{
+    keyRepeatDelay = delay;
+    keyRepeatInterval = interval;
+    SDL_EnableKeyRepeat(keyRepeatDelay, keyRepeatInterval);
+}
+
 SVAR(message_title, "");
 SVAR(message_content, "");
 void showCubeGuiMessage(std::string title, std::string content)
@@ -185,8 +194,10 @@ printf("rels: %f, %f        %f,%f\r\n", xrel, yrel, x, curr_x);
         pushevent(event);
     }
 
-    void injectKeyPress(int sym, int unicode, bool down)
+    void injectKeyPress(int sym, int unicode, bool down, bool isRepeat)
     {
+        if (isRepeat && keyRepeatDelay == 0) return; // Suppress repeat
+
         SDL_Event event;
         event.type = down ? SDL_KEYDOWN : SDL_KEYUP;
         event.key.keysym.sym = (SDLKey)sym;

@@ -41,7 +41,7 @@ public:
     bool setWindow(NPWindow *window);
     void onMouseMove(double x, double y);
     void onMouseButton(int button, bool down);
-    void onKeyboard(int key, int unicode, bool down);
+    void onKeyboard(int key, int unicode, bool down, bool isRepeat);
 protected:
     void initialize(NPWindow *window);
     void setupComm();

@@ -124,12 +124,12 @@ class TestMaster(unittest.TestCase):
                 _unicode = unicodes[i]
 
             barrier = self.make_barrier()
-            proc.sendline('CModule.inject_key_press(%d, %d, 1)' % (sym, _unicode))
+            proc.sendline('CModule.inject_key_press(%d, %d, 1, False)' % (sym, _unicode))
 #            proc.sendline('CModule.flush_input_events(); print "%sk";' % barrier) # No unicode on way up
 #            self.assertExpect(proc, barrier)
 #
 #            barrier = self.make_barrier()
-            proc.sendline('CModule.inject_key_press(%d, 0, 0)' % sym)
+            proc.sendline('CModule.inject_key_press(%d, 0, 0, False)' % sym)
             proc.sendline('CModule.flush_input_events(); print "%sk";' % barrier) # No unicode on way up
             self.assertExpect(proc, barrier)
 

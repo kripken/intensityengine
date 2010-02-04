@@ -24,6 +24,8 @@
 
 namespace IntensityGUI
 {
+    extern void setKeyRepeat(int delay, int interval);
+
     extern void showMessage(std::string title, std::string content, int originClientNumber=-1);
 
     extern void showInputDialog(std::string title, std::string content);
@@ -42,6 +44,6 @@ namespace IntensityGUI
 
     //! Simulates the user pressing a key
     //! (set logging level to DEBUG to see the SDL events from your interaction, which you can then plug in here)
-    void injectKeyPress(int sym, int unicode, bool down);
+    void injectKeyPress(int sym, int unicode, bool down, bool isRepeat);
 }
 

@@ -45,7 +45,7 @@ public:
     SimpleChannel() : index(0), data(NULL), segment(NULL) { };
     void write(std::string message)
     {
-        printf("Write %s from %d\r\n", message.c_str(), index);
+//        printf("Write %s from %d\r\n", message.c_str(), index);
         for (unsigned int i = 0; i < message.size(); i++)
         {
             assert((*data)[index] == '\0');
@@ -61,7 +61,7 @@ public:
     {
         if ((*data)[index] == '\0') return ""; // Nothing new
 
-        printf("Read from %d\r\n", index);
+//        printf("Read from %d\r\n", index);
         std::string message = "";
         while ((*data)[index] != '\0')
         {
@@ -79,7 +79,7 @@ public:
         std::vector<std::string> parsed;
         std::string message = read();
         if (message == "") return parsed;
-        printf("Read for parsing: %s\r\n", message.c_str());
+//        printf("Read for parsing: %s\r\n", message.c_str());
         message = message + "|"; // Final barrier
         std::string curr = "";
         for (unsigned int i = 0; i < message.size(); i++)

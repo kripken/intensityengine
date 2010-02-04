@@ -43,6 +43,8 @@
 #include "plugin/cross/main.h"
 #include "plugin/cross/out_of_memory.h"
 #include "plugin/linux/envvars.h"
+#include "base/time.h"
+
 
 using glue::_o3d::PluginObject;
 using glue::StreamManager;
@@ -281,14 +283,43 @@ static gboolean GtkHandleMouseButton(GtkWidget *widget,
   return TRUE;
 }
 
+// We need to send presses even if they are repeats, but not
+// send releases that are repeats.
+static guint32 g_last_time = -1;
+static guint g_last_keyval = -1;
+static bool g_in_repeat = false;
+static double g_repeat_timer = -1;
+
 static gboolean GtkHandleKey(GtkWidget *widget,
                              GdkEventKey *key_event,
                              PluginObject *obj) {
+
+    if (key_event->type == GDK_KEY_PRESS)
+    {
+        if (key_event->keyval == g_last_keyval && key_event->time == g_last_time)
+        {
+            g_in_repeat = true;
+        } else {
+            g_last_time = -1;
+            g_last_keyval = -1;
+            g_in_repeat = false;
+            g_repeat_timer = -1;
+        }
+    } else {
+        g_last_time = key_event->time;
+        g_last_keyval = key_event->keyval;
+        g_in_repeat = false;
+        g_repeat_timer = base::Time::Now().ToDoubleT();
+        return TRUE; // timeout will handle this, if it isn't a repeat
+    }
+
     obj->intensityObject->onKeyboard(
         KeySymToDOMKeyCode(key_event->keyval),
         gdk_keyval_to_unicode(key_event->keyval),
-        key_event->type == GDK_KEY_PRESS
+        key_event->type == GDK_KEY_PRESS,
+        g_in_repeat
     );
+
     return TRUE;
 }
 
@@ -357,11 +388,24 @@ static gboolean GtkDeleteEventCallback(GtkWidget *widget,
 }
 
 static gboolean GtkTimeoutCallback(gpointer user_data) {
-  PluginObject *obj = static_cast<PluginObject *>(user_data);
-      GtkWidget *widget;
-      widget = obj->gtk_container_;
-      gtk_widget_queue_draw(widget);
-  return TRUE;
+    PluginObject *obj = static_cast<PluginObject *>(user_data);
+
+    if (g_repeat_timer == -1) return TRUE;
+    if (base::Time::Now().ToDoubleT() - g_repeat_timer <= 0.015) return TRUE;
+
+    if (!g_in_repeat)
+    {
+        obj->intensityObject->onKeyboard(
+            KeySymToDOMKeyCode(g_last_keyval),
+            gdk_keyval_to_unicode(g_last_keyval),
+            false,
+            false
+        );
+
+        g_repeat_timer = -1;
+    }
+
+    return TRUE;
 }
 
 NPError InitializePlugin() {
@@ -542,7 +586,7 @@ NPError NPP_SetWindow(NPP instance, NPWindow *window) {
         obj->intensityObject->setWindow(window);
         window->window = save;
 
-//      obj->timeout_id_ = g_timeout_add(10, GtkTimeoutCallback, obj);
+      obj->timeout_id_ = g_timeout_add(10, GtkTimeoutCallback, obj);
     } else {
       // No XEmbed support, the xwindow is a Xt Widget.
       Widget widget = XtWindowToWidget(display, xwindow);

@@ -144,10 +144,11 @@ void IntensityPluginObject::onMouseButton(int button, bool down)
     channel->write(message);
 }
 
-void IntensityPluginObject::onKeyboard(int key, int unicode, bool down)
+void IntensityPluginObject::onKeyboard(int key, int unicode, bool down, bool isRepeat)
 {
     key = DOMSymToSDL(key);
-    std::string message = "kb|" + _toString(key) + "|" + _toString(unicode) + "|" + _toString(down);
+
+    std::string message = "kb|" + _toString(key) + "|" + _toString(unicode) + "|" + _toString(down) + "|" + _toString(isRepeat);
     channel->write(message);
 }
 

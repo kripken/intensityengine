@@ -61,37 +61,38 @@ void frameTrigger()
             if (parsed.size() == 0) break;
 
             std::string command = parsed[0];
-            printf("Processing command: %s\r\n", command.c_str());
+//            printf("Processing command: %s\r\n", command.c_str());
 
             if (command == "sw")
             {
                 assert(parsed.size() == 3);
                 int width = atoi(parsed[1].c_str());
                 int height = atoi(parsed[2].c_str());
-                printf("    %d,%d\r\n", width, height);
+//                printf("    %d,%d\r\n", width, height);
                 screenres(&width, &height);
             } else if (command == "mm")
             {
                 assert(parsed.size() == 3);
                 double x = atof(parsed[1].c_str());
                 double y = atof(parsed[2].c_str());
-                printf("    %f,%f\r\n", x, y);
+//                printf("    %f,%f\r\n", x, y);
                 IntensityGUI::injectMousePosition(x, y, true);
             } else if (command == "mb")
             {
                 assert(parsed.size() == 3);
                 int button = atoi(parsed[1].c_str());
                 bool down = atoi(parsed[2].c_str());
-                printf("    %d,%d\r\n", button, down);
+//                printf("    %d,%d\r\n", button, down);
                 IntensityGUI::injectMouseClick(button, down);
             } else if (command == "kb")
             {
-                assert(parsed.size() == 4);
+                assert(parsed.size() == 5);
                 int key = atoi(parsed[1].c_str());
                 int unicode = atoi(parsed[2].c_str());
                 bool down = atoi(parsed[3].c_str());
-                printf("    %d,%d,%d\r\n", key, unicode, down);
-                IntensityGUI::injectKeyPress(key, unicode, down);
+                bool isRepeat = atoi(parsed[4].c_str());
+//                printf("    %d,%d,%d\r\n", key, unicode, down);
+                IntensityGUI::injectKeyPress(key, unicode, down, isRepeat);
             } else {
                 assert(0);
             }
