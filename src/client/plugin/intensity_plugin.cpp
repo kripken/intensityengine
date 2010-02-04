@@ -74,6 +74,7 @@ SDLKey DOMSymToSDL(int key)
         TRANS(16, SDLK_RSHIFT)
         TRANS(17, SDLK_RCTRL)
         TRANS(18, SDLK_RALT)
+        TRANS(46, SDLK_DELETE)
     }
     return (SDLKey)key;
 }

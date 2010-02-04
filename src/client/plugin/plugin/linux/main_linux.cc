@@ -286,31 +286,49 @@ static gboolean GtkHandleMouseButton(GtkWidget *widget,
 
 // We need to send presses even if they are repeats, but not
 // send releases that are repeats.
-static guint32 g_last_time = -1;
-static guint g_last_keyval = -1;
-static bool g_in_repeat = false;
-static double g_repeat_timer = -1;
+struct KeyInfo
+{
+    guint keyval;
+    guint32 last_time;
+    bool in_repeat;
+    double repeat_timer;
+
+    KeyInfo() : keyval(0) { reset(); };
+    KeyInfo(guint keyval_) : keyval(keyval_) { reset(); };
+    void reset()
+    {
+        last_time = -1;
+        in_repeat = false;
+        repeat_timer = -1;
+    }
+    void prime(guint32 time)
+    {
+        last_time = time;
+        in_repeat = false;
+        repeat_timer = base::Time::Now().ToDoubleT();
+    }
+};
+
+typedef std::map<guint, KeyInfo> KeyInfos;
+KeyInfos key_infos;
 
 static gboolean GtkHandleKey(GtkWidget *widget,
                              GdkEventKey *key_event,
                              PluginObject *obj) {
+    if (key_infos.count(key_event->keyval) == 0)
+        key_infos[key_event->keyval] = KeyInfo(key_event->keyval);
+    KeyInfo& key_info = key_infos[key_event->keyval];
 
     if (key_event->type == GDK_KEY_PRESS)
     {
-        if (key_event->keyval == g_last_keyval && key_event->time == g_last_time)
+        if (key_event->time == key_info.last_time)
         {
-            g_in_repeat = true;
+            key_info.in_repeat = true;
         } else {
-            g_last_time = -1;
-            g_last_keyval = -1;
-            g_in_repeat = false;
-            g_repeat_timer = -1;
+            key_info.reset();
         }
     } else {
-        g_last_time = key_event->time;
-        g_last_keyval = key_event->keyval;
-        g_in_repeat = false;
-        g_repeat_timer = base::Time::Now().ToDoubleT();
+        key_info.prime(key_event->time);
         return TRUE; // timeout will handle this, if it isn't a repeat
     }
 
@@ -318,7 +336,7 @@ static gboolean GtkHandleKey(GtkWidget *widget,
         KeySymToDOMKeyCode(key_event->keyval),
         gdk_keyval_to_unicode(key_event->keyval),
         key_event->type == GDK_KEY_PRESS,
-        g_in_repeat
+        key_info.in_repeat
     );
 
     return TRUE;
@@ -398,19 +416,31 @@ static gboolean GtkDeleteEventCallback(GtkWidget *widget,
 static gboolean GtkTimeoutCallback(gpointer user_data) {
     PluginObject *obj = static_cast<PluginObject *>(user_data);
 
-    if (g_repeat_timer == -1) return TRUE;
-    if (base::Time::Now().ToDoubleT() - g_repeat_timer <= 0.015) return TRUE;
-
-    if (!g_in_repeat)
+    for (KeyInfos::iterator iter = key_infos.begin(); iter != key_infos.end(); )
     {
+        KeyInfo& key_info = iter->second;
+
+        if (key_info.repeat_timer == -1)
+        {
+            key_infos.erase(iter++);
+            continue;
+        }
+
+        if (base::Time::Now().ToDoubleT() - key_info.repeat_timer <= 0.015 ||
+            key_info.in_repeat)
+        {
+            iter++;
+            continue;
+        }
+
         obj->intensityObject->onKeyboard(
-            KeySymToDOMKeyCode(g_last_keyval),
-            gdk_keyval_to_unicode(g_last_keyval),
+            KeySymToDOMKeyCode(key_info.keyval),
+            gdk_keyval_to_unicode(key_info.keyval),
             false,
             false
         );
 
-        g_repeat_timer = -1;
+        key_infos.erase(iter++);
     }
 
     return TRUE;
