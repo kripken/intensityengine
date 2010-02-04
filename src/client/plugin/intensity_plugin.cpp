@@ -68,6 +68,9 @@ SDLKey DOMSymToSDL(int key)
         TRANS(39, SDLK_RIGHT)
         TRANS(40, SDLK_DOWN)
         TRANS(191, SDLK_SLASH)
+        TRANS(16, SDLK_RSHIFT)
+        TRANS(17, SDLK_RCTRL)
+        TRANS(18, SDLK_RALT)
     }
     return (SDLKey)key;
 }
@@ -147,7 +150,7 @@ void IntensityPluginObject::onMouseButton(int button, bool down)
 void IntensityPluginObject::onKeyboard(int key, int unicode, bool down, bool isRepeat)
 {
     key = DOMSymToSDL(key);
-
+//printf("key: %d,%d\r\n", key, unicode);
     std::string message = "kb|" + _toString(key) + "|" + _toString(unicode) + "|" + _toString(down) + "|" + _toString(isRepeat);
     channel->write(message);
 }

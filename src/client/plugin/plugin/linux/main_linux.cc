@@ -45,6 +45,7 @@
 #include "plugin/linux/envvars.h"
 #include "base/time.h"
 
+#include "SDL.h"
 
 using glue::_o3d::PluginObject;
 using glue::StreamManager;
@@ -326,12 +327,19 @@ static gboolean GtkHandleKey(GtkWidget *widget,
 static gboolean GtkHandleScroll(GtkWidget *widget,
                                 GdkEventScroll *scroll_event,
                                 PluginObject *obj) {
-  return TRUE;
+    for (int i = 1; i >= 0; i--)
+    {
+        obj->intensityObject->onMouseButton(
+            scroll_event->direction == GDK_SCROLL_UP ? SDL_BUTTON_WHEELUP : SDL_BUTTON_WHEELDOWN,
+            i
+        );
+    }
+
+   return TRUE;
 }
 
 void GtkHandleEventCrossing(GtkWidget *widget, GdkEventCrossing *crossing_event)
 {
-printf("\r\n\r\ gtk FFFFFFFFFFFFFFFFFFFOCUS\r\n\r\n");
 //    gdk_window_focus(gtk_widget_get_window(widget), crossing_event->time);
     gtk_widget_set_can_focus(widget, true);
     gtk_widget_grab_focus(widget);
@@ -547,6 +555,7 @@ printf("Destroy\r\n");
     NPN_ReleaseObject(obj);
     instance->pdata = NULL;
   }
+printf("Destroy done?\r\n");
   return NPERR_NO_ERROR;
 }
 
