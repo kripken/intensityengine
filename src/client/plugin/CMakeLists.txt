@@ -9,12 +9,11 @@ endforeach(source)
 
 # If LINUX etc. ... TODO
     find_package(PkgConfig)
+
     pkg_check_modules(GTK gtk+-2.0)
     include_directories(${GTK_INCLUDE_DIRS})
 
-    find_package(PkgConfig)
     pkg_check_modules(XT xt)
-    message(STATUS "XT libs:" ${XT_LIBRARIES})
     include_directories(${XT_INCLUDE_DIRS})
 
     add_definitions(-DXP_UNIX)
@@ -46,18 +45,8 @@ add_library(IntensityPlugin SHARED
     base/file_util_linux.cc
     base/file_util_posix.cc
     base/file_path.cc
-    base/ref_counted.cc
     base/thread_collision_warner.cc
-    base/message_loop.cc
-    base/message_pump_libevent.cc
-    base/histogram.cc
-    base/pickle.cc
-    base/dynamic_annotations.cc
     base/at_exit.cc
-    base/lazy_instance.cc
-    base/thread_local_posix.cc
-    base/tracked.cc
-    base/tracked_objects.cc
     base/time.cc
     base/time_posix.cc
     plugin/cross/o3d_glue.cc
