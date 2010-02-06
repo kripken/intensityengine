@@ -26,7 +26,7 @@
     //! Single entry point for communication with the plugin
     function intensityCommunicate(param) {
         if (param === 'user_info') {
-            var userInfo = '{{user_id}}|{{session_id}}';
+            var userInfo = '{{my_account.uuid}}|{{my_account.session_id}}';
             return userInfo !== '|' ? userInfo : '';
         }
     }
