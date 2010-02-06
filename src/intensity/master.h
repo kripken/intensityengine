@@ -25,6 +25,7 @@
 namespace MasterServer
 {
 #ifdef CLIENT
+void useLogin(std::string userId, std::string sessionId);
 void logout();
 #endif
 }

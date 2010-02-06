@@ -26,6 +26,7 @@
 #include "intensity_plugin_listener.h"
 
 #include "intensity_gui.h"
+#include "master.h"
 
 
 using namespace boost;
@@ -35,11 +36,12 @@ extern void screenres(int *w, int *h);
 namespace PluginListener
 {
 
-ClientChannel *channel;
+ClientChannel *channelIn, *channelOut;
 
 void setupComm()
 {
-    channel = new ClientChannel();
+    channelIn = new ClientChannel("ICPI");
+    channelOut = new ClientChannel("ICPO");
 }
 
 bool initialized = false;
@@ -57,7 +59,7 @@ void frameTrigger()
     {
         while (true)
         {
-            std::vector<std::string> parsed = channel->readParsed();
+            std::vector<std::string> parsed = channelIn->readParsed();
             if (parsed.size() == 0) break;
 
             std::string command = parsed[0];
@@ -93,6 +95,13 @@ void frameTrigger()
                 bool isRepeat = atoi(parsed[4].c_str());
 //                printf("    %d,%d,%d\r\n", key, unicode, down);
                 IntensityGUI::injectKeyPress(key, unicode, down, isRepeat);
+            } else if (command == "ui")
+            {
+                assert(parsed.size() == 3);
+                std::string userId = parsed[1];
+                std::string sessionId = parsed[2];
+//                printf("    %s, %s\r\n", userId.c_str(), sessionId.c_str());
+                MasterServer::useLogin(userId, sessionId);
             } else {
                 assert(0);
             }

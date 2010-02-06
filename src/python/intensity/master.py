@@ -215,14 +215,10 @@ class MasterSession:
             return (False,)
 
         try:
-            self.my_id = Output.response['your_id']
-            self.session_id = Output.response['session_id']
+            self.set_info(Output.response['your_id'], Output.response['session_id'])
         except KeyError:
             log(logging.ERROR, "Error in contacting master: missing key in response: %s" % str(Output.response))
             return (False,)
-
-        # The default transaction code is the id + the session id.
-        CModule.set_transaction_code(self.my_id + ',' + self.session_id)
 
         return (True, Output.hashed_password)
 
@@ -230,6 +226,10 @@ class MasterSession:
     def set_info(self, my_id, session_id):
         self.my_id = my_id
         self.session_id = session_id
+
+        if Global.CLIENT:
+            # The default transaction code is the id + the session id.
+            CModule.set_transaction_code(self.my_id + ',' + self.session_id)
 
     def add_info(self, params_vec):
         if self.my_id == '': return
@@ -253,6 +253,9 @@ def get_master_session():
 def login_to_master(username, raw_password):
     return get_master_session().connect(username, raw_password)
 
+## Use a known login (like from the browser window
+def use_master_login(user_id, session_id):
+    get_master_session().set_info(user_id, session_id)
 
 # Prevent loops
 

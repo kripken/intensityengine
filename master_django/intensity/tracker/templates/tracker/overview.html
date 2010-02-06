@@ -13,5 +13,24 @@
     <li>Please file bugs as described <a href="{{toplevel_root}}/toplevel/intensityengine/">here</a></li>
 </ul>
 
+<br><br>
+
+<h1>Experimental browser plugin (if you installed it)</h1>
+<p>
+  <center>
+    <embed id="embed1" type="application/x-intensityengine" width="800"height="500">
+  </center>
+</p>
+
+<script>
+    //! Single entry point for communication with the plugin
+    function intensityCommunicate(param) {
+        if (param === 'user_info') {
+            var userInfo = '{{user_id}}|{{session_id}}';
+            return userInfo !== '|' ? userInfo : '';
+        }
+    }
+</script>
+
 {%endblock%}
 

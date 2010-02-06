@@ -29,7 +29,6 @@
 #include <boost/interprocess/containers/vector.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
 
-#define INTENSITY_CHANNEL "IntensityChannel"
 #define CHANNEL_SIZE 65530
 
 typedef boost::interprocess::allocator<char, boost::interprocess::managed_shared_memory::segment_manager> ShmemAllocator;
@@ -41,6 +40,7 @@ class SimpleChannel
 protected:
     ChannelVector *data;
     boost::interprocess::managed_shared_memory *segment;
+
 public:
     SimpleChannel() : index(0), data(NULL), segment(NULL) { };
     void write(std::string message)
@@ -98,12 +98,12 @@ public:
 class ServerChannel : public SimpleChannel
 {
 public:
-    ServerChannel() : SimpleChannel()
+    ServerChannel(std::string channelName) : SimpleChannel()
     {
-        boost::interprocess::shared_memory_object::remove(INTENSITY_CHANNEL);
+        boost::interprocess::shared_memory_object::remove(channelName.c_str());
         segment = new boost::interprocess::managed_shared_memory(
             boost::interprocess::create_only,
-            INTENSITY_CHANNEL,
+            channelName.c_str(),
             CHANNEL_SIZE*10
         );
 
@@ -120,11 +120,11 @@ public:
 class ClientChannel : public SimpleChannel
 {
 public:
-    ClientChannel() : SimpleChannel()
+    ClientChannel(std::string channelName) : SimpleChannel()
     {
         segment = new boost::interprocess::managed_shared_memory(
             boost::interprocess::open_only,
-            INTENSITY_CHANNEL
+            channelName.c_str()
         );
 
         data = segment->find<ChannelVector>("MyVector").first;

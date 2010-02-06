@@ -28,7 +28,6 @@
 #include <npfunctions.h>
 
 #include "intensity_plugin.h"
-#include "intensity_plugin_listener.h"
 
 #include "base/file_util.h"
 #include "base/time.h"
@@ -80,8 +79,6 @@ SDLKey DOMSymToSDL(int key)
     return (SDLKey)key;
 }
 
-ServerChannel *channel;
-
 bool IntensityPluginObject::setWindow(NPWindow *window)
 {
     printf("setWindow\r\n");
@@ -95,7 +92,7 @@ bool IntensityPluginObject::setWindow(NPWindow *window)
 
     printf("SetWindow: %d, %d\r\n", window->width, window->height);
     std::string message = "sw|" + _toString((int)window->width) + "|" + _toString((int)window->height);
-    channel->write(message);
+    channelOut->write(message);
 
     if (!initialized)
     {
@@ -129,7 +126,10 @@ void IntensityPluginObject::initialize(NPWindow *window)
     base::LaunchApp(CommandLine(argv), false, false, &processHandle);
 
     // Read some browser data
-    printf("Ask for username: %s\r\n", browserCommunicate("user_name").c_str());
+    // XXX: Can deadlock, apparently due to a Chromium issue: http://code.google.com/p/chromium/issues/detail?id=32797
+    std::string userInfo = browserCommunicate("user_info");
+    if (userInfo != "")
+        channelOut->write("ui|" + userInfo);
 
     delete[] buffer;
 }
@@ -137,7 +137,8 @@ void IntensityPluginObject::initialize(NPWindow *window)
 void IntensityPluginObject::setupComm()
 {
     printf("setupComm\r\n");
-    channel = new ServerChannel();
+    channelIn = new ServerChannel("ICPO");
+    channelOut = new ServerChannel("ICPI");
 }
 
 void IntensityPluginObject::onMouseMove(double x, double y)
@@ -146,13 +147,13 @@ void IntensityPluginObject::onMouseMove(double x, double y)
     if (now - lastMouseMove < 0.005) return; // Max 200fps of mouse movements
     lastMouseMove = now;
     std::string message = "mm|" + _toString(x/window_->width) + "|" + _toString(y/window_->height);
-    channel->write(message);
+    channelOut->write(message);
 }
 
 void IntensityPluginObject::onMouseButton(int button, bool down)
 {
     std::string message = "mb|" + _toString(button) + "|" + _toString(down);
-    channel->write(message);
+    channelOut->write(message);
 }
 
 void IntensityPluginObject::onKeyboard(int key, int unicode, bool down, bool isRepeat)
@@ -160,7 +161,7 @@ void IntensityPluginObject::onKeyboard(int key, int unicode, bool down, bool isR
     key = DOMSymToSDL(key);
 //printf("key: %d,%d\r\n", key, unicode);
     std::string message = "kb|" + _toString(key) + "|" + _toString(unicode) + "|" + _toString(down) + "|" + _toString(isRepeat);
-    channel->write(message);
+    channelOut->write(message);
 }
 
 std::string IntensityPluginObject::browserCommunicate(std::string data)
