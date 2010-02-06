@@ -163,7 +163,7 @@ PluginObject::PluginObject(NPP npp)
       prev_width_(0),
       prev_height_(0) {
 
-  intensityObject = new IntensityPluginObject(); // INTENSITY
+  intensityObject = new IntensityPluginObject(npp); // INTENSITY
 
 #if defined(OS_WIN) || defined(OS_LINUX)
   memset(cursors_, 0, sizeof(cursors_));

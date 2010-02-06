@@ -110,7 +110,6 @@ NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value) {
     case NPPVpluginScriptableNPObject: {
       void **v = static_cast<void **>(value);
       PluginObject *obj = static_cast<PluginObject *>(instance->pdata);
-      obj=obj;
       // Return value is expected to be retained
       GLUE_PROFILE_START(instance, "retainobject");
       NPN_RetainObject(obj);

@@ -25,11 +25,12 @@
 
 #include "SDL.h"
 
+#include <npfunctions.h>
+
 #include "intensity_plugin.h"
 #include "intensity_plugin_listener.h"
 
 #include "base/file_util.h"
-#include "base/message_loop.h"
 #include "base/time.h"
 
 
@@ -107,7 +108,7 @@ bool IntensityPluginObject::setWindow(NPWindow *window)
 
 void IntensityPluginObject::initialize(NPWindow *window)
 {
-    printf("initialize\r\n");
+    printf("initialize : %lu\r\n", (unsigned long)npp);
 
     // SDL_WINDOWID hack
    	char* buffer = new char[1000];
@@ -126,6 +127,9 @@ void IntensityPluginObject::initialize(NPWindow *window)
     #endif
     argv.push_back("-P"); // Tell child process it should talk to us
     base::LaunchApp(CommandLine(argv), false, false, &processHandle);
+
+    // Read some browser data
+    printf("Ask for username: %s\r\n", browserCommunicate("user_name").c_str());
 
     delete[] buffer;
 }
@@ -157,5 +161,28 @@ void IntensityPluginObject::onKeyboard(int key, int unicode, bool down, bool isR
 //printf("key: %d,%d\r\n", key, unicode);
     std::string message = "kb|" + _toString(key) + "|" + _toString(unicode) + "|" + _toString(down) + "|" + _toString(isRepeat);
     channel->write(message);
+}
+
+std::string IntensityPluginObject::browserCommunicate(std::string data)
+{
+    std::string ret = "";
+
+    NPObject* window;
+    assert(NPN_GetValue(npp, NPNVWindowNPObject, &window) == NPERR_NO_ERROR);
+    NPIdentifier handler = NPN_GetStringIdentifier("intensityCommunicate");
+    NPVariant npData, result;
+    STRINGZ_TO_NPVARIANT(data.c_str(), npData);
+    int err =  NPN_Invoke(npp, window, handler, &npData, 1, &result);
+    assert(err == NPERR_NO_ERROR || err == NPERR_GENERIC_ERROR); // XXX Not sure why, gives generic error, but works...
+    if (NPVARIANT_IS_STRING(result))
+    {
+        NPString &npsResult = NPVARIANT_TO_STRING(result);
+        ret.resize(npsResult.UTF8Length);
+        for (unsigned int i = 0; i < npsResult.UTF8Length; i++)
+            ret[i] = npsResult.UTF8Characters[i]; // XXX speed this up
+    }
+    NPN_ReleaseVariantValue(&result);
+
+    return ret;
 }
 

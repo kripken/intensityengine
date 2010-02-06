@@ -33,15 +33,17 @@ class IntensityPluginObject
     bool initialized;
     base::ProcessHandle processHandle;
     NPWindow *window_;
+    NPP npp;
 
     double lastMouseMove;
 
 public:
-    IntensityPluginObject() : initialized(false), window_(NULL), lastMouseMove(0) { };
+    IntensityPluginObject(NPP npp_) : initialized(false), window_(NULL), npp(npp_), lastMouseMove(0) { };
     bool setWindow(NPWindow *window);
     void onMouseMove(double x, double y);
     void onMouseButton(int button, bool down);
     void onKeyboard(int key, int unicode, bool down, bool isRepeat);
+    std::string browserCommunicate(std::string data);
 protected:
     void initialize(NPWindow *window);
     void setupComm();

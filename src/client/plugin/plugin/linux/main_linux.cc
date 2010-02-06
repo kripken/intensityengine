@@ -315,6 +315,7 @@ KeyInfos key_infos;
 static gboolean GtkHandleKey(GtkWidget *widget,
                              GdkEventKey *key_event,
                              PluginObject *obj) {
+
     if (key_infos.count(key_event->keyval) == 0)
         key_infos[key_event->keyval] = KeyInfo(key_event->keyval);
     KeyInfo& key_info = key_infos[key_event->keyval];
@@ -499,6 +500,7 @@ printf("Init\r\n");
   NPError retval = InitializeNPNApi(browserFuncs);
   if (retval != NPERR_NO_ERROR) return retval;
   NP_GetEntryPoints(pluginFuncs);
+
   return InitializePlugin();
 }
 
@@ -531,6 +533,8 @@ NPError PlatformNPPGetValue(NPP instance, NPPVariable variable, void *value) {
 NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc,
                 char *argn[], char *argv[], NPSavedData *saved) {
   HANDLE_CRASHES;
+
+  printf("NPP_New : %lu\r\n", (unsigned long)instance);
 
   PluginObject* pluginObject = glue::_o3d::PluginObject::Create(
       instance);
