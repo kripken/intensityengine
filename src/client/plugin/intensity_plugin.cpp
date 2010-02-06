@@ -165,15 +165,15 @@ void IntensityPluginObject::onKeyboard(int key, int unicode, bool down, bool isR
 
 std::string IntensityPluginObject::browserCommunicate(std::string data)
 {
-    std::string ret = "";
-
     NPObject* window;
     assert(NPN_GetValue(npp, NPNVWindowNPObject, &window) == NPERR_NO_ERROR);
     NPIdentifier handler = NPN_GetStringIdentifier("intensityCommunicate");
     NPVariant npData, result;
     STRINGZ_TO_NPVARIANT(data.c_str(), npData);
-    int err =  NPN_Invoke(npp, window, handler, &npData, 1, &result);
-    assert(err == NPERR_NO_ERROR || err == NPERR_GENERIC_ERROR); // XXX Not sure why, gives generic error, but works...
+    int success =  NPN_Invoke(npp, window, handler, &npData, 1, &result);
+    if (!success) return "";
+
+    std::string ret = "";
     if (NPVARIANT_IS_STRING(result))
     {
         NPString &npsResult = NPVARIANT_TO_STRING(result);
@@ -182,7 +182,6 @@ std::string IntensityPluginObject::browserCommunicate(std::string data)
             ret[i] = npsResult.UTF8Characters[i]; // XXX speed this up
     }
     NPN_ReleaseVariantValue(&result);
-
     return ret;
 }
 
