@@ -632,6 +632,12 @@ NPError NPP_SetWindow(NPP instance, NPWindow *window) {
         window->window = save;
 
       obj->timeout_id_ = g_timeout_add(10, GtkTimeoutCallback, obj);
+
+      // XXX move to better place and fix leak
+      GdkWindow* gdkWindow = gtk_widget_get_window(obj->gtk_container_);
+      GdkCursor* cursor = gdk_cursor_new(GDK_BLANK_CURSOR);
+      gdk_window_set_cursor(gdkWindow, cursor);
+
     } else {
       // No XEmbed support, the xwindow is a Xt Widget.
       Widget widget = XtWindowToWidget(display, xwindow);
