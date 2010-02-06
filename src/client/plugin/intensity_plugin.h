@@ -47,6 +47,7 @@ public:
     void onMouseButton(int button, bool down);
     void onKeyboard(int key, int unicode, bool down, bool isRepeat);
     std::string browserCommunicate(std::string data);
+    void frameTrigger();
 
 protected:
     void initialize(NPWindow *window);

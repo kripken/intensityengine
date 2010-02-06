@@ -125,12 +125,6 @@ void IntensityPluginObject::initialize(NPWindow *window)
     argv.push_back("-P"); // Tell child process it should talk to us
     base::LaunchApp(CommandLine(argv), false, false, &processHandle);
 
-    // Read some browser data
-    // XXX: Can deadlock, apparently due to a Chromium issue: http://code.google.com/p/chromium/issues/detail?id=32797
-    std::string userInfo = browserCommunicate("user_info");
-    if (userInfo != "")
-        channelOut->write("ui|" + userInfo);
-
     delete[] buffer;
 }
 
@@ -184,5 +178,35 @@ std::string IntensityPluginObject::browserCommunicate(std::string data)
     }
     NPN_ReleaseVariantValue(&result);
     return ret;
+}
+
+void IntensityPluginObject::frameTrigger()
+{
+    if (initialized && window_)
+    {
+        while (true)
+        {
+            std::vector<std::string> parsed = channelIn->readParsed();
+            if (parsed.size() == 0) break;
+
+            std::string command = parsed[0];
+//            printf("Processing command: %s\r\n", command.c_str());
+
+            if (command == "gu")
+            {
+                assert(parsed.size() == 1);
+
+                // Request user info
+                // XXX: Risk of deadlocks in other approaches to this, like doing it
+                // during our own initialization, as part of SetWindow etc.,
+                // apparently due to a Chromium issue: http://code.google.com/p/chromium/issues/detail?id=32797
+                std::string userInfo = browserCommunicate("user_info");
+                if (userInfo != "")
+                    channelOut->write("ui|" + userInfo);
+            } else {
+                assert(0);
+            }
+        }
+    }
 }
 

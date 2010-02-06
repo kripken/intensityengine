@@ -51,6 +51,9 @@ void initialize()
     setupComm();
 
     initialized = true;
+
+    // Additional setup
+    channelOut->write("gu"); // request user info
 }
 
 void frameTrigger()

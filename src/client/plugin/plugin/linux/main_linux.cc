@@ -417,6 +417,8 @@ static gboolean GtkDeleteEventCallback(GtkWidget *widget,
 static gboolean GtkTimeoutCallback(gpointer user_data) {
     PluginObject *obj = static_cast<PluginObject *>(user_data);
 
+    obj->intensityObject->frameTrigger();
+
     for (KeyInfos::iterator iter = key_infos.begin(); iter != key_infos.end(); )
     {
         KeyInfo& key_info = iter->second;
