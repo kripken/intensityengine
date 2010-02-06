@@ -247,6 +247,8 @@ void PluginObject::TearDown() {
   // broken, and the reference counting system will successfully delete the
   // plugin.
 //  np_v8_bridge_.ReleaseNPObjects();
+
+  delete intensityObject;; // INTENSITY
 }
 
 void PluginObject::CreateRenderer(const o3d::DisplayWindow& display_window) {

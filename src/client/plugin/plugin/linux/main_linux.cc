@@ -449,6 +449,8 @@ static gboolean GtkTimeoutCallback(gpointer user_data) {
     return TRUE;
 }
 
+GdkCursor* g_blank_cursor = NULL; // TODO: Unref on shutdown?
+
 NPError InitializePlugin() {
   CommandLine::Init(0, NULL);
   InitLogging("debug.log",
@@ -484,6 +486,8 @@ NPError InitializePlugin() {
       xembed_support = 0;
   }
   g_xembed_support = xembed_support != 0;
+
+  g_blank_cursor = gdk_cursor_new(GDK_BLANK_CURSOR);
 
   return NPERR_NO_ERROR;
 }
@@ -633,10 +637,8 @@ NPError NPP_SetWindow(NPP instance, NPWindow *window) {
 
       obj->timeout_id_ = g_timeout_add(10, GtkTimeoutCallback, obj);
 
-      // XXX move to better place and fix leak
       GdkWindow* gdkWindow = gtk_widget_get_window(obj->gtk_container_);
-      GdkCursor* cursor = gdk_cursor_new(GDK_BLANK_CURSOR);
-      gdk_window_set_cursor(gdkWindow, cursor);
+      gdk_window_set_cursor(gdkWindow, g_blank_cursor);
 
     } else {
       // No XEmbed support, the xwindow is a Xt Widget.

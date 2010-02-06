@@ -79,6 +79,12 @@ SDLKey DOMSymToSDL(int key)
     return (SDLKey)key;
 }
 
+IntensityPluginObject::~IntensityPluginObject()
+{
+    base::KillProcess(processHandle, 0, true);
+    base::CloseProcessHandle(processHandle);
+}
+
 bool IntensityPluginObject::setWindow(NPWindow *window)
 {
     printf("setWindow\r\n");

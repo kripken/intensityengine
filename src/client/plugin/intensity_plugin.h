@@ -42,6 +42,7 @@ class IntensityPluginObject
 public:
     IntensityPluginObject(NPP npp_) : initialized(false), window_(NULL), npp(npp_), lastMouseMove(0),
         channelIn(NULL), channelOut(NULL) { };
+    ~IntensityPluginObject();
     bool setWindow(NPWindow *window);
     void onMouseMove(double x, double y);
     void onMouseButton(int button, bool down);
