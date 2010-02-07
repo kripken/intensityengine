@@ -80,10 +80,10 @@ to the package names and so forth, but overall, things should be similar.
 First, install Git, CMake, SCons and other important stuff:
 
   Ubuntu 9.04:
-    sudo apt-get install git-core cmake scons build-essential libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev python-dev libboost-python1.35-dev zlib1g-dev   
+    sudo apt-get install git-core cmake scons build-essential libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev python-dev zlib1g-dev   
 
   Ubuntu 9.10:
-    sudo apt-get install git-core cmake scons g++ libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev libboost-python1.38-dev
+    sudo apt-get install git-core cmake scons g++ libsdl1.2-dev libsdl-image1.2-dev libsdl-mixer1.2-dev python-dev zlib1g-dev
 
 Check out the source code:
 
@@ -195,13 +195,9 @@ elsewhere, you will need to edit the SConstruct file so it can find them):
           you will get 'failure to load core textures'), as well as jpeg.dll
         - Note that SDL-mixer should come with libogg-0.dll, libvorbis-0,
           libvorbisfile-3
-   4. Boost: Use the installer, http://www.boostpro.com/products/free. Get
-      the "Multithread, DLL" version. We basically need the headers
-      for shared_ptr, and boost_python binary (so you can just
-      install those).????????
-   5. ?? TODO: OpenGL headers ??
-   6. Get zlib from www.zlib.net
-   7. Get CMake
+   4. ?? TODO: OpenGL headers ??
+   5. Get zlib from www.zlib.net
+   6. Get CMake
 
 
 In the directory where the source code was placed (usually 'intensityengine'),
@@ -225,11 +221,6 @@ Some things to be aware of:
     * If you get pre-compiled libraries, they must be of a sort appropriate for
       your compiler. Some projects are nice and provide various versions for
       you, so pick wisely.
-    * Pre-compiled Boost binaries, in particular those in windows_dev.zip, are
-      linked against Python 2.5.x. Using another version of Python in addition to
-      that may cause errors (see 'version mismatch?' below). The simplest solution
-      is to use Python 2.5.x. Or, build Boost from scratch so there is no dependency
-      on Python 2.5.
     * In general, it is best to use Python 2.5.x for everything, as trying to use
       another version for some things may cause confusion. However, if you build
       all the dependencies entirely from scratch, it should not be hard to use
