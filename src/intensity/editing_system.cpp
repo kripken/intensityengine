@@ -67,6 +67,9 @@
 // 1.0 is to place it exactly on worldpos
 #define FAR_PLACING_FACTOR 0.9
 
+extern int efocus;
+extern int orient;
+
 namespace EditingSystem
 {
     // Globals
@@ -647,6 +650,13 @@ void createHeightmapFromRaw(int resolution, double addr)
         Logging::log(Logging::ERROR, "Unable to create createHeightmapFromRaw thread: %s\n", SDL_GetError());
 }
 
+LogicEntityPtr getSelectedEntity()
+{
+    if (!entities::getents().inrange(efocus)) return LogicEntityPtr();
+    extentity& e = *(entities::getents()[efocus]);
+    return LogicSystem::getLogicEntity(e);
+}
+
 }
 
 
@@ -778,4 +788,29 @@ void debugoctree()
 COMMAND(debugoctree, "");
 
 //CModule.run_cubescript("debugoctree");
+
+//! Centers the selected entity on the cube cursor
+//! Usage: Select an entity, hover the cursor (with gridsize you want),
+//!        then do /centerent
+void centerent()
+{
+    // lu: lower left corner of current cube
+    // lusize: gridsize
+    // orient: orientation of current pointer hover
+
+    vec center = lu.tovec();
+    vec offset = vec(lusize);
+    int d = dimension(orient);
+    int dc = dimcoord(orient);
+    float f = dc>0 ? 0.2f : -0.2f;
+    center[D[d]] += float(dc) * offset[D[d]] + f;
+    offset[D[d]] *= dc*2-1;
+    offset.mul(0.5);
+    center.add(offset);
+    LogicEntityPtr entity = EditingSystem::getSelectedEntity();
+    if (!entity.get()) return;
+    entity->setOrigin(center);
+}
+
+COMMAND(centerent, "");
 

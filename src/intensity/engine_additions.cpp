@@ -147,21 +147,11 @@ float CLogicEntity::getRadius()
 
 void CLogicEntity::setOrigin(vec &newOrigin)
 {
-    conoutf("Warning: setOrigin does not work and is deprecated for now!...\r\n");
-    assert(0);
-/*
-    switch (getType())
-    {
-        case LE_DYNAMIC_ENTITY:
-            dynamicEntity->o = newOrigin;
-            break;
-        case LE_MAPMODEL:
-            conoutf("Warning: trying to move a mapmodel. This might be possible in the future...\r\n");
-            break;
-        default:
-            assert(0 && "setting the origin of a NONE LogicEntity!");
-    }
-*/
+    ScriptEngineManager::runScript("getEntity(" + Utility::toString(getUniqueId()) + ").position = [" +
+        Utility::toString(newOrigin.x) + "," +
+        Utility::toString(newOrigin.y) + "," +
+        Utility::toString(newOrigin.z) + "]"
+    );
 }
 
 int CLogicEntity::getAnimation()

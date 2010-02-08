@@ -69,5 +69,7 @@ namespace EditingSystem
     void createMapFromRaw(int resolution, double addr, int smoothing);
 
     void createHeightmapFromRaw(int resolution, double addr);
+
+    LogicEntityPtr getSelectedEntity();
 };
 

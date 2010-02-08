@@ -1,0 +1,13 @@
+Additional Cubescript Commands
+==============================
+
+/upload_asset LOCATION
+    - Packages and uploads the asset with LOCATION (e.g., base/mymap.tar.gz)
+
+/listtex
+    - See source code
+
+/centerent
+    - Centers the selected entity on the hovered cube face. A convenient way
+      to quickly get an entity into a power of 2 (canonical) position
+
