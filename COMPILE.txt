@@ -48,13 +48,17 @@ The following are the shared aspects.
 
        ld: skipping incompatible src/thirdparty/v8/libv8.a when searching for -lv8
 
+   or
+
+       error: gnu/stubs-32.h: No such file or directory
+
    For solutions for those older versions, see
 
        http://code.google.com/p/v8/issues/detail?id=29
 
    (but again, the current version should work fine on 64-bit systems).
 
-   Another possible reason for a 'skipping incompatible' error as
+   Another possible reason for those errors
    mentioned above is if V8 builds itself in 32-bit mode on a 64-bit
    system. This appears to be the default setting at present with V8,
    but should change eventually. Meanwhile, to fix it, compile V8
