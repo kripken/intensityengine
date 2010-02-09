@@ -169,39 +169,22 @@ which might be useful, but it hasn't been officially tested.
 Windows
 =======
 
-Acquiring all the various libraries needed to compile the project is
-somewhat of a hassle. The main website should have a download
-that can help, check at
+** NOTE: As of this moment, there is a build issue in the source code
+repo, some problem with linking Boost.Python. **
 
-    http://github.com/kripken/intensityengine/downloads
+To build from source, do the following:
 
-The windows_dev.zip file is what you need for compilation. Place the
-contents under /src/windows_dev. (The windows_runtime.zip contains
-the runtime dlls, which should be placed under /windows/dll in the
-install directory). Note that you will be merging the contents of
-the src/windows_dev/include directory.
-
-If instead you want/need to get the development headers and libraries
-yourself, then you should do the following: Get the following
-items, and place them under /src/windows_dev (if you place them
-elsewhere, you will need to edit the SConstruct file so it can find them):
-
-   1. Get Git from http://git-scm.com/ , if you want to get the source code
-      from the repo.
+   1. Get Git from git-scm.com.
    2. Get SCons from www.scons.org.
-   3. Get SDL from www.libsdl.org, (something like) SDL-devel-1.2.13-VC8.zip,
-      as well as SDL-image and SDL-mixer
-        - Note that SDL-image should come with libpng (if this is missing,
-          you will get 'failure to load core textures'), as well as jpeg.dll
-        - Note that SDL-mixer should come with libogg-0.dll, libvorbis-0,
-          libvorbisfile-3
-   4. ?? TODO: OpenGL headers ??
-   5. Get zlib from www.zlib.net
-   6. Get CMake
+   3. Get CMake from www.cmake.org.
+   4. Get Python from www.python.org.
+   5. Get the source code by running
 
+          git clone git://github.com/kripken/intensityengine.git
 
 In the directory where the source code was placed (usually 'intensityengine'),
-run (in a DOS shell, that is, inside cmd.exe) the following commands.
+run (in a DOS shell, that is, inside cmd.exe) the following commands. They
+assume you are building with Visual Studio Express 2008.
 
 First, build V8 by going to src\thirdparty\v8 and running
 
@@ -209,26 +192,24 @@ First, build V8 by going to src\thirdparty\v8 and running
 
 (change the path to point to where you have the Windows platform SDKs).
 
-Then, go back up and do \cbuild, and there run
+Then, go back up and to \cbuild, and there run
 
     SET PATH=%PATH%;C:\Program Files\Microsoft Visual Studio 9.0\VC\bin;C:\Program Files\Microsoft Visual Studio 9.0\Common7\IDE
     cmake -G "Visual Studio 9 2008" ..
 
 this should create a project file for VC++, which you can then build. Note
-that the second line gets the VC++ compiler in your path; if it is already
-there, or in a different location, change that line accordingly.
+that the first line gets the VC++ compiler in your path; if it is already
+there, or in a different location, change or remove that line accordingly.
+
+You can then open the generated solution file in Visual Studio. In
+build->configuration manager make sure you are compiling for 'Release'
+and not 'Debug', and then start the build.
 
 Some things to be aware of:
 
-    * If you get pre-compiled libraries, they must be of a sort appropriate for
-      your compiler. Some projects are nice and provide various versions for
-      you, so pick wisely.
-    * In general, it is best to use Python 2.5.x for everything, as trying to use
-      another version for some things may cause confusion. However, if you build
-      all the dependencies entirely from scratch, it should not be hard to use
-      a later Python version (2.6 or 2.7 - not 3.0), in which case again you
-      should use just that version for everything.
-    * Related to the last point, if you get
+    * zlib, SDL, SDL_Image and SDL_Mixer are bundled in the source code repo for you,
+      so you don't need to get those.
+    * If you get
 
         "Fatal Python Error: Interpreter not initialized (version mismatch?)"
 
@@ -240,8 +221,6 @@ Some things to be aware of:
       such as "exception 0xc0000005", which is a general fault due to reading from
       an invalid location. Note that such an error may also indicate a completely
       different problem.
-    * Need to rename the C Modules from .dll to .pyd, Python 2.5+ wants that.
-      This is done by the SCons files, in a slightly hackish manner however.
     * When testing with MSVC++ 2008, the following were needed: msvcr90.dll,
       msvcp90.dll. Present in Microsoft Visual C++ 2008 Redistributable Package,
       http://www.microsoft.com/downloads/details.aspx?familyid=9B2DA534-3E03-4391-8A4D-074B9F2BC1BF&displaylang=en
@@ -258,14 +237,9 @@ Some things to be aware of:
           mt.exe –manifest Intensity_CClient.dll.manifest -outputresource:Intensity_CClient.pyd;2
       where mt.exe is from the Microsoft Platform SDK. In other words, the
       manifests have been prepared, and are in 'build', but they haven't been baked into the dlls.
-    * You need the already mentioned Microsoft Platform SDK.
-    * You should place development files in src/windows_dev, according to the file structure
-      laid out there. Otherwise, you will need to edit the SConstruct file to change paths.
+    * You need the already mentioned Microsoft Windows Platform SDK.
     * If you need to change paths (which you might, if you install e.g. the Platform SDK
-      somewhere else than what the SConstruct file assumes), this can be changed in the SConstruct
-      file. Note that the SConstruct file is written in Python, so its syntax is hopefully
-      familiar. The relevant things to change would be variables like shared_includes,
-      client_libs, etc.
+      somewhere else than the defaults), you might need to edit the various CMakeFiles.txt files.
     * If you get "ImportError: DLL load failed: The specified module could not be found", then
       look at the line above it for what import failed. You can use Microsoft's
       Process Monitor/File Monitor tools to help debug things.
@@ -279,10 +253,6 @@ Some things to be aware of:
       for some info.
     * "LNK4098: defaultlib `LIBCMT` conflicts with use of other libs." This can be ignored for now
       (but it should be fixed).
-    * "Cannot open include file: 'pymacconfig.h': No such file or directory"
-      Stems from using Python 2.6 include file in windows_dev\python, which an old version of
-      windows_dev.zip had. If you are using that version, simply copy from Python25\Include
-      the Python.h file to src\windows_dev\include.
     * Make sure to use the same windows platform sdk for both V8 and tIE (not v6.0A one place v6.1 elsewhere).
     * For running, you should place the relevant DLL files (for SDL, etc.) in windows\dll under
       the install directory. This is placed into the path automatically by the Intensity Engine
@@ -311,8 +281,8 @@ To compile the experimental browser plugin, use
 
 instead of "cmake ..".
 
-Note that you will need some things like GTK development headers, etc. (I
-will document things better later on, after I clean up the build files there).
+Note that you will need some things like GTK development headers, etc. On
+Ubuntu the relevant package is libgtk2.0-dev.
 
 Then copy the browser plugin to where it will be found, using something
 like
