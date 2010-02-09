@@ -360,7 +360,11 @@ static gboolean GtkHandleScroll(GtkWidget *widget,
 void GtkHandleEventCrossing(GtkWidget *widget, GdkEventCrossing *crossing_event)
 {
 //    gdk_window_focus(gtk_widget_get_window(widget), crossing_event->time);
+
+// Without this, we at least compile, but we get no keyboard input...
+#if GTK_MAJOR_VERSION >= 2 && GTK_MINOR_VERSION >= 18
     gtk_widget_set_can_focus(widget, true);
+#endif
     gtk_widget_grab_focus(widget);
 }
 
