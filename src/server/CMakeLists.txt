@@ -12,7 +12,7 @@ add_executable(Intensity_CServer ../intensity/editing_system ../shared/tools ../
 target_link_libraries(Intensity_CServer enet v8 ${PYTHON_LIBRARIES} ${Boost_Python_Library} ${SDL_LIBRARY} ${SDLMIXER_LIBRARY} ${SDLIMAGE_LIBRARY} ${SDLSOUND_LIBRARY} ${ZLIB_LIBRARIES})
 
 if(${WIN32})
-    target_link_libraries(ws2_32 winmm msvcrt opengl32)
+    target_link_libraries(Intensity_CServer ws2_32 winmm msvcrt opengl32)
 endif(${WIN32})
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "BSD")

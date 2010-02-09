@@ -211,10 +211,12 @@ First, build V8 by going to src\thirdparty\v8 and running
 
 Then, go back up and do \cbuild, and there run
 
-    SET INTENSITY_DEP_PATH = ..\src\windows_dev
-    cmake ..
+    SET PATH=%PATH%;C:\Program Files\Microsoft Visual Studio 9.0\VC\bin;C:\Program Files\Microsoft Visual Studio 9.0\Common7\IDE
+    cmake -G "Visual Studio 9 2008" ..
 
-this should create a project file for VC++, which you can then build.
+this should create a project file for VC++, which you can then build. Note
+that the second line gets the VC++ compiler in your path; if it is already
+there, or in a different location, change that line accordingly.
 
 Some things to be aware of:
 

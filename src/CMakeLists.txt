@@ -2,8 +2,10 @@
 
 find_package(PythonLibs REQUIRED)
 if(${WIN32})
-    set (PYTHON_INCLUDE_PATH "${PYTHON_INCLUDE_PATH};C:\\PYTHON25\\include")
+#    set (PYTHON_INCLUDE_PATH "C:\\PYTHON26\\include")
+#    set (PYTHON_LIBRARIES "C:\\PYTHON26\\libs\\python26.lib")
     message(STATUS "Py path: ${PYTHON_INCLUDE_PATH}")
+    message(STATUS "Py libraries: ${PYTHON_LIBRARIES}")
 endif(${WIN32})
 
 #set(BOOST_ROOT ${INTENSITY_DEP_PATH}/boost)
@@ -34,6 +36,12 @@ link_directories(src/thirdparty/boost/libs/python)
 # Subdirs
 
 set(Boost_Python_Library boost_python)
+#if(${WIN32})
+#    set(Boost_Python_Library boost_python-vc90-mt-1_41) # Must match what Boost invents for its own name, see auto_link.hpp
+##    link_directories(src\\thirdparty\\boost\\libs\\python)
+##    link_directories(src\\thirdparty\\boost\\libs\\python\\Release)
+#endif(${WIN32})
+message(STATUS "Boost.Python libname (1): ${Boost_Python_Library}")
 
 add_subdirectory(thirdparty)
 add_subdirectory(enet)

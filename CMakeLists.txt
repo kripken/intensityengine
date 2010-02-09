@@ -29,12 +29,14 @@ else(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     message(STATUS "...Windows...")
     add_definitions (-DWINDOWS)
     set(CMAKE_CXX_FLAGS "/DWIN32 /O2 /EHsc")
-    file(TO_CMAKE_PATH "$ENV{INTENSITY_DEP_PATH}" INTENSITY_DEP_PATH) # e.g. src/windows_dev
+    set(INTENSITY_DEP_PATH ${CMAKE_SOURCE_DIR}/src/windows)
+    message(STATUS "Dependencies at:" ${INTENSITY_DEP_PATH})
     include_directories(${INTENSITY_DEP_PATH}/include)
     link_directories(${INTENSITY_DEP_PATH}/lib)
 
     set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${INTENSITY_DEP_PATH})
-
+    message(STATUS "Prefix path:" ${CMAKE_PREFIX_PATH})
+            
     file(TO_CMAKE_PATH "C:\\Program Files\\Microsoft SDKs\\Windows\\v6.0A" PLATFORM_SDK_A)
     include_directories(${PLATFORM_SDK_A}/Include)
 
