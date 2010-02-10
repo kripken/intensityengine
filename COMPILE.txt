@@ -206,11 +206,14 @@ that the first line gets the VC++ compiler in your path; if it is already
 there, or in a different location, change or remove that line accordingly.
 
 You can then open the generated solution file in Visual Studio. In
-build->configuration manager make sure you are compiling for 'Release'
+Build->Configuration Manager make sure you are compiling for 'Release'
 and not 'Debug', and then start the build.
 
 Some things to be aware of:
 
+    * If you are compiling for 'Debug', you may get bizarre and inexplicable errors.
+      As mentioend above, you must compile for 'Release'. Since the default is in
+      fact 'Debug', you must remember to switch it.
     * zlib, SDL, SDL_Image and SDL_Mixer are bundled in the source code repo for you,
       so you don't need to get those.
     * If you get
