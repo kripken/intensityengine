@@ -173,9 +173,6 @@ which might be useful, but it hasn't been officially tested.
 Windows
 =======
 
-** NOTE: As of this moment, there is a build issue in the source code
-repo, some problem with linking Boost.Python. **
-
 To build from source, do the following:
 
    1. Get Git from git-scm.com.
