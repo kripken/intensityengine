@@ -6,6 +6,12 @@ if(${WIN32})
 #    set (PYTHON_LIBRARIES "C:\\PYTHON26\\libs\\python26.lib")
     message(STATUS "Py path: ${PYTHON_INCLUDE_PATH}")
     message(STATUS "Py libraries: ${PYTHON_LIBRARIES}")
+
+    add_definitions(-DBOOST_PYTHON_STATIC_LIB)
+    add_definitions(-DBOOST_AUTO_LINK_NOMANGLE)
+    add_definitions(-DBOOST_PYTHON_SOURCE)
+    add_definitions(-DBOOST_PYTHON_NO_LIB)
+    add_definitions(-DBOOST_ALL_NO_LIB)
 endif(${WIN32})
 
 #set(BOOST_ROOT ${INTENSITY_DEP_PATH}/boost)
@@ -31,7 +37,7 @@ find_package(ZLIB REQUIRED)
 
 include_directories(shared engine fpsgame intensity enet/include thirdparty/boost include ${SDL_INCLUDE_DIR} ${SDLMIXER_INCLUDE_DIR} ${SDLIMAGE_INCLUDE_DIR} ${PYTHON_INCLUDE_PATH})
 link_directories(enet)
-link_directories(src/thirdparty/boost/libs/python)
+link_directories(thirdparty/boost/libs/python)
 
 # Subdirs
 
