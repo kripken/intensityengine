@@ -178,7 +178,8 @@ To build from source, do the following:
    1. Get Git from git-scm.com.
    2. Get SCons from www.scons.org.
    3. Get CMake from www.cmake.org.
-   4. Get Python from www.python.org.
+   4. Get Python from www.python.org. Note: The batch files etc. assume
+      you are using Python 2.6.x.
    5. Get the source code by running
 
           git clone git://github.com/kripken/intensityengine.git

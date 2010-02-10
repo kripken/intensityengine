@@ -1,11 +1,11 @@
 SET OLD_PATH=%PATH%
-SET PATH=windows\dll;Python25;C:\PYTHON25\;%PATH%
+SET PATH=windows\dll;Python26;C:\PYTHON26\;%PATH%
 
 SET OLD_PYTHONHOME=%PYTHONHOME%
-SET PYTHONHOME=Python25\lib;Python25\DLLs;%PYTHONHOME%
+SET PYTHONHOME=Python26\lib;Python26\DLLs;C:\Python26\lib;C:\Python26\DLLs;%PYTHONHOME%
 
 SET OLD_PYTHONPATH=%PYTHONPATH%
-SET PYTHONPATH=Python25\lib;Python25\DLLs;%PYTHONPATH%
+SET PYTHONPATH=Python26\lib;Python26\DLLs;C:\Python26\lib;C:\Python26\DLLs;%PYTHONPATH%
 
 cbuild\src\server\Release\Intensity_CServer %* > out_server 2>&1
 
