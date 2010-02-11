@@ -35,6 +35,7 @@
 #include "utility.h"
 #include "fpsclient_interface.h"
 #include "NPC.h"
+#include "intensity_physics.h"
 
 
 // WorldSystem
@@ -370,6 +371,8 @@ void LogicSystem::clear()
         // Destroy the scripting engine, for a blank slate
         ScriptEngineManager::destroyEngine();
     }
+
+    PhysicsManager::destroyEngine();
 }
 
 void LogicSystem::init()
@@ -377,6 +380,10 @@ void LogicSystem::init()
     clear();
 
     ScriptEngineManager::createEngine();
+
+    // Note: We do not create the physics engine here, as we need for scripting
+    // to not only be set up, but to run the map script and so forth. So we
+    // create the engine in game::startmap, which is run right after the map loads
 }
 
 void LogicSystem::registerLogicEntity(LogicEntityPtr newEntity)

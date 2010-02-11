@@ -51,6 +51,19 @@ message(STATUS "Boost.Python libname (1): ${Boost_Python_Library}")
 
 add_subdirectory(thirdparty)
 add_subdirectory(enet)
+
+if(${INTENSITY_BULLET})
+    message(STATUS "*** Building with experimental Bullet physics ***")
+    add_definitions(-DINTENSITY_BULLET)
+    include_directories(${CMAKE_SOURCE_DIR}/src/thirdparty/bullet/src/)
+    link_directories(
+        ${CMAKE_SOURCE_DIR}/src/thirdparty/bullet/src/BulletCollision
+        ${CMAKE_SOURCE_DIR}/src/thirdparty/bullet/src/BulletDynamics
+    )
+    set(BULLET_SOURCES ../intensity/intensity_physics_bullet.cpp)
+    set(BULLET_LIBRARIES BulletDynamics BulletCollision)
+endif(${INTENSITY_BULLET})
+
 add_subdirectory(server)
 add_subdirectory(client)
 

@@ -46,6 +46,7 @@
 #include "system_manager.h"
 #include "message_system.h"
 #include "world_system.h"
+#include "intensity_physics.h"
 
 
 // Enable to let *server* do physics for players - useful for debugging. Must also be defined in client.cpp!
@@ -386,20 +387,14 @@ namespace game
 
         physicsBenchmarker.start();
 
-            #ifdef CLIENT
-                if (runWorld)
-                    otherplayers(curtime); // Server doesn't need smooth interpolation of other players
-            #endif
-
-            if (runWorld)
-                moveControlledEntities();
-
-            //============================================
-            // Additional physics: Collisions, ragdolls
-            //============================================
-
             if (runWorld)
             {
+                PhysicsManager::simulate(float(curtime)/1024.0f);
+
+                //============================================
+                // Additional physics: Collisions
+                //============================================
+
                 // If triggering collisions can be done by the scripting library code, use that
                 if (ScriptEngineManager::getGlobal()->hasProperty("manageTriggeringCollisions"))
                     ScriptEngineManager::getGlobal()->call("manageTriggeringCollisions");
@@ -416,26 +411,6 @@ namespace game
                             WorldSystem::checkTriggeringCollisions(entity);
                         }
                     }
-                }
-
-                loopv(players)
-                {
-                    fpsent* fpsEntity = players[i];
-                    LogicEntityPtr entity = LogicSystem::getLogicEntity(fpsEntity);
-                    if (!entity.get() || entity->isNone()) continue;
-
-                    #ifdef CLIENT
-                        // Ragdolls
-                        int anim = entity->getAnimation();
-                        if (fpsEntity->ragdoll && !(anim&ANIM_DYING))
-                        {
-                            cleanragdoll(fpsEntity);
-                        }
-                        if (fpsEntity->ragdoll && (anim&ANIM_DYING))
-                        {
-                            moveragdoll(fpsEntity);
-                        }
-                    #endif
                 }
             }
 
@@ -603,6 +578,7 @@ namespace game
 
     void startmap(const char *name)   // called just after a map load
     {
+        PhysicsManager::createEngine();
 //        if(multiplayer(false) && m_sp) { gamemode = 0; conoutf(CON_ERROR, "coop sp not supported yet"); } Kripken
 //        clearmovables();
 //        clearprojectiles();

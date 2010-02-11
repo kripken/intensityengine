@@ -4,6 +4,7 @@
 #include "engine.h"
 
 #include "intensity_texture.h"
+#include "intensity_physics.h"
 
 VARF(floatvtx, 0, 0, 1, allchanged());
 
@@ -448,6 +449,17 @@ struct vacollect : verthash
 
             va->voffset = vbosize[VBO_VBUF];
             uchar *vdata = addvbo(va, VBO_VBUF, va->verts, VTXSIZE);
+            // INTENSITY: Set up physical verts
+            PhysicsManager::setupWorldGeometryVerts(verts); 
+            // Go over each item in vc's "hashtable<sortkey, sortval> indices;", each is a group of tris
+            enumeratekt(indices, sortkey, k, sortval, t,
+                {
+                    loopl(6)
+                        PhysicsManager::setupWorldGeometryTriGroup(t.dims[l], k.tex, k.lmid, l);
+                }
+            );
+            PhysicsManager::finishWorldGeometryVerts();
+            // INTENSITY: end
             genverts(verts, vdata, ivec(va->o).mask(~VVEC_INT_MASK).shl(VVEC_FRAC).tovec());
             va->minvert += va->voffset;
             va->maxvert += va->voffset;
@@ -1689,6 +1701,9 @@ void precachetextures()
 void allchanged(bool load)
 {
     renderprogress(0, "clearing vertex arrays...");
+
+    PhysicsManager::clearWorldGeometry(); // New world geometry, from scratch // INTENSITY
+
     clearvas(worldroot);
     resetqueries();
     if(load) initenvmaps();
@@ -1714,6 +1729,8 @@ void allchanged(bool load)
         seedparticles();
         genenvmaps();
     }
+
+    PhysicsManager::finalizeWorldGeometry(); // INTENSITY
 }
 
 void recalc()

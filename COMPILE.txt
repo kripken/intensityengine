@@ -280,6 +280,9 @@ as written above.
 Advanced Usage
 ==============
 
+Browser Plugin
+--------------
+
 To compile the experimental browser plugin, use
 
     cmake .. -DINTENSITY_PLUGIN=1
@@ -297,4 +300,9 @@ like
 Then restart your browser and open
 
     src/client/plugin/test.html
+
+Bullet
+------
+
+    cmake .. -DINTENSITY_BULLET=1
 

@@ -25,6 +25,8 @@ set(CLIENT_SOURCES
     ../intensity/client_system
     ../intensity/client_engine_additions
     ../intensity/character_render
+    ../intensity/intensity_physics
+    ../intensity/intensity_physics_sauer
     ../fpsgame/fps
     ../fpsgame/server
     ../fpsgame/client
@@ -83,6 +85,7 @@ set(CLIENT_SOURCES
     ../intensity/shared_module_members_boost
     ../fpsgame/scoreboard
     ${Extra_ClientServer_Sources}
+    ${BULLET_SOURCES}
 )
 
 set(CLIENT_LIBRARIES
@@ -96,6 +99,7 @@ set(CLIENT_LIBRARIES
     ${SDLSOUND_LIBRARY}
     ${OPENGL_LIBRARIES}
     ${ZLIB_LIBRARIES}
+    ${BULLET_LIBRARIES}
 )
 
 if(${WIN32})
