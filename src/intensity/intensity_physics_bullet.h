@@ -23,15 +23,24 @@
  */
 
 
-class SauerPhysicsEngine : public PhysicsEngine
+#include "btBulletDynamicsCommon.h"
+
+
+class BulletPhysicsEngine : public RealisticPhysicsEngine
 {
+    btBroadphaseInterface*	m_overlappingPairCache;
+	btCollisionDispatcher*	m_dispatcher;
+	btConstraintSolver*	m_constraintSolver;
+	btDefaultCollisionConfiguration* m_collisionConfiguration;
+    btDynamicsWorld *m_dynamicsWorld;
+
 public:
     virtual void init();
 
     virtual void destroy();
 
-    virtual void clearStaticPolygons() { };
-    virtual bool requiresStaticPolygons() { return false; };
+    virtual void clearStaticPolygons();
+    virtual bool requiresStaticPolygons() { return true; };
     virtual void addStaticPolygon(std::vector<vec> vertexes);
 
     virtual physicsHandle addDynamic(float mass, float radius);

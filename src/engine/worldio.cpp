@@ -7,7 +7,10 @@
 #include "intensity.h"
 #include "world_system.h"
 #include "message_system.h"
-#include "client_system.h"
+#ifdef CLIENT
+    #include "client_system.h"
+#endif
+#include "intensity_physics.h"
 
 
 void backup(char *name, char *backupname)
@@ -721,6 +724,8 @@ bool load_world(const char *mname, const char *cname)        // still supports a
 #endif
     overrideidents = false;
    
+    PhysicsManager::createEngine();
+
 #ifdef CLIENT // INTENSITY: Stop, finish loading later when we have all the entities
     renderprogress(0, "requesting entities...");
     Logging::log(Logging::DEBUG, "Requesting active entities...\r\n");

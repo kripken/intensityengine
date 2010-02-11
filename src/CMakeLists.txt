@@ -59,9 +59,10 @@ if(${INTENSITY_BULLET})
     link_directories(
         ${CMAKE_SOURCE_DIR}/src/thirdparty/bullet/src/BulletCollision
         ${CMAKE_SOURCE_DIR}/src/thirdparty/bullet/src/BulletDynamics
+        ${CMAKE_SOURCE_DIR}/src/thirdparty/bullet/src/LinearMath
     )
     set(BULLET_SOURCES ../intensity/intensity_physics_bullet.cpp)
-    set(BULLET_LIBRARIES BulletDynamics BulletCollision)
+    set(BULLET_LIBRARIES BulletDynamics BulletCollision LinearMath)
 endif(${INTENSITY_BULLET})
 
 add_subdirectory(server)

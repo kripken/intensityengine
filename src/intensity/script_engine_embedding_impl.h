@@ -305,3 +305,11 @@ EMBED_CAPI_FUNC_STD(rdLimitRot, 7);
 
 EMBED_CAPI_FUNC_STD(mdlEnvmap, 2);
 
+// Physics
+
+EMBED_CAPI_FUNC_STD(physicsAddDynamic, 2);
+EMBED_CAPI_FUNC_STD(physicsRemoveDynamic, 1);
+EMBED_CAPI_FUNC_STD(physicsSetDynamicPosition, 4);
+EMBED_CAPI_FUNC_STD(physicsSetDynamicVelocity, 4);
+EMBED_CAPI_FUNC_STD(physicsGetDynamic, 1);
+

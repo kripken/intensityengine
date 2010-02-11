@@ -40,20 +40,6 @@ namespace PhysicsManager
 
 PhysicsEngine *engine = NULL;
 
-// Dynamic entities and such
-
-struct WatchedDynamic
-{
-    int uniqueId;
-    void* handle;
-    vec lastPosition, lastVelocity;
-    bool simulateThisTime;
-
-    WatchedDynamic(int _uniqueId, void* _handle) : uniqueId(_uniqueId), handle(_handle), lastPosition(0, 0, 0), lastVelocity(0, 0, 0), simulateThisTime(true) { };
-};
-
-std::vector<WatchedDynamic> watchedDynamics;
-
 //
 
 void createEngine()
@@ -64,6 +50,8 @@ void createEngine()
 
     if (ScriptEngineManager::getGlobal()->getProperty("Global")->hasProperty("physicsEngineType"))
         type = ScriptEngineManager::getGlobal()->getProperty("Global")->getProperty("physicsEngineType")->getString();
+
+    Logging::log(Logging::WARNING, "Physics engine: %s\r\n", type.c_str());
 
     if (type == "sauer")
     {
@@ -84,7 +72,6 @@ void createEngine()
     }
 
     engine->init();
-    watchedDynamics.clear();
 }
 
 void destroyEngine()
@@ -100,6 +87,12 @@ void destroyEngine()
 bool hasEngine()
 {
     return (engine != NULL);
+}
+
+PhysicsEngine* getEngine()
+{
+    assert(engine);
+    return engine;
 }
 
 #define REQUIRE_ENGINE if (!hasEngine()) return; // Sauer calls physics before the first map even loads
@@ -177,41 +170,6 @@ void finishWorldGeometryVerts()
 void finalizeWorldGeometry()
 {
     REQUIRE_ENGINE
-}
-
-
-//! Adds a character. The character will continue to be tracked until removed, i.e.,
-//! (1) simulation will notice changes in the character's position and velocity, which
-//! are assumed to be from scripting/position updates, and
-//! (2) simulation will store changes in the entity, so that they are seen
-void addWatchedDynamic(int uniqueId)
-{
-    REQUIRE_ENGINE
-
-    LogicEntityPtr entity = LogicSystem::getLogicEntity(uniqueId); // TODO: Save entity in structure
-
-    watchedDynamics.push_back(
-        WatchedDynamic(
-            uniqueId,
-            engine->addDynamic(
-                10,  // TODO: Mass, how much?
-                (entity->dynamicEntity->eyeheight + entity->dynamicEntity->aboveeye)/2
-            )
-        )
-    );
-};
-
-void removeWatchedDynamic(int uniqueId)
-{
-    REQUIRE_ENGINE
-
-    for (unsigned int i = 0; i < watchedDynamics.size(); i++)
-        if (watchedDynamics[i].uniqueId == uniqueId)
-        {
-            engine->removeDynamic(watchedDynamics[i].handle);
-            watchedDynamics.erase(watchedDynamics.begin() + i);
-            return;
-        }
 }
 
 

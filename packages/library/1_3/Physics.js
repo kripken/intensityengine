@@ -75,5 +75,45 @@ Physics = {
             },
         },
     },
+
+    Engines: {
+        setupPhysicalEntity: function(entity) {
+            entity.physicsHandle = CAPI.physicsAddDynamic(1, 10);
+
+            entity.connect((Global.CLIENT ? 'client_' : '') + 'onModify_position', function(position) {
+                position = new Vector3(position);
+                CAPI.physicsSetDynamicPosition(entity.physicsHandle, position.x, position.y, position.z);
+            });
+
+            entity.connect((Global.CLIENT ? 'client_' : '') + 'onModify_velocity', function(velocity) {
+                velocity = new Vector3(velocity);
+                CAPI.physicsSetDynamicVelocity(entity.physicsHandle, velocity.x, velocity.y, velocity.z);
+            });
+        },
+
+        teardownPhysicalEntity: function(entity) {
+            CAPI.physicsRemoveDynamic(entity.physicsHandle);
+        },
+
+        playerPlugin: {
+            activate: function() { Physics.Engines.setupPhysicalEntity(this); },
+            deactivate: function() { Physics.Engines.teardownPhysicalEntity(this); },
+            clientActivate: function() { Physics.Engines.setupPhysicalEntity(this); },
+            clientDeactivate: function() { Physics.Engines.teardownPhysicalEntity(this); },
+
+            clientAct: function(seconds) {
+                var data = CAPI.physicsGetDynamic(this.physicsHandle);
+                this.position = data.position;
+                this.velocity = data.velocity;
+
+                if (this === getPlayerEntity()) {
+                    if (this.move) {
+                        this.velocity.add(new Vector3().fromYawPitch(this.yaw, this.pitch).mul(seconds*100));
+                        CAPI.physicsSetDynamicVelocity(this.physicsHandle, this.velocity.x, this.velocity.y, this.velocity.z);
+                    }
+                }
+            },
+        },
+    },
 };
 

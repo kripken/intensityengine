@@ -42,34 +42,38 @@ void SauerPhysicsEngine::addStaticPolygon(std::vector<vec> vertexes)
 {
 }
 
+/*
 struct SauerDynamic
 {
     float radius;
     SauerDynamic(float _radius) : radius(_radius) { };
 };
+*/
 
-void* SauerPhysicsEngine::addDynamic(float mass, float radius)
+physicsHandle SauerPhysicsEngine::addDynamic(float mass, float radius)
 {
-    return new SauerDynamic(radius);
+    assert(0);
+    return 0;
 }
 
-void SauerPhysicsEngine::removeDynamic(void* handle)
+void SauerPhysicsEngine::removeDynamic(physicsHandle handle)
 {
-    delete (SauerDynamic*)handle;
+    assert(0);
 }
 
-void SauerPhysicsEngine::setDynamicPosition(void* handle, const vec& position)
+void SauerPhysicsEngine::setDynamicPosition(physicsHandle handle, const vec& position)
 {
-//    position.z -= ((SauerDynamic*)handle)->radius;
+    assert(0);
 }
 
-void SauerPhysicsEngine::setDynamicVelocity(void* handle, const vec& velocity)
+void SauerPhysicsEngine::setDynamicVelocity(physicsHandle handle, const vec& velocity)
 {
+    assert(0);
 }
 
-void SauerPhysicsEngine::getDynamic(void* handle, vec& position, vec& velocity)
+void SauerPhysicsEngine::getDynamic(physicsHandle handle, vec& position, vec& velocity)
 {
-    position.z -= ((SauerDynamic*)handle)->radius;
+    assert(0);
 }
 
 namespace game

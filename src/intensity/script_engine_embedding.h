@@ -40,6 +40,8 @@
     #include "NPC.h"
 #endif
 
+#include "intensity_physics.h"
+
 #define RETURN_VECTOR3(sauervec) \
     ScriptValuePtr __ret_position = ScriptEngineManager::getGlobal()->call("__new__", \
         ScriptValueArgs().append(ScriptEngineManager::getGlobal()->getProperty("Vector3")) \
@@ -1296,4 +1298,51 @@ CUBESCRIPT_iid(rdLimitDist, rdlimitdist);
 CUBESCRIPT_iiddddd(rdLimitRot, rdlimitrot);
 
 CUBESCRIPT_dd(mdlEnvmap, mdlenvmap);
+
+// Physics
+
+V8_FUNC_dd(__script__physicsAddDynamic, {
+    physicsHandle ret = PhysicsManager::getEngine()->addDynamic(arg1, arg2);
+    V8_RETURN_INT(ret);
+});
+
+V8_FUNC_i(__script__physicsRemoveDynamic, {
+    PhysicsManager::getEngine()->removeDynamic(arg1);
+});
+
+V8_FUNC_iddd(__script__physicsSetDynamicPosition, {
+    PhysicsManager::getEngine()->setDynamicPosition(arg1, vec(arg2, arg3, arg4));
+});
+
+V8_FUNC_iddd(__script__physicsSetDynamicVelocity, {
+    PhysicsManager::getEngine()->setDynamicVelocity(arg1, vec(arg2, arg3, arg4));
+});
+
+V8_FUNC_i(__script__physicsGetDynamic, {
+    arg1 = arg1;
+
+    vec position;
+    vec velocity;
+    PhysicsManager::getEngine()->getDynamic(arg1, position, velocity);
+
+    ScriptValuePtr scriptPosition = ScriptEngineManager::getGlobal()->call("__new__",
+        ScriptValueArgs().append(ScriptEngineManager::getGlobal()->getProperty("Vector3"))
+            .append(position.x)
+            .append(position.y)
+            .append(position.z)
+    );
+
+    ScriptValuePtr scriptVelocity = ScriptEngineManager::getGlobal()->call("__new__",
+        ScriptValueArgs().append(ScriptEngineManager::getGlobal()->getProperty("Vector3"))
+            .append(velocity.x)
+            .append(velocity.y)
+            .append(velocity.z)
+    );
+
+    ScriptValuePtr ret = ScriptEngineManager::createScriptObject();
+    ret->setProperty("position", scriptPosition);
+    ret->setProperty("velocity", scriptVelocity);
+
+    V8_RETURN_VALUE(ret);
+});
 

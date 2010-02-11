@@ -22,6 +22,8 @@
  *=============================================================================
  */
 
+typedef int physicsHandle;
+
 // An abstract interface to a physics engine. Specific physics engines implement
 // this interface.
 class PhysicsEngine
@@ -40,19 +42,18 @@ public:
     //! Add a polygon to be collided against, that is treated as completely fixed - static geometry
     virtual void addStaticPolygon(std::vector<vec> vertexes) = 0;
 
-    //! Add a dynamic element, representing a character. Returns a pointer/handle to an engine-specific
-    //! structure (that is held and passed back to the engine - not used)
-    virtual void* addDynamic(float mass, float radius) = 0;
+    //! Add a dynamic element, something that can move in the world
+    virtual physicsHandle addDynamic(float mass, float radius) = 0;
 
     //!
-    virtual void removeDynamic(void* handle) = 0;
+    virtual void removeDynamic(physicsHandle handle) = 0;
 
     //! Sets a dynamic's properties. Called to get changes due to scripting or position updates, etc.
-    virtual void setDynamicPosition(void* handle, const vec& position) = 0;
-    virtual void setDynamicVelocity(void* handle, const vec& velocity) = 0;
+    virtual void setDynamicPosition(physicsHandle handle, const vec& position) = 0;
+    virtual void setDynamicVelocity(physicsHandle handle, const vec& velocity) = 0;
 
     //! Outputs a dynamic's properties. Called to get information from the physics engine outside into the rest of the engine
-    virtual void getDynamic(void* handle, vec& position, vec& velocity) = 0;
+    virtual void getDynamic(physicsHandle handle, vec& position, vec& velocity) = 0;
 
     virtual void simulate(float seconds) = 0;
 };
@@ -65,6 +66,8 @@ namespace PhysicsManager
     extern void destroyEngine();
 
     extern bool hasEngine();
+
+    PhysicsEngine* getEngine();
 
     //! Erases the contents of the physics engine
     extern void clearWorldGeometry();
