@@ -345,6 +345,12 @@ Character = AnimatableLogicEntity.extend({
     getTargetingOrigin: function(origin) {
         return origin;
     },
+
+    isOnFloor: function() {
+        if (floorDistance(this.position, 1024) < 1) return true;
+        if (this.velocity.z < -1 || this.falling.z < -1) return false;
+        return World.isColliding(this.position, this.radius+2, this);
+    },
 });
 
 
@@ -441,12 +447,6 @@ Character.plugins = {
                     this.velocity.z += (1500+World.gravity)*seconds*this.isPressingJumpSeconds/0.25;
                     this.isPressingJumpSeconds -= seconds;
                 }
-            },
-
-            isOnFloor: function() {
-                if (floorDistance(this.position, 1024) < 1) return true;
-                if (this.velocity.z < -1 || this.falling.z < -1) return false;
-                return World.isColliding(this.position, this.radius+2, this);
             },
         },
     },

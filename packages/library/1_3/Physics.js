@@ -87,6 +87,7 @@ Physics = {
 
             entity.connect((Global.CLIENT ? 'client_' : '') + 'onModify_velocity', function(velocity) {
                 velocity = new Vector3(velocity);
+//log(ERROR, "mod vel: " + velocity);
                 CAPI.physicsSetDynamicVelocity(entity.physicsHandle, velocity.x, velocity.y, velocity.z);
             });
         },
@@ -108,10 +109,16 @@ Physics = {
 
                 if (this === getPlayerEntity()) {
                     if (this.move) {
-                        this.velocity.add(new Vector3().fromYawPitch(this.yaw, this.pitch).mul(seconds*100));
+                        this.velocity.add(new Vector3().fromYawPitch(this.yaw, this.pitch).mul(seconds*100*this.move));
                         CAPI.physicsSetDynamicVelocity(this.physicsHandle, this.velocity.x, this.velocity.y, this.velocity.z);
                     }
                 }
+            },
+
+            jump: function() {
+//                if (this.isOnFloor() || World.getMaterial(this.position) === MATERIAL.WATER) {
+                    this.velocity.z += 100;
+//                }
             },
         },
     },

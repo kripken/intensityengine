@@ -7,6 +7,7 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/Plugins');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Health');
 Library.include('library/' + Global.LIBRARY_VERSION + '/GameManager');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Physics');
+Library.include('library/' + Global.LIBRARY_VERSION + '/World');
 
 Global.physicsEngineType = 'bullet';
 
