@@ -304,5 +304,16 @@ Then restart your browser and open
 Bullet
 ------
 
+This is very experimental at this point. To try it, do
+
     cmake .. -DINTENSITY_BULLET=1
+
+You will need to build bullet and place it in src/thirdparty/bullet.
+Bullet itself requires some things, perhaps only for its internal
+demos though, like GLUT (on Ubuntu: freeglut3-dev). You can build
+Bullet without the extras and demos by doing
+
+    cmake . -DBUILD_DEMOS=OFF -DBUILD_EXTRAS=OFF
+
+when you prepare to build Bullet.
 
