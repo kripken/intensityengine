@@ -108,16 +108,35 @@ Physics = {
                 this.velocity = data.velocity;
 
                 if (this === getPlayerEntity()) {
-                    if (this.move) {
-                        this.velocity.add(new Vector3().fromYawPitch(this.yaw, this.pitch).mul(seconds*100*this.move));
-                        CAPI.physicsSetDynamicVelocity(this.physicsHandle, this.velocity.x, this.velocity.y, this.velocity.z);
+                    var speed = this.movementSpeed*2;
+                    var editing = isPlayerEditing(this);
+
+                    if (editing) {
+                        this.position = this.lastPosition ? this.lastPosition : this.position;
+                        this.velocity.mul(0);
                     }
+
+                    if (this.move) {
+                        this.velocity.add(new Vector3().fromYawPitch(this.yaw, !editing ? 0 : this.pitch).mul(seconds*speed*this.move));
+                    }
+                    if (this.strafe) {
+                        this.velocity.add(new Vector3().fromYawPitch(this.yaw-90, 0).mul(seconds*speed*this.strafe));
+                    }
+                    if (this.move || this.strafe) {
+                        if (!editing) {
+                            CAPI.physicsSetDynamicVelocity(this.physicsHandle, this.velocity.x, this.velocity.y, this.velocity.z);
+                        } else {
+                            this.position.add(this.velocity.mulNew(speed*seconds));
+                        }
+                    }
+
+                    if (editing) { this.lastPosition = this.position.copy(); }
                 }
             },
 
             jump: function() {
 //                if (this.isOnFloor() || World.getMaterial(this.position) === MATERIAL.WATER) {
-                    this.velocity.z += 100;
+                    this.velocity.z += this.movementSpeed;
 //                }
             },
         },

@@ -176,10 +176,10 @@ void BulletPhysicsEngine::getDynamic(physicsHandle handle, vec& position, vec& v
 {
     IntensityBulletDynamic* body = handleDynamicMap[handle];
 
-    btVector3 btPosition = body->getCenterOfMassPosition();
-    btVector3 btVelocity = body->getLinearVelocity();
-//    btVector3 btPosition = body->interpolatedPosition;
-//    btVector3 btVelocity = body->interpolatedVelocity;
+//    btVector3 btPosition = body->getCenterOfMassPosition();
+//    btVector3 btVelocity = body->getLinearVelocity();
+    btVector3 btPosition = body->interpolatedPosition;
+    btVector3 btVelocity = body->interpolatedVelocity;
     TO_SAUER_VEC( position, btPosition );
     TO_SAUER_VEC( velocity, btVelocity );
 }
