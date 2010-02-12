@@ -894,6 +894,7 @@ MochiKit.Base.update(MochiKit.Base, {
         // short-circuit for objects that support "json" serialization
         // if they return "self" then just pass-through...
         var newObj;
+        if(o === undefined) return "[UNDEFINED]"; // INTENSITY: Kripken: Added this!
         if (typeof(o.__json__) == "function") {
             newObj = o.__json__();
             if (o !== newObj) {
