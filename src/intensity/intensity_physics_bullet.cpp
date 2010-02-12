@@ -52,7 +52,7 @@
             TO_SAUER_VEC( sauerTo, to );
 
             #define VEC_TO_COLOR(it) \
-                ((int(it.x()*255)>>16) + (int(it.y()*255)>>8) + int(it.z()*255))
+                ((int((it.x()*0.5+0.5)*255)<<16) + (int((it.y()*0.5+0.5)*255)<<8) + int((it.z()*0.5+0.5)*255))
             particle_flare(sauerFrom, sauerTo, 0, PART_STREAK, VEC_TO_COLOR(fromColor));
             particle_flare(sauerTo, sauerFrom, 0, PART_STREAK, VEC_TO_COLOR(toColor));
         }
