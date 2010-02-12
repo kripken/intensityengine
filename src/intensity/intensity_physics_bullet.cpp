@@ -54,7 +54,7 @@
             #define VEC_TO_COLOR(it) \
                 ((int((it.x()*0.5+0.5)*255)<<16) + (int((it.y()*0.5+0.5)*255)<<8) + int((it.z()*0.5+0.5)*255))
             particle_flare(sauerFrom, sauerTo, 0, PART_STREAK, VEC_TO_COLOR(fromColor));
-            particle_flare(sauerTo, sauerFrom, 0, PART_STREAK, VEC_TO_COLOR(toColor));
+//            particle_flare(sauerTo, sauerFrom, 0, PART_STREAK, VEC_TO_COLOR(toColor));
         }
 
         virtual void drawLine(const btVector3 &from, const btVector3 &to, const btVector3 &color)
@@ -82,14 +82,13 @@ void BulletPhysicsEngine::init()
 
 	m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
 
-	btVector3 worldMin(-1000,-1000,-1000); // XXX
-	btVector3 worldMax(1000,1000,1000);
-	btAxisSweep3* sweepBP = new btAxisSweep3(worldMin,worldMax); // TODO: Consider btDbvtBroadphase, may be faster
-	m_overlappingPairCache = sweepBP;
+	btDbvtBroadphase* m_broadPhase = new btDbvtBroadphase();
 
 	m_constraintSolver = new btSequentialImpulseConstraintSolver();
 
-    m_dynamicsWorld = new btDiscreteDynamicsWorld(m_dispatcher, m_overlappingPairCache, m_constraintSolver, m_collisionConfiguration);
+    m_dynamicsWorld = new btDiscreteDynamicsWorld(m_dispatcher, m_broadPhase, m_constraintSolver, m_collisionConfiguration);
+
+	m_dynamicsWorld->setGravity(btVector3(0,-10,0));
 
     // Debug
     #ifdef CLIENT
@@ -144,7 +143,7 @@ class IntensityBulletDynamic : public btRigidBody
 public:
     btVector3 interpolatedPosition, interpolatedVelocity;
 
-    IntensityBulletDynamic(btScalar mass, btMotionState *motionState, btCollisionShape *collisionShape, const btVector3 &localInertia=btVector3(0, 0, 0)) : btRigidBody(mass, motionState, collisionShape, localInertia) { };
+    IntensityBulletDynamic(btScalar mass, btMotionState *motionState, btCollisionShape *collisionShape, const btVector3 &localInertia) : btRigidBody(mass, motionState, collisionShape, localInertia) { };
 };
 
 //! Interface to modify our interpolated values
@@ -169,9 +168,14 @@ int handleDynamicCounter = 0;
 
 physicsHandle BulletPhysicsEngine::addDynamic(btCollisionShape *shape, float mass)
 {
+    btVector3 localInertia(0, 0, 0);
+    if (mass > 0)
+        shape->calculateLocalInertia(mass, localInertia);
+
     IntensityBulletMotionState* motionState = new IntensityBulletMotionState();
-	IntensityBulletDynamic* body = new IntensityBulletDynamic(mass, motionState, shape); // No mass === static geometry
+	IntensityBulletDynamic* body = new IntensityBulletDynamic(mass, motionState, shape, localInertia);
     motionState->parent = body;
+
 	m_dynamicsWorld->addRigidBody(body);
 
     physicsHandle handle = handleDynamicCounter;

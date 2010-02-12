@@ -108,7 +108,7 @@ Physics = {
 
         playerPlugin: {
             createPhysicalObject: function() {
-                return CAPI.physicsAddDynamicSphere(1, 10);
+                return CAPI.physicsAddDynamicSphere(10, 10);
             },
             clientAct: function(seconds) {
                 var data = CAPI.physicsGetDynamic(this.physicsHandle);
