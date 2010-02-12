@@ -34,7 +34,8 @@ public:
     virtual bool requiresStaticPolygons() { return false; };
     virtual void addStaticPolygon(std::vector<vec> vertexes);
 
-    virtual physicsHandle addDynamic(float mass, float radius);
+    virtual physicsHandle addDynamicSphere(float mass, float radius);
+    virtual physicsHandle addDynamicBox(float mass, float rx, float ry, float rz) { assert(0); return 0; };
     virtual void removeDynamic(physicsHandle handle);
     virtual void setDynamicPosition(physicsHandle handle, const vec& position);
     virtual void setDynamicVelocity(physicsHandle handle, const vec& velocity);

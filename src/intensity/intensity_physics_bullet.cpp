@@ -167,10 +167,8 @@ typedef std::map<physicsHandle, IntensityBulletDynamic*> handleDynamicMap_t;
 handleDynamicMap_t handleDynamicMap;
 int handleDynamicCounter = 0;
 
-physicsHandle BulletPhysicsEngine::addDynamic(float mass, float radius)
+physicsHandle BulletPhysicsEngine::addDynamic(btCollisionShape *shape, float mass)
 {
-    // TODO: You can share Shapes, to save memory etc.
-	btSphereShape* shape = new btSphereShape( FROM_SAUER_SCALAR(radius) ); // TODO: Use correct radius
     IntensityBulletMotionState* motionState = new IntensityBulletMotionState();
 	IntensityBulletDynamic* body = new IntensityBulletDynamic(mass, motionState, shape); // No mass === static geometry
     motionState->parent = body;
@@ -181,6 +179,17 @@ physicsHandle BulletPhysicsEngine::addDynamic(float mass, float radius)
     handleDynamicCounter += 1; // TODO: Handle overflow etc. etc. etc.
 
     return handle; // XXX garbage collect ***shape***. Also body also motionstate in previous func, etc.}
+
+physicsHandle BulletPhysicsEngine::addDynamicSphere(float mass, float radius)
+{
+    return addDynamic(new btSphereShape( FROM_SAUER_SCALAR(radius) ), mass);
+}
+
+physicsHandle BulletPhysicsEngine::addDynamicBox(float mass, float rx, float ry, float rz)
+{
+    btVector3 halfExtents(FROM_SAUER_SCALAR(rx/2), FROM_SAUER_SCALAR(ry/2), FROM_SAUER_SCALAR(rz/2));
+    return addDynamic(new btBoxShape(halfExtents), mass);
+}
 
 void BulletPhysicsEngine::removeDynamic(physicsHandle handle)
 {

@@ -1301,8 +1301,13 @@ CUBESCRIPT_dd(mdlEnvmap, mdlenvmap);
 
 // Physics
 
-V8_FUNC_dd(__script__physicsAddDynamic, {
-    physicsHandle ret = PhysicsManager::getEngine()->addDynamic(arg1, arg2);
+V8_FUNC_dd(__script__physicsAddDynamicSphere, {
+    physicsHandle ret = PhysicsManager::getEngine()->addDynamicSphere(arg1, arg2);
+    V8_RETURN_INT(ret);
+});
+
+V8_FUNC_dddd(__script__physicsAddDynamicBox, {
+    physicsHandle ret = PhysicsManager::getEngine()->addDynamicBox(arg1, arg2, arg3, arg4);
     V8_RETURN_INT(ret);
 });
 

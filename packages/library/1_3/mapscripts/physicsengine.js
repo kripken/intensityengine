@@ -33,7 +33,8 @@ GamePlayer = registerEntityClass(
         [
             Health.plugin,
             GameManager.playerPlugin,
-            Physics.Engines.playerPlugin,
+            Physics.Engine.objectPlugin,
+            Physics.Engine.playerPlugin,
             {
                 _class: "GamePlayer",
             },
@@ -80,7 +81,7 @@ if (Global.SERVER) { // Run this only on the server - not the clients
         {
             _name: 'players',
             setup: function(player) {
-                player.defaultModelName = 'stromar/red';
+                player.defaultModelName = 'ed';
                 player.defaultHUDModelName = '';
             },
         },

@@ -34,6 +34,9 @@ class BulletPhysicsEngine : public RealisticPhysicsEngine
 	btDefaultCollisionConfiguration* m_collisionConfiguration;
     btDynamicsWorld *m_dynamicsWorld;
 
+    //! Adds a bullet shape as a dynamic element. Takes ownership of 'shape'.
+    physicsHandle addDynamic(btCollisionShape *shape, float mass);
+
 public:
     virtual void init();
 
@@ -43,7 +46,8 @@ public:
     virtual bool requiresStaticPolygons() { return true; };
     virtual void addStaticPolygon(std::vector<vec> vertexes);
 
-    virtual physicsHandle addDynamic(float mass, float radius);
+    virtual physicsHandle addDynamicSphere(float mass, float radius);
+    virtual physicsHandle addDynamicBox(float mass, float rx, float ry, float rz);
     virtual void removeDynamic(physicsHandle handle);
     virtual void setDynamicPosition(physicsHandle handle, const vec& position);
     virtual void setDynamicVelocity(physicsHandle handle, const vec& velocity);

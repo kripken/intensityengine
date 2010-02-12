@@ -76,9 +76,9 @@ Physics = {
         },
     },
 
-    Engines: {
+    Engine: {
         setupPhysicalEntity: function(entity) {
-            entity.physicsHandle = CAPI.physicsAddDynamic(1, 10);
+            entity.physicsHandle = entity.createPhysicalObject();
 
             entity.connect((Global.CLIENT ? 'client_' : '') + 'onModify_position', function(position) {
                 position = new Vector3(position);
@@ -96,12 +96,20 @@ Physics = {
             CAPI.physicsRemoveDynamic(entity.physicsHandle);
         },
 
-        playerPlugin: {
-            activate: function() { Physics.Engines.setupPhysicalEntity(this); },
-            deactivate: function() { Physics.Engines.teardownPhysicalEntity(this); },
-            clientActivate: function() { Physics.Engines.setupPhysicalEntity(this); },
-            clientDeactivate: function() { Physics.Engines.teardownPhysicalEntity(this); },
+        objectPlugin: {
+            createPhysicalObject: function() {
+                return CAPI.physicsAddDynamicBox(1, 10, 10, 10);
+            },
+            activate: function() { Physics.Engine.setupPhysicalEntity(this); },
+            deactivate: function() { Physics.Engine.teardownPhysicalEntity(this); },
+            clientActivate: function() { Physics.Engine.setupPhysicalEntity(this); },
+            clientDeactivate: function() { Physics.Engine.teardownPhysicalEntity(this); },
+        },
 
+        playerPlugin: {
+            createPhysicalObject: function() {
+                return CAPI.physicsAddDynamicSphere(1, 10);
+            },
             clientAct: function(seconds) {
                 var data = CAPI.physicsGetDynamic(this.physicsHandle);
                 this.position = data.position;
@@ -142,4 +150,26 @@ Physics = {
         },
     },
 };
+
+Physics.Engine.Entity = registerEntityClass(bakePlugins(LogicEntity, [
+    Physics.Engine.objectPlugin,
+    {
+        _class: 'PhysicsEngineEntity',
+        _sauerType: '',
+
+        position: new StateVector3(),
+        radius: new StateFloat(),
+
+        init: function(uniqueId, kwargs) {
+log(ERROR, "init:" + serializeJSON(kwargs));
+            this.position = new Vector3(kwargs.position.x, kwargs.position.y, kwargs.position.z);
+log(ERROR, "pos:" + this.position + ',' + kwargs.position + ',' + new Vector3(kwargs.position.x, kwargs.position.y, kwargs.position.z));
+            this.radius = 5;
+        },
+
+        activate: function(kwargs) {
+log(ERROR, "activate");
+        },
+    },
+]));
 

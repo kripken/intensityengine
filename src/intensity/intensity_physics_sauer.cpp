@@ -50,7 +50,7 @@ struct SauerDynamic
 };
 */
 
-physicsHandle SauerPhysicsEngine::addDynamic(float mass, float radius)
+physicsHandle SauerPhysicsEngine::addDynamicSphere(float mass, float radius)
 {
     assert(0);
     return 0;

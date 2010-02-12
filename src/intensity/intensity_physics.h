@@ -43,7 +43,8 @@ public:
     virtual void addStaticPolygon(std::vector<vec> vertexes) = 0;
 
     //! Add a dynamic element, something that can move in the world
-    virtual physicsHandle addDynamic(float mass, float radius) = 0;
+    virtual physicsHandle addDynamicSphere(float mass, float radius) = 0;
+    virtual physicsHandle addDynamicBox(float mass, float rx, float ry, float rz) = 0;
 
     //!
     virtual void removeDynamic(physicsHandle handle) = 0;
