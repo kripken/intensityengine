@@ -128,7 +128,7 @@ def do_login(code, client_number, ip_addr):
 
             if World.scenario_code != curr_scenario_code:
                 log(logging.WARNING, "Scenario code has changed since client %d began login" % client_number)
-#                return fail("Instance has begun a new scenario. Try connecting again") XXX - do we want this?
+                return fail("Server has begun a new scenario. Try connecting again") # XXX - do we want this?
 
             user_id = response['user_id']
 
