@@ -29,6 +29,53 @@
 #include "intensity_physics_bullet.h"
 
 
+// Sauer coordinates are in 'cubes', not metres as in Bullet
+#define SAUER_FACTOR 17.0
+// Reverse y and z axes
+#define FROM_SAUER_VEC(sauervec) ( btVector3(sauervec.x/SAUER_FACTOR, sauervec.z/SAUER_FACTOR, sauervec.y/SAUER_FACTOR) )
+#define TO_SAUER_VEC(sauervec, btvec) { sauervec.x = btvec.x()*SAUER_FACTOR; sauervec.y = btvec.z()*SAUER_FACTOR; sauervec.z = btvec.y()*SAUER_FACTOR; }
+#define FROM_SAUER_SCALAR(value) ( value/SAUER_FACTOR )
+
+
+#ifdef CLIENT
+    class SauerDebugDrawer : public btIDebugDraw
+    {
+        int m_debugMode;
+
+    public:
+        SauerDebugDrawer() : m_debugMode(0) { };
+
+        virtual void drawLine(const btVector3 &from, const btVector3 &to, const btVector3 &fromColor, const btVector3 &toColor)
+        {
+            vec sauerFrom, sauerTo;
+            TO_SAUER_VEC( sauerFrom, from );
+            TO_SAUER_VEC( sauerTo, to );
+
+            #define VEC_TO_COLOR(it) \
+                ((int(it.x()*255)>>16) + (int(it.y()*255)>>8) + int(it.z()*255))
+            particle_flare(sauerFrom, sauerTo, 0, PART_STREAK, VEC_TO_COLOR(fromColor));
+            particle_flare(sauerTo, sauerFrom, 0, PART_STREAK, VEC_TO_COLOR(toColor));
+        }
+
+        virtual void drawLine(const btVector3 &from, const btVector3 &to, const btVector3 &color)
+        {
+            drawLine(from, to, color, color);
+        }
+
+        virtual void draw3dText (const btVector3 &location, const char *textString)
+        {
+            vec sauerLocation;
+            TO_SAUER_VEC( sauerLocation, location );
+            particle_text(sauerLocation, textString, PART_TEXT, 0);
+        }
+
+        virtual void drawContactPoint (const btVector3 &PointOnB, const btVector3 &normalOnB, btScalar distance, int lifeTime, const btVector3 &color) { }
+        virtual void reportErrorWarning (const char *warningString) { printf("Bullet warning: %s\r\n", warningString); }
+        virtual void setDebugMode(int debugMode) { m_debugMode = debugMode; }
+        virtual int getDebugMode() const { return m_debugMode; }
+    };
+#endif
+
 void BulletPhysicsEngine::init()
 {
 	m_collisionConfiguration = new btDefaultCollisionConfiguration();
@@ -43,6 +90,13 @@ void BulletPhysicsEngine::init()
 	m_constraintSolver = new btSequentialImpulseConstraintSolver();
 
     m_dynamicsWorld = new btDiscreteDynamicsWorld(m_dispatcher, m_overlappingPairCache, m_constraintSolver, m_collisionConfiguration);
+
+    // Debug
+    #ifdef CLIENT
+        SauerDebugDrawer* debug = new SauerDebugDrawer(); // XXX leak
+        debug->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+        m_dynamicsWorld->setDebugDrawer(debug);
+    #endif
 }
 
 void BulletPhysicsEngine::destroy()
@@ -52,13 +106,6 @@ void BulletPhysicsEngine::destroy()
 void BulletPhysicsEngine::clearStaticPolygons()
 {
 }
-
-// Sauer coordinates are in 'cubes', not metres as in Bullet
-#define SAUER_FACTOR 17.0
-// Reverse y and z axes
-#define FROM_SAUER_VEC(sauervec) ( btVector3(sauervec.x/SAUER_FACTOR, sauervec.z/SAUER_FACTOR, sauervec.y/SAUER_FACTOR) )
-#define TO_SAUER_VEC(sauervec, btvec) { sauervec.x = btvec.x()*SAUER_FACTOR; sauervec.y = btvec.z()*SAUER_FACTOR; sauervec.z = btvec.y()*SAUER_FACTOR; }
-#define FROM_SAUER_SCALAR(value) ( value/SAUER_FACTOR )
 
 void BulletPhysicsEngine::addStaticPolygon(std::vector<vec> vertexes)
 {
@@ -184,9 +231,21 @@ void BulletPhysicsEngine::getDynamic(physicsHandle handle, vec& position, vec& v
     TO_SAUER_VEC( velocity, btVelocity );
 }
 
+VAR(bulletdebug, 0, 0, 1);
+
 void BulletPhysicsEngine::simulate(float seconds)
 {
     m_dynamicsWorld->stepSimulation(seconds);
+
+    if (bulletdebug) m_dynamicsWorld->debugDrawWorld();
+
+/*
+This will happen in predictplayer: So need to counter it?
+        d->o = d->newpos;
+        d->yaw = d->newyaw;
+        d->pitch = d->newpitch;
+*/
+// XXX TODO:    game::predictplayer(*, false); - interpolate remote players
 }
 
 
