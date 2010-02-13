@@ -98,7 +98,7 @@ Physics = {
 
         objectPlugin: {
             createPhysicalObject: function() {
-                return CAPI.physicsAddDynamicBox(1, 10, 10, 10);
+                return CAPI.physicsAddDynamicBox(1, 20, 20, 20);
             },
             activate: function() { Physics.Engine.setupPhysicalEntity(this); },
             deactivate: function() { Physics.Engine.teardownPhysicalEntity(this); },
@@ -108,43 +108,46 @@ Physics = {
 
         playerPlugin: {
             createPhysicalObject: function() {
-                return CAPI.physicsAddDynamicSphere(10, 10);
+                return CAPI.physicsAddDynamicBox(10, 30, 30, 30);
+//                return CAPI.physicsAddDynamicSphere(10, 10);
+            },
+            clientActivate: function() {
+                this.lastPosition = new Vector3(0, 0, 0);
             },
             clientAct: function(seconds) {
                 var data = CAPI.physicsGetDynamic(this.physicsHandle);
-                this.position = data.position;
-                this.velocity = data.velocity;
 
                 if (this === getPlayerEntity()) {
                     var speed = this.movementSpeed*2;
                     var editing = isPlayerEditing(this);
 
                     if (editing) {
-                        this.position = this.lastPosition ? this.lastPosition : this.position;
-                        this.velocity.mul(0);
+                        data.position = this.lastPosition ? this.lastPosition : this.position;
+                        data.velocity.mul(0);
                     }
 
                     if (this.move) {
-                        this.velocity.add(new Vector3().fromYawPitch(this.yaw, !editing ? 0 : this.pitch).mul(seconds*speed*this.move));
+                        data.velocity.add(new Vector3().fromYawPitch(this.yaw, !editing ? 0 : this.pitch).mul(seconds*speed*this.move));
                     }
                     if (this.strafe) {
-                        this.velocity.add(new Vector3().fromYawPitch(this.yaw-90, 0).mul(seconds*speed*this.strafe));
+                        data.velocity.add(new Vector3().fromYawPitch(this.yaw-90, 0).mul(seconds*speed*this.strafe));
                     }
                     if (this.move || this.strafe) {
-                        if (!editing) {
-                            CAPI.physicsSetDynamicVelocity(this.physicsHandle, this.velocity.x, this.velocity.y, this.velocity.z);
-                        } else {
-                            this.position.add(this.velocity.mulNew(speed*seconds));
+                        if (editing) {
+                            data.position.add(data.velocity.mulNew(speed*seconds));
                         }
                     }
 
-                    if (editing) { this.lastPosition = this.position.copy(); }
+                    this.lastPosition = this.position.copy();
                 }
+
+                this.position = data.position;
+                this.velocity = data.velocity;
             },
 
             jump: function() {
 //                if (this.isOnFloor() || World.getMaterial(this.position) === MATERIAL.WATER) {
-                    this.velocity.z += this.movementSpeed;
+                    this.velocity.z += this.movementSpeed*2;
 //                }
             },
         },
@@ -161,14 +164,8 @@ Physics.Engine.Entity = registerEntityClass(bakePlugins(LogicEntity, [
         radius: new StateFloat(),
 
         init: function(uniqueId, kwargs) {
-log(ERROR, "init:" + serializeJSON(kwargs));
             this.position = new Vector3(kwargs.position.x, kwargs.position.y, kwargs.position.z);
-log(ERROR, "pos:" + this.position + ',' + kwargs.position + ',' + new Vector3(kwargs.position.x, kwargs.position.y, kwargs.position.z));
             this.radius = 5;
-        },
-
-        activate: function(kwargs) {
-log(ERROR, "activate");
         },
     },
 ]));

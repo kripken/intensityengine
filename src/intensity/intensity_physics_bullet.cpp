@@ -78,17 +78,17 @@
 
 void BulletPhysicsEngine::init()
 {
-	m_collisionConfiguration = new btDefaultCollisionConfiguration();
+    m_collisionConfiguration = new btDefaultCollisionConfiguration();
 
-	m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
+    m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
 
-	btDbvtBroadphase* m_broadPhase = new btDbvtBroadphase();
+    btDbvtBroadphase* m_broadPhase = new btDbvtBroadphase();
 
-	m_constraintSolver = new btSequentialImpulseConstraintSolver();
+    m_constraintSolver = new btSequentialImpulseConstraintSolver();
 
     m_dynamicsWorld = new btDiscreteDynamicsWorld(m_dispatcher, m_broadPhase, m_constraintSolver, m_collisionConfiguration);
 
-	m_dynamicsWorld->setGravity(btVector3(0,-10,0));
+    m_dynamicsWorld->setGravity(btVector3(0,-10,0));
 
     // Debug
     #ifdef CLIENT
@@ -116,7 +116,7 @@ void BulletPhysicsEngine::addStaticPolygon(std::vector<vec> vertexes)
 // Perhaps we should subdivide triangles that are too big?
 // "Also degenerate triangles with large size ratios between each sides or close to zero area can better be avoided."
 
-	btConvexHullShape* shape = new btConvexHullShape();
+    btConvexHullShape* shape = new btConvexHullShape();
     for (unsigned int i = 0; i < vertexes.size(); i++)
     {
         vec& currVec = vertexes[i];
@@ -124,9 +124,9 @@ void BulletPhysicsEngine::addStaticPolygon(std::vector<vec> vertexes)
         shape->addPoint(currBtVec);
     }
 
-	btRigidBody* body = new btRigidBody(0, NULL, shape); // No mass === static geometry
+    btRigidBody* body = new btRigidBody(0, NULL, shape); // No mass === static geometry
 
-	m_dynamicsWorld->addRigidBody(body);
+    m_dynamicsWorld->addRigidBody(body);
 }
 
 
@@ -171,12 +171,11 @@ physicsHandle BulletPhysicsEngine::addDynamic(btCollisionShape *shape, float mas
     btVector3 localInertia(0, 0, 0);
     if (mass > 0)
         shape->calculateLocalInertia(mass, localInertia);
-
     IntensityBulletMotionState* motionState = new IntensityBulletMotionState();
-	IntensityBulletDynamic* body = new IntensityBulletDynamic(mass, motionState, shape, localInertia);
+    IntensityBulletDynamic* body = new IntensityBulletDynamic(mass, motionState, shape, localInertia);
     motionState->parent = body;
 
-	m_dynamicsWorld->addRigidBody(body);
+    m_dynamicsWorld->addRigidBody(body);
 
     physicsHandle handle = handleDynamicCounter;
     handleDynamicMap[handle] = body;
