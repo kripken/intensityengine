@@ -108,6 +108,8 @@ void BulletPhysicsEngine::clearStaticPolygons()
 
 void BulletPhysicsEngine::addStaticPolygon(std::vector<vec> vertexes)
 {
+    assert(0);
+
 //    btBvhTriangleMeshShape shape =  TODO: Use a single one of these for all the world geomerty? Should be much faster. Can
 //                                          even be saved to disk.
 
@@ -128,7 +130,6 @@ void BulletPhysicsEngine::addStaticPolygon(std::vector<vec> vertexes)
 
     m_dynamicsWorld->addRigidBody(body);
 }
-
 
 //! Our class for Bullet dynamic entities. Holds everything we need
 class IntensityBulletDynamic : public btRigidBody
@@ -182,6 +183,13 @@ physicsHandle BulletPhysicsEngine::addDynamic(btCollisionShape *shape, float mas
     handleDynamicCounter += 1; // TODO: Handle overflow etc. etc. etc.
 
     return handle; // XXX garbage collect ***shape***. Also body also motionstate in previous func, etc.}
+
+void BulletPhysicsEngine::addStaticCube(vec o, vec r)
+{
+    btVector3 halfExtents = FROM_SAUER_VEC(r);
+    physicsHandle handle = addDynamic(new btBoxShape(halfExtents), 0);
+    setDynamicPosition(handle, o);
+}
 
 physicsHandle BulletPhysicsEngine::addDynamicSphere(float mass, float radius)
 {

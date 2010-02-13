@@ -37,10 +37,14 @@ public:
     virtual void clearStaticPolygons() = 0;
 
     // Whether we need static polygon info
-    virtual bool requiresStaticPolygons() = 0;
+    virtual bool requiresStaticPolygons() { return false; };
 
     //! Add a polygon to be collided against, that is treated as completely fixed - static geometry
-    virtual void addStaticPolygon(std::vector<vec> vertexes) = 0;
+    virtual void addStaticPolygon(std::vector<vec> vertexes) { };
+
+    virtual bool requiresStaticCubes() { return false; };
+    //! Provides the info for a static cube
+    virtual void addStaticCube(vec o, vec r) { };
 
     //! Add a dynamic element, something that can move in the world
     virtual physicsHandle addDynamicSphere(float mass, float radius) = 0;

@@ -38,10 +38,6 @@ void SauerPhysicsEngine::destroy()
 {
 }
 
-void SauerPhysicsEngine::addStaticPolygon(std::vector<vec> vertexes)
-{
-}
-
 /*
 struct SauerDynamic
 {

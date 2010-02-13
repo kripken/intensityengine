@@ -762,13 +762,13 @@ void debugcube(cube &c, int size, int x, int y, int z)
         }
     } else {
         debugcube(c.children[0], size/2, 0, 0, 0);
-        debugcube(c.children[0], size/2, size/2, 0, 0);
-        debugcube(c.children[0], size/2, 0, size/2, 0);
-        debugcube(c.children[0], size/2, size/2, size/2, 0);
-        debugcube(c.children[0], size/2, 0, 0, size/2);
-        debugcube(c.children[0], size/2, size/2, 0, size/2);
-        debugcube(c.children[0], size/2, 0, size/2, size/2);
-        debugcube(c.children[0], size/2, size/2, size/2, size/2);
+        debugcube(c.children[1], size/2, size/2, 0, 0);
+        debugcube(c.children[2], size/2, 0, size/2, 0);
+        debugcube(c.children[3], size/2, size/2, size/2, 0);
+        debugcube(c.children[4], size/2, 0, 0, size/2);
+        debugcube(c.children[5], size/2, size/2, 0, size/2);
+        debugcube(c.children[6], size/2, 0, size/2, size/2);
+        debugcube(c.children[7], size/2, size/2, size/2, size/2);
     }
 }
 

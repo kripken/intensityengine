@@ -166,10 +166,39 @@ void finishWorldGeometryVerts()
     currVecs = NULL;
 }
 
+// Cube world processing utilities
+
+    void loopOctree(cube* c, int size, ivec o);
+
+    void processOctanode(cube* c, int size, ivec o)
+    {
+        if (!c->children)
+        {
+            Logging::log(Logging::WARNING, "processOctanode: %4d,%4d,%4d : %4d,%4d,%4d   (%.8x,%.8x,%.8x)\r\n", o.x, o.y, o.z, o.x+size, o.y+size, o.z+size, c->faces[0], c->faces[1], c->faces[2]);
+            if (isentirelysolid(*c))
+                engine->addStaticCube(vec(o.x+size/2, o.y+size/2, o.z+size/2), vec(size/2));
+        } else {
+            loopOctree(c->children, size, o);
+        }
+    }
+
+    void loopOctree(cube* c, int size, ivec o)
+    {
+        for (int z = 0; z <= 1; z++)
+            for (int y = 0; y <= 1; y++)
+                for (int x = 0; x <= 1; x++)
+                    processOctanode(&c[x+y*2+z*4], size/2, ivec(o.x + x*size/2, o.y + y*size/2, o.z + z*size/2));
+    }
 
 void finalizeWorldGeometry()
 {
     REQUIRE_ENGINE
+
+    if (engine->requiresStaticCubes())
+    {
+        // Loop the octree and provide the physics engine with the cube info
+        loopOctree(worldroot, worldsize, vec(0));
+    }
 }
 
 
