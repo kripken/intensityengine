@@ -193,7 +193,42 @@ void finishWorldGeometryVerts()
                     vecs.push_back(t);
                 }
                 assert(vecs.size() > 0);
-                engine->addStaticConvex(vecs);
+
+                // Test for simple rectangular objects, which we sent as Cubes, not Convexes
+                std::set<int> dimensionValues[3];
+                int dimensionMins[3], dimensionMaxes[3];
+                for (unsigned int j = 0; j < vecs.size(); j++)
+                {
+                    for (int k = 0; k < 3; k++)
+                    {
+                        dimensionValues[k].insert(vecs[j][k]);
+                        if (j > 0)
+                        {
+                            dimensionMins[k] = min(dimensionMins[k], int(vecs[j][k]));
+                            dimensionMaxes[k] = max(dimensionMaxes[k], int(vecs[j][k]));
+                        } else {
+                            dimensionMins[k] = vecs[j][k];
+                            dimensionMaxes[k] = vecs[j][k];
+                        }
+                    }
+                }
+                for (int k = 0; k < 3; k++)
+                    if (dimensionValues[k].size() > 2)
+                    {
+                        Logging::log(Logging::WARNING, "Adding as Convex\r\n");
+                        engine->addStaticConvex(vecs);
+                        return;
+                    }
+                Logging::log(Logging::WARNING, "Adding as Cube\r\n");
+                engine->addStaticCube(vec(
+                    (dimensionMins[0]+dimensionMaxes[0])/2,
+                    (dimensionMins[1]+dimensionMaxes[1])/2,
+                    (dimensionMins[2]+dimensionMaxes[2])/2
+                ), vec(
+                    (dimensionMaxes[0]-dimensionMins[0])/2,
+                    (dimensionMaxes[1]-dimensionMins[1])/2,
+                    (dimensionMaxes[2]-dimensionMins[2])/2
+                ));
             }
         } else {
             loopOctree(c->children, size, o);
