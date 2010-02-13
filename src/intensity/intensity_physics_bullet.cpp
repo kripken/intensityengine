@@ -37,6 +37,37 @@
 #define FROM_SAUER_SCALAR(value) ( value/SAUER_FACTOR )
 
 
+//! Our class for Bullet dynamic entities. Holds everything we need
+class IntensityBulletBody : public btRigidBody
+{
+public:
+    btVector3 interpolatedPosition, interpolatedVelocity;
+    bool isStatic;
+
+    IntensityBulletBody(btScalar mass, btMotionState *motionState, btCollisionShape *collisionShape, const btVector3 &localInertia) : btRigidBody(mass, motionState, collisionShape, localInertia) { isStatic = (mass == 0); };
+};
+
+//! Interface to modify our interpolated values
+class IntensityBulletMotionState : public btMotionState
+{
+public:
+    IntensityBulletBody* parent;
+
+    virtual void getWorldTransform (btTransform &worldTrans) const
+    { printf("getWorldTransform\r\n"); } // No need - we set the position/velocity manually
+
+    virtual void setWorldTransform (const btTransform &worldTrans)
+    {
+        parent->interpolatedPosition = worldTrans.getOrigin();
+        parent->interpolatedVelocity = parent->getLinearVelocity();
+    }
+};
+
+typedef std::map<physicsHandle, IntensityBulletBody*> handleBodyMap_t;
+handleBodyMap_t handleBodyMap;
+int handleBodyCounter = 0;
+
+
 #ifdef CLIENT
     class SauerDebugDrawer : public btIDebugDraw
     {
@@ -102,8 +133,18 @@ void BulletPhysicsEngine::destroy()
 {
 }
 
-void BulletPhysicsEngine::clearStaticPolygons()
+void BulletPhysicsEngine::clearStaticGeometry()
 {
+    std::vector<physicsHandle> toErase;
+    for(handleBodyMap_t::iterator iter = handleBodyMap.begin(); iter != handleBodyMap.end(); iter++)
+    {
+        IntensityBulletBody* body = iter->second;
+        if (body->isStatic)
+            toErase.push_back(iter->first);
+    }
+
+    for (unsigned int i = 0; i < toErase.size(); i++)
+        removeBody(toErase[i]);
 }
 
 void BulletPhysicsEngine::addStaticPolygon(std::vector<vec> vertexes)
@@ -131,63 +172,34 @@ void BulletPhysicsEngine::addStaticPolygon(std::vector<vec> vertexes)
     m_dynamicsWorld->addRigidBody(body);
 }
 
-//! Our class for Bullet dynamic entities. Holds everything we need
-class IntensityBulletDynamic : public btRigidBody
-{
-
-//When rigidbodies are created, they will retrieve the initial worldtransform from the btMotionState,
-//using btMotionState::getWorldTransform. When the simulation is running, using
-//stepSimulation, the new worldtransform is updated for active rigidbodies using the
-//btMotionState::setWorldTransform.
-
-
-public:
-    btVector3 interpolatedPosition, interpolatedVelocity;
-
-    IntensityBulletDynamic(btScalar mass, btMotionState *motionState, btCollisionShape *collisionShape, const btVector3 &localInertia) : btRigidBody(mass, motionState, collisionShape, localInertia) { };
-};
-
-//! Interface to modify our interpolated values
-class IntensityBulletMotionState : public btMotionState
-{
-public:
-    IntensityBulletDynamic* parent;
-
-    virtual void getWorldTransform (btTransform &worldTrans) const
-    { printf("getWorldTransform\r\n"); } // No need - we set the position/velocity manually
-
-    virtual void setWorldTransform (const btTransform &worldTrans)
-    {
-        parent->interpolatedPosition = worldTrans.getOrigin();
-        parent->interpolatedVelocity = parent->getLinearVelocity();
-    }
-};
-
-typedef std::map<physicsHandle, IntensityBulletDynamic*> handleDynamicMap_t;
-handleDynamicMap_t handleDynamicMap;
-int handleDynamicCounter = 0;
-
-physicsHandle BulletPhysicsEngine::addDynamic(btCollisionShape *shape, float mass)
+physicsHandle BulletPhysicsEngine::addBody(btCollisionShape *shape, float mass)
 {
     btVector3 localInertia(0, 0, 0);
     if (mass > 0)
         shape->calculateLocalInertia(mass, localInertia);
     IntensityBulletMotionState* motionState = new IntensityBulletMotionState();
-    IntensityBulletDynamic* body = new IntensityBulletDynamic(mass, motionState, shape, localInertia);
+    IntensityBulletBody* body = new IntensityBulletBody(mass, motionState, shape, localInertia);
     motionState->parent = body;
 
     m_dynamicsWorld->addRigidBody(body);
 
-    physicsHandle handle = handleDynamicCounter;
-    handleDynamicMap[handle] = body;
-    handleDynamicCounter += 1; // TODO: Handle overflow etc. etc. etc.
+    physicsHandle handle = handleBodyCounter;
+    handleBodyMap[handle] = body;
+    handleBodyCounter += 1; // TODO: Handle overflow etc. etc. etc.
 
     return handle; // XXX garbage collect ***shape***. Also body also motionstate in previous func, etc.}
+
+void BulletPhysicsEngine::removeBody(physicsHandle handle)
+{
+    IntensityBulletBody* body = handleBodyMap[handle];
+    m_dynamicsWorld->removeRigidBody(body);
+    handleBodyMap.erase(handle);
+}
 
 void BulletPhysicsEngine::addStaticCube(vec o, vec r)
 {
     btVector3 halfExtents = FROM_SAUER_VEC(r);
-    physicsHandle handle = addDynamic(new btBoxShape(halfExtents), 0);
+    physicsHandle handle = addBody(new btBoxShape(halfExtents), 0);
     setDynamicPosition(handle, o);
 }
 
@@ -207,32 +219,32 @@ void BulletPhysicsEngine::addStaticConvex(std::vector<vec>& vecs)
         btVector3 btRel = FROM_SAUER_VEC(rel);
         convex->addPoint(btRel);
     }
-    physicsHandle handle = addDynamic(convex, 0);
+    physicsHandle handle = addBody(convex, 0);
     setDynamicPosition(handle, center);
 }
 
 physicsHandle BulletPhysicsEngine::addDynamicSphere(float mass, float radius)
 {
-    return addDynamic(new btSphereShape( FROM_SAUER_SCALAR(radius) ), mass);
+    return addBody(new btSphereShape( FROM_SAUER_SCALAR(radius) ), mass);
 }
 
 physicsHandle BulletPhysicsEngine::addDynamicBox(float mass, float rx, float ry, float rz)
 {
     btVector3 halfExtents(FROM_SAUER_SCALAR(rx/2), FROM_SAUER_SCALAR(ry/2), FROM_SAUER_SCALAR(rz/2));
-    return addDynamic(new btBoxShape(halfExtents), mass);
+    return addBody(new btBoxShape(halfExtents), mass);
 }
 
 void BulletPhysicsEngine::removeDynamic(physicsHandle handle)
 {
-    IntensityBulletDynamic* body = handleDynamicMap[handle];
+    IntensityBulletBody* body = handleBodyMap[handle];
     m_dynamicsWorld->removeRigidBody(body);
-    handleDynamicMap.erase(handle);
+    handleBodyMap.erase(handle);
     // TODO: Counter stuff
 }
 
 void BulletPhysicsEngine::setDynamicPosition(physicsHandle handle, const vec& position)
 {
-    IntensityBulletDynamic* body = handleDynamicMap[handle];
+    IntensityBulletBody* body = handleBodyMap[handle];
 
     btTransform transform;
     
@@ -248,7 +260,7 @@ void BulletPhysicsEngine::setDynamicPosition(physicsHandle handle, const vec& po
 
 void BulletPhysicsEngine::setDynamicVelocity(physicsHandle handle, const vec& velocity)
 {
-    IntensityBulletDynamic* body = handleDynamicMap[handle];
+    IntensityBulletBody* body = handleBodyMap[handle];
 
     btVector3 btVelocity =  FROM_SAUER_VEC(velocity);
     body->setLinearVelocity( btVelocity );
@@ -261,7 +273,7 @@ void BulletPhysicsEngine::setDynamicVelocity(physicsHandle handle, const vec& ve
 
 void BulletPhysicsEngine::getDynamic(physicsHandle handle, vec& position, vec& velocity)
 {
-    IntensityBulletDynamic* body = handleDynamicMap[handle];
+    IntensityBulletBody* body = handleBodyMap[handle];
 
 //    btVector3 btPosition = body->getCenterOfMassPosition();
 //    btVector3 btVelocity = body->getLinearVelocity();

@@ -101,9 +101,7 @@ void clearWorldGeometry()
 {
     REQUIRE_ENGINE
 
-    engine->clearStaticPolygons();
-
-    renderprogress(0, "generating physics simulation");
+    engine->clearStaticGeometry();
 }
 
 vec* currVecs = NULL;
@@ -113,6 +111,8 @@ void setupWorldGeometryVerts(vector<vertex>& verts)
     REQUIRE_ENGINE
 
     if (!engine->requiresStaticPolygons()) return;
+
+    renderprogress(0, "generating physics vertexes");
 
     unsigned int nVertices = verts.length();
     currVecs = new vec[nVertices];
@@ -214,6 +214,8 @@ void finalizeWorldGeometry()
 
     if (engine->requiresStaticCubes())
     {
+        renderprogress(0, "generating physics geometries");
+
         // Loop the octree and provide the physics engine with the cube info
         loopOctree(worldroot, worldsize, vec(0));
     }

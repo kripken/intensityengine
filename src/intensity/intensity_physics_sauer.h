@@ -30,8 +30,6 @@ public:
 
     virtual void destroy();
 
-    virtual void clearStaticPolygons() { };
-
     virtual physicsHandle addDynamicSphere(float mass, float radius);
     virtual physicsHandle addDynamicBox(float mass, float rx, float ry, float rz) { assert(0); return 0; };
     virtual void removeDynamic(physicsHandle handle);

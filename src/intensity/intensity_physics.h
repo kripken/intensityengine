@@ -34,7 +34,7 @@ public:
     //! Erase all contents
     virtual void destroy() = 0;
 
-    virtual void clearStaticPolygons() = 0;
+    virtual void clearStaticGeometry() { };
 
     // Whether we need static polygon info
     virtual bool requiresStaticPolygons() { return false; };
