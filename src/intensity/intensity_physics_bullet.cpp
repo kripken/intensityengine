@@ -42,9 +42,14 @@ class IntensityBulletBody : public btRigidBody
 {
 public:
     btVector3 interpolatedPosition, interpolatedVelocity;
+    btQuaternion interpolatedRotation;
     bool isStatic;
 
-    IntensityBulletBody(btScalar mass, btMotionState *motionState, btCollisionShape *collisionShape, const btVector3 &localInertia) : btRigidBody(mass, motionState, collisionShape, localInertia) { isStatic = (mass == 0); };
+    IntensityBulletBody(btScalar mass, btMotionState *motionState, btCollisionShape *collisionShape, const btVector3 &localInertia) : btRigidBody(mass, motionState, collisionShape, localInertia)
+    {
+        isStatic = (mass == 0);
+        interpolatedRotation.setEuler(0,0,0);
+    };
 };
 
 //! Interface to modify our interpolated values
@@ -59,6 +64,7 @@ public:
     virtual void setWorldTransform (const btTransform &worldTrans)
     {
         parent->interpolatedPosition = worldTrans.getOrigin();
+        parent->interpolatedRotation = worldTrans.getRotation();
         parent->interpolatedVelocity = parent->getLinearVelocity();
     }
 };
@@ -191,6 +197,7 @@ physicsHandle BulletPhysicsEngine::addBody(btCollisionShape *shape, float mass)
 
 void BulletPhysicsEngine::removeBody(physicsHandle handle)
 {
+    assert(handleBodyMap.count(handle) == 1);
     IntensityBulletBody* body = handleBodyMap[handle];
     m_dynamicsWorld->removeRigidBody(body);
     handleBodyMap.erase(handle);
@@ -242,6 +249,7 @@ void BulletPhysicsEngine::setBodyPosition(physicsHandle handle, const vec& posit
     
     transform.setIdentity();
     transform.setOrigin( FROM_SAUER_VEC(position) );
+    transform.setRotation(body->interpolatedRotation); // XXX?
     body->setCenterOfMassTransform(transform);
 
     // Save in interpolated values, since we might read them soon
