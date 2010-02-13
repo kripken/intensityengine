@@ -48,6 +48,7 @@ public:
 
     virtual bool requiresStaticCubes() { return true; };
     virtual void addStaticCube(vec o, vec r);
+    virtual void addStaticConvex(std::vector<vec>& vecs);
 
     virtual physicsHandle addDynamicSphere(float mass, float radius);
     virtual physicsHandle addDynamicBox(float mass, float rx, float ry, float rz);

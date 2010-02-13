@@ -45,6 +45,7 @@ public:
     virtual bool requiresStaticCubes() { return false; };
     //! Provides the info for a static cube
     virtual void addStaticCube(vec o, vec r) { };
+    virtual void addStaticConvex(std::vector<vec>& vecs) { };
 
     //! Add a dynamic element, something that can move in the world
     virtual physicsHandle addDynamicSphere(float mass, float radius) = 0;

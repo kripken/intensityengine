@@ -177,6 +177,24 @@ void finishWorldGeometryVerts()
             Logging::log(Logging::WARNING, "processOctanode: %4d,%4d,%4d : %4d,%4d,%4d   (%.8x,%.8x,%.8x)\r\n", o.x, o.y, o.z, o.x+size, o.y+size, o.z+size, c->faces[0], c->faces[1], c->faces[2]);
             if (isentirelysolid(*c))
                 engine->addStaticCube(vec(o.x+size/2, o.y+size/2, o.z+size/2), vec(size/2));
+            else if (!isempty(*c))
+            {
+                // Not fully solid, create convex shape with the verts
+                // TODO: Optimize, use addStaticCube when rectangular
+                printf("Not fully solid nor empty\r\n");
+                vvec vv[8];
+                bool usefaces[8];
+                int vertused = calcverts(*c, o.x, o.y, o.z, size, vv, usefaces);
+                std::vector<vec> vecs;
+                loopi(8) if(vertused&(1<<i))
+                {
+                    vec t = vv[i].tovec(o);
+                    printf("vv: %f,%f,%f\r\n", t.x, t.y, t.z);
+                    vecs.push_back(t);
+                }
+                assert(vecs.size() > 0);
+                engine->addStaticConvex(vecs);
+            }
         } else {
             loopOctree(c->children, size, o);
         }

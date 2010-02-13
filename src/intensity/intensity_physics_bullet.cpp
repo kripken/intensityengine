@@ -191,6 +191,26 @@ void BulletPhysicsEngine::addStaticCube(vec o, vec r)
     setDynamicPosition(handle, o);
 }
 
+void BulletPhysicsEngine::addStaticConvex(std::vector<vec>& vecs)
+{
+    unsigned int i;
+    vec center(0);
+    for (i = 0; i < vecs.size(); i++)
+        center.add(vecs[i]);
+    center.mul(1.0/vecs.size());
+
+    btConvexHullShape *convex = new btConvexHullShape();
+    for (i = 0; i < vecs.size(); i++)
+    {
+        vec rel = vecs[i];
+        rel.sub(center);
+        btVector3 btRel = FROM_SAUER_VEC(rel);
+        convex->addPoint(btRel);
+    }
+    physicsHandle handle = addDynamic(convex, 0);
+    setDynamicPosition(handle, center);
+}
+
 physicsHandle BulletPhysicsEngine::addDynamicSphere(float mass, float radius)
 {
     return addDynamic(new btSphereShape( FROM_SAUER_SCALAR(radius) ), mass);
