@@ -30,12 +30,12 @@ public:
 
     virtual void destroy();
 
-    virtual physicsHandle addDynamicSphere(float mass, float radius);
-    virtual physicsHandle addDynamicBox(float mass, float rx, float ry, float rz) { assert(0); return 0; };
-    virtual void removeDynamic(physicsHandle handle);
-    virtual void setDynamicPosition(physicsHandle handle, const vec& position);
-    virtual void setDynamicVelocity(physicsHandle handle, const vec& velocity);
-    virtual void getDynamic(physicsHandle handle, vec& position, vec& velocity);
+    virtual physicsHandle addSphere(float mass, float radius) { assert(0); return 0; };
+    virtual physicsHandle addBox(float mass, float rx, float ry, float rz) { assert(0); return 0; };
+    virtual void removeBody(physicsHandle handle) { assert(0); };
+    virtual void setBodyPosition(physicsHandle handle, const vec& position) { assert(0); };
+    virtual void setBodyVelocity(physicsHandle handle, const vec& velocity) { assert(0); };
+    virtual void getBody(physicsHandle handle, vec& position, vec& velocity) { assert(0); };
 
     virtual void simulate(float seconds);
 };

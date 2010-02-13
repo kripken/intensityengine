@@ -200,7 +200,7 @@ void BulletPhysicsEngine::addStaticCube(vec o, vec r)
 {
     btVector3 halfExtents = FROM_SAUER_VEC(r);
     physicsHandle handle = addBody(new btBoxShape(halfExtents), 0);
-    setDynamicPosition(handle, o);
+    setBodyPosition(handle, o);
 }
 
 void BulletPhysicsEngine::addStaticConvex(std::vector<vec>& vecs)
@@ -220,29 +220,21 @@ void BulletPhysicsEngine::addStaticConvex(std::vector<vec>& vecs)
         convex->addPoint(btRel);
     }
     physicsHandle handle = addBody(convex, 0);
-    setDynamicPosition(handle, center);
+    setBodyPosition(handle, center);
 }
 
-physicsHandle BulletPhysicsEngine::addDynamicSphere(float mass, float radius)
+physicsHandle BulletPhysicsEngine::addSphere(float mass, float radius)
 {
     return addBody(new btSphereShape( FROM_SAUER_SCALAR(radius) ), mass);
 }
 
-physicsHandle BulletPhysicsEngine::addDynamicBox(float mass, float rx, float ry, float rz)
+physicsHandle BulletPhysicsEngine::addBox(float mass, float rx, float ry, float rz)
 {
     btVector3 halfExtents(FROM_SAUER_SCALAR(rx/2), FROM_SAUER_SCALAR(ry/2), FROM_SAUER_SCALAR(rz/2));
     return addBody(new btBoxShape(halfExtents), mass);
 }
 
-void BulletPhysicsEngine::removeDynamic(physicsHandle handle)
-{
-    IntensityBulletBody* body = handleBodyMap[handle];
-    m_dynamicsWorld->removeRigidBody(body);
-    handleBodyMap.erase(handle);
-    // TODO: Counter stuff
-}
-
-void BulletPhysicsEngine::setDynamicPosition(physicsHandle handle, const vec& position)
+void BulletPhysicsEngine::setBodyPosition(physicsHandle handle, const vec& position)
 {
     IntensityBulletBody* body = handleBodyMap[handle];
 
@@ -258,7 +250,7 @@ void BulletPhysicsEngine::setDynamicPosition(physicsHandle handle, const vec& po
     body->activate();
 }
 
-void BulletPhysicsEngine::setDynamicVelocity(physicsHandle handle, const vec& velocity)
+void BulletPhysicsEngine::setBodyVelocity(physicsHandle handle, const vec& velocity)
 {
     IntensityBulletBody* body = handleBodyMap[handle];
 
@@ -271,7 +263,7 @@ void BulletPhysicsEngine::setDynamicVelocity(physicsHandle handle, const vec& ve
     body->activate();
 }
 
-void BulletPhysicsEngine::getDynamic(physicsHandle handle, vec& position, vec& velocity)
+void BulletPhysicsEngine::getBody(physicsHandle handle, vec& position, vec& velocity)
 {
     IntensityBulletBody* body = handleBodyMap[handle];
 

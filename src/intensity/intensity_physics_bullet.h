@@ -36,7 +36,6 @@ class BulletPhysicsEngine : public RealisticPhysicsEngine
 
     //! Adds a bullet body. Takes ownership of 'shape'.
     physicsHandle addBody(btCollisionShape *shape, float mass);
-    void removeBody(physicsHandle handle);
 
 public:
     virtual void init();
@@ -51,12 +50,13 @@ public:
     virtual void addStaticCube(vec o, vec r);
     virtual void addStaticConvex(std::vector<vec>& vecs);
 
-    virtual physicsHandle addDynamicSphere(float mass, float radius);
-    virtual physicsHandle addDynamicBox(float mass, float rx, float ry, float rz);
-    virtual void removeDynamic(physicsHandle handle);
-    virtual void setDynamicPosition(physicsHandle handle, const vec& position);
-    virtual void setDynamicVelocity(physicsHandle handle, const vec& velocity);
-    virtual void getDynamic(physicsHandle handle, vec& position, vec& velocity);
+    virtual void removeBody(physicsHandle handle);
+
+    virtual physicsHandle addSphere(float mass, float radius);
+    virtual physicsHandle addBox(float mass, float rx, float ry, float rz);
+    virtual void setBodyPosition(physicsHandle handle, const vec& position);
+    virtual void setBodyVelocity(physicsHandle handle, const vec& velocity);
+    virtual void getBody(physicsHandle handle, vec& position, vec& velocity);
 
     virtual void simulate(float seconds);
 };

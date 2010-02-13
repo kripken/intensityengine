@@ -1301,34 +1301,34 @@ CUBESCRIPT_dd(mdlEnvmap, mdlenvmap);
 
 // Physics
 
-V8_FUNC_dd(__script__physicsAddDynamicSphere, {
-    physicsHandle ret = PhysicsManager::getEngine()->addDynamicSphere(arg1, arg2);
+V8_FUNC_dd(__script__physicsAddSphere, {
+    physicsHandle ret = PhysicsManager::getEngine()->addSphere(arg1, arg2);
     V8_RETURN_INT(ret);
 });
 
-V8_FUNC_dddd(__script__physicsAddDynamicBox, {
-    physicsHandle ret = PhysicsManager::getEngine()->addDynamicBox(arg1, arg2, arg3, arg4);
+V8_FUNC_dddd(__script__physicsAddBox, {
+    physicsHandle ret = PhysicsManager::getEngine()->addBox(arg1, arg2, arg3, arg4);
     V8_RETURN_INT(ret);
 });
 
-V8_FUNC_i(__script__physicsRemoveDynamic, {
-    PhysicsManager::getEngine()->removeDynamic(arg1);
+V8_FUNC_i(__script__physicsRemoveBody, {
+    PhysicsManager::getEngine()->removeBody(arg1);
 });
 
-V8_FUNC_iddd(__script__physicsSetDynamicPosition, {
-    PhysicsManager::getEngine()->setDynamicPosition(arg1, vec(arg2, arg3, arg4));
+V8_FUNC_iddd(__script__physicsSetBodyPosition, {
+    PhysicsManager::getEngine()->setBodyPosition(arg1, vec(arg2, arg3, arg4));
 });
 
-V8_FUNC_iddd(__script__physicsSetDynamicVelocity, {
-    PhysicsManager::getEngine()->setDynamicVelocity(arg1, vec(arg2, arg3, arg4));
+V8_FUNC_iddd(__script__physicsSetBodyVelocity, {
+    PhysicsManager::getEngine()->setBodyVelocity(arg1, vec(arg2, arg3, arg4));
 });
 
-V8_FUNC_i(__script__physicsGetDynamic, {
+V8_FUNC_i(__script__physicsGetBody, {
     arg1 = arg1;
 
     vec position;
     vec velocity;
-    PhysicsManager::getEngine()->getDynamic(arg1, position, velocity);
+    PhysicsManager::getEngine()->getBody(arg1, position, velocity);
 
     ScriptValuePtr scriptPosition = ScriptEngineManager::getGlobal()->call("__new__",
         ScriptValueArgs().append(ScriptEngineManager::getGlobal()->getProperty("Vector3"))

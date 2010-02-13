@@ -307,10 +307,10 @@ EMBED_CAPI_FUNC_STD(mdlEnvmap, 2);
 
 // Physics
 
-EMBED_CAPI_FUNC_STD(physicsAddDynamicSphere, 2);
-EMBED_CAPI_FUNC_STD(physicsAddDynamicBox, 4);
-EMBED_CAPI_FUNC_STD(physicsRemoveDynamic, 1);
-EMBED_CAPI_FUNC_STD(physicsSetDynamicPosition, 4);
-EMBED_CAPI_FUNC_STD(physicsSetDynamicVelocity, 4);
-EMBED_CAPI_FUNC_STD(physicsGetDynamic, 1);
+EMBED_CAPI_FUNC_STD(physicsAddSphere, 2);
+EMBED_CAPI_FUNC_STD(physicsAddBox, 4);
+EMBED_CAPI_FUNC_STD(physicsRemoveBody, 1);
+EMBED_CAPI_FUNC_STD(physicsSetBodyPosition, 4);
+EMBED_CAPI_FUNC_STD(physicsSetBodyVelocity, 4);
+EMBED_CAPI_FUNC_STD(physicsGetBody, 1);
 

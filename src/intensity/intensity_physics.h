@@ -47,19 +47,18 @@ public:
     virtual void addStaticCube(vec o, vec r) { };
     virtual void addStaticConvex(std::vector<vec>& vecs) { };
 
-    //! Add a dynamic element, something that can move in the world
-    virtual physicsHandle addDynamicSphere(float mass, float radius) = 0;
-    virtual physicsHandle addDynamicBox(float mass, float rx, float ry, float rz) = 0;
+    virtual physicsHandle addSphere(float mass, float radius) = 0;
+    virtual physicsHandle addBox(float mass, float rx, float ry, float rz) = 0;
 
     //!
-    virtual void removeDynamic(physicsHandle handle) = 0;
+    virtual void removeBody(physicsHandle handle) = 0;
 
-    //! Sets a dynamic's properties. Called to get changes due to scripting or position updates, etc.
-    virtual void setDynamicPosition(physicsHandle handle, const vec& position) = 0;
-    virtual void setDynamicVelocity(physicsHandle handle, const vec& velocity) = 0;
+    //! Sets a body's properties. Called to get changes due to scripting or position updates, etc.
+    virtual void setBodyPosition(physicsHandle handle, const vec& position) = 0;
+    virtual void setBodyVelocity(physicsHandle handle, const vec& velocity) = 0;
 
-    //! Outputs a dynamic's properties. Called to get information from the physics engine outside into the rest of the engine
-    virtual void getDynamic(physicsHandle handle, vec& position, vec& velocity) = 0;
+    //! Outputs a body's properties. Called to get information from the physics engine outside into the rest of the engine
+    virtual void getBody(physicsHandle handle, vec& position, vec& velocity) = 0;
 
     virtual void simulate(float seconds) = 0;
 };
@@ -91,13 +90,5 @@ namespace PhysicsManager
     extern void finalizeWorldGeometry();
 
     extern void simulate(float seconds);
-
-    //! Adds a character. The character will continue to be tracked until removed, i.e.,
-    //! (1) simulation will notice changes in the character's position and velocity, which
-    //! are assumed to be from scripting/position updates, and
-    //! (2) simulation will store changes in the entity, so that they are seen
-    extern void addWatchedDynamic(int uniqueId);
-
-    extern void removeWatchedDynamic(int uniqueId);
 };
 

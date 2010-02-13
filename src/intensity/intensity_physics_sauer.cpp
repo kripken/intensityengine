@@ -38,39 +38,6 @@ void SauerPhysicsEngine::destroy()
 {
 }
 
-/*
-struct SauerDynamic
-{
-    float radius;
-    SauerDynamic(float _radius) : radius(_radius) { };
-};
-*/
-
-physicsHandle SauerPhysicsEngine::addDynamicSphere(float mass, float radius)
-{
-    assert(0);
-    return 0;
-}
-
-void SauerPhysicsEngine::removeDynamic(physicsHandle handle)
-{
-    assert(0);
-}
-
-void SauerPhysicsEngine::setDynamicPosition(physicsHandle handle, const vec& position)
-{
-    assert(0);
-}
-
-void SauerPhysicsEngine::setDynamicVelocity(physicsHandle handle, const vec& velocity)
-{
-    assert(0);
-}
-
-void SauerPhysicsEngine::getDynamic(physicsHandle handle, vec& position, vec& velocity)
-{
-    assert(0);
-}
 
 namespace game
 {
