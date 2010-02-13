@@ -53,6 +53,7 @@ ApplicationManager.setApplicationClass(Application.extend({
 
     // Replace this with appropriate behaviour for when a player falls of the map
     clientOnEntityOffMap: function(entity) {
+log(ERROR, "off map!");
         entity.position = [600,600,600];
     }
 }));
@@ -81,10 +82,19 @@ if (Global.SERVER) { // Run this only on the server - not the clients
         {
             _name: 'players',
             setup: function(player) {
-                player.defaultModelName = 'ed';
+                player.defaultModelName = 'stromar/red';
                 player.defaultHUDModelName = '';
             },
         },
     ]);
+
+    Global.queuedActions.push(function() {
+        var SIZE = 20.5;
+        for (var i = 0; i < 1; i++) {
+            for (var j = 0; j < 1; j++) {
+                newEntity('PhysicsEngineEntity', { position: new Vector3(600+i*SIZE, 600, 520+j*SIZE) });
+            }
+        }
+    });
 }
 

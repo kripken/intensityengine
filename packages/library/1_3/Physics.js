@@ -82,23 +82,23 @@ Physics = {
 
             entity.connect((Global.CLIENT ? 'client_' : '') + 'onModify_position', function(position) {
                 position = new Vector3(position);
-                CAPI.physicsSetDynamicPosition(entity.physicsHandle, position.x, position.y, position.z);
+                CAPI.physicsSetBodyPosition(entity.physicsHandle, position.x, position.y, position.z);
             });
 
             entity.connect((Global.CLIENT ? 'client_' : '') + 'onModify_velocity', function(velocity) {
                 velocity = new Vector3(velocity);
 //log(ERROR, "mod vel: " + velocity);
-                CAPI.physicsSetDynamicVelocity(entity.physicsHandle, velocity.x, velocity.y, velocity.z);
+                CAPI.physicsSetBodyVelocity(entity.physicsHandle, velocity.x, velocity.y, velocity.z);
             });
         },
 
         teardownPhysicalEntity: function(entity) {
-            CAPI.physicsRemoveDynamic(entity.physicsHandle);
+            CAPI.physicsRemoveBody(entity.physicsHandle);
         },
 
         objectPlugin: {
             createPhysicalObject: function() {
-                return CAPI.physicsAddDynamicBox(1, 20, 20, 20);
+                return CAPI.physicsAddBox(1, 20, 20, 20);
             },
             activate: function() { Physics.Engine.setupPhysicalEntity(this); },
             deactivate: function() { Physics.Engine.teardownPhysicalEntity(this); },
@@ -108,14 +108,14 @@ Physics = {
 
         playerPlugin: {
             createPhysicalObject: function() {
-                return CAPI.physicsAddDynamicBox(10, 30, 30, 30);
-//                return CAPI.physicsAddDynamicSphere(10, 10);
+                return CAPI.physicsAddBox(10, 30, 30, 30);
+//                return CAPI.physicsAddSphere(10, 10);
             },
             clientActivate: function() {
                 this.lastPosition = new Vector3(0, 0, 0);
             },
             clientAct: function(seconds) {
-                var data = CAPI.physicsGetDynamic(this.physicsHandle);
+                var data = CAPI.physicsGetBody(this.physicsHandle);
 
                 if (this === getPlayerEntity()) {
                     var speed = this.movementSpeed*2;
@@ -167,6 +167,17 @@ Physics.Engine.Entity = registerEntityClass(bakePlugins(LogicEntity, [
             this.position = new Vector3(kwargs.position.x, kwargs.position.y, kwargs.position.z);
             this.radius = 5;
         },
+
+        renderDynamic: function() {
+            var data = CAPI.physicsGetBody(this.physicsHandle);
+            var o = data.position;
+            var orientation = data.rotation.toYawPitchRoll();
+log(ERROR, o);//serializeJSON(data.rotation) + ' , ' + serializeJSON(orientation));
+            var flags = MODEL.LIGHT;
+            var args = [this, 'box', ANIM_IDLE|ANIM_LOOP, o.x, o.y, o.z, -orientation.yaw, orientation.pitch, orientation.roll, flags, 0];
+            CAPI.renderModel2.apply(this, args);
+        },
+
     },
 ]));
 

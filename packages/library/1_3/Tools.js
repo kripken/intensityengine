@@ -108,3 +108,22 @@ function replaceNaN(value, fallback) {
     return !isNaN(value) ? value : fallback;
 }
 
+Quaternion = Class.extend({
+    create: function(x, y, z, w) {
+        if (x.length === 4) {
+            this.x = x[0]; this.y = x[1]; this.z = x[2]; this.w = x[3];
+        } else {
+            this.x = x; this.y = y; this.z = z; this.w = w;
+        }
+    },
+
+    toYawPitchRoll: function() {
+        var RAD = (Math.PI/180.0);
+        return {
+            yaw: Math.atan2(2*(this.x*this.y + this.z*this.w), 1-2*(this.x*this.x+this.y*this.y))/RAD,
+            pitch: Math.asin(2*(this.x*this.z-this.y*this.w))/RAD,
+            roll: Math.atan2(2*(this.x*this.w + this.y*this.z), 1-2*(this.z*this.z+this.w*this.w))/RAD,
+        };
+    },
+});
+

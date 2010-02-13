@@ -34,6 +34,7 @@
 // Reverse y and z axes
 #define FROM_SAUER_VEC(sauervec) ( btVector3(sauervec.x/SAUER_FACTOR, sauervec.z/SAUER_FACTOR, sauervec.y/SAUER_FACTOR) )
 #define TO_SAUER_VEC(sauervec, btvec) { sauervec.x = btvec.x()*SAUER_FACTOR; sauervec.y = btvec.z()*SAUER_FACTOR; sauervec.z = btvec.y()*SAUER_FACTOR; }
+#define TO_SAUER_QUAT(sauerquat, btquat) { sauerquat.x = btquat.x(); sauerquat.y = btquat.z(); sauerquat.z = btquat.y(); sauerquat.w = btquat.w(); }
 #define FROM_SAUER_SCALAR(value) ( value/SAUER_FACTOR )
 
 
@@ -271,15 +272,17 @@ void BulletPhysicsEngine::setBodyVelocity(physicsHandle handle, const vec& veloc
     body->activate();
 }
 
-void BulletPhysicsEngine::getBody(physicsHandle handle, vec& position, vec& velocity)
+void BulletPhysicsEngine::getBody(physicsHandle handle, vec& position, quat& rotation, vec& velocity)
 {
     IntensityBulletBody* body = handleBodyMap[handle];
 
 //    btVector3 btPosition = body->getCenterOfMassPosition();
 //    btVector3 btVelocity = body->getLinearVelocity();
     btVector3 btPosition = body->interpolatedPosition;
+    btQuaternion btRotation = body->interpolatedRotation;
     btVector3 btVelocity = body->interpolatedVelocity;
     TO_SAUER_VEC( position, btPosition );
+    TO_SAUER_QUAT( rotation, btRotation );
     TO_SAUER_VEC( velocity, btVelocity );
 }
 
