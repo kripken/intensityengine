@@ -101,6 +101,8 @@ void clearWorldGeometry()
 {
     REQUIRE_ENGINE
 
+    printf("*** Clear world geometry ***\r\n");
+
     engine->clearStaticGeometry();
 }
 
@@ -189,7 +191,7 @@ void finishWorldGeometryVerts()
                 loopi(8) if(vertused&(1<<i))
                 {
                     vec t = vv[i].tovec(o);
-                    printf("vv: %f,%f,%f\r\n", t.x, t.y, t.z);
+//                    printf("vv: %f,%f,%f\r\n", t.x, t.y, t.z);
                     vecs.push_back(t);
                 }
                 assert(vecs.size() > 0);
@@ -246,6 +248,8 @@ void finishWorldGeometryVerts()
 void finalizeWorldGeometry()
 {
     REQUIRE_ENGINE
+
+    printf("*** Finalize world geometry ***\r\n");
 
     if (engine->requiresStaticCubes())
     {

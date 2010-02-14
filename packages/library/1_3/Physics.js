@@ -172,9 +172,11 @@ Physics.Engine.Entity = registerEntityClass(bakePlugins(LogicEntity, [
             var data = CAPI.physicsGetBody(this.physicsHandle);
             var o = data.position;
             var orientation = data.rotation.toYawPitchRoll();
-log(ERROR, o);//serializeJSON(data.rotation) + ' , ' + serializeJSON(orientation));
-            var flags = MODEL.LIGHT;
-            var args = [this, 'box', ANIM_IDLE|ANIM_LOOP, o.x, o.y, o.z, -orientation.yaw, orientation.pitch, orientation.roll, flags, 0];
+//orientation.yaw = -orientation.roll//(Math.PI/180.0);
+//orientation.roll = 0;
+//log(ERROR, serializeJSON(data.rotation) + ' , ' + serializeJSON(orientation));
+            var flags = MODEL.LIGHT | MODEL.FULLBRIGHT;
+            var args = [this, 'box', ANIM_IDLE|ANIM_LOOP, o.x, o.y, o.z, orientation.yaw, orientation.pitch, orientation.roll, flags, 0];
             CAPI.renderModel2.apply(this, args);
         },
 

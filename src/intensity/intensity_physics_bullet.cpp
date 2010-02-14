@@ -34,7 +34,8 @@
 // Reverse y and z axes
 #define FROM_SAUER_VEC(sauervec) ( btVector3(sauervec.x/SAUER_FACTOR, sauervec.z/SAUER_FACTOR, sauervec.y/SAUER_FACTOR) )
 #define TO_SAUER_VEC(sauervec, btvec) { sauervec.x = btvec.x()*SAUER_FACTOR; sauervec.y = btvec.z()*SAUER_FACTOR; sauervec.z = btvec.y()*SAUER_FACTOR; }
-#define TO_SAUER_QUAT(sauerquat, btquat) { sauerquat.x = btquat.x(); sauerquat.y = btquat.z(); sauerquat.z = btquat.y(); sauerquat.w = btquat.w(); }
+#define TO_SAUER_VEC_NOFACTOR(sauervec, btvec) { sauervec.x = btvec.x(); sauervec.y = btvec.z(); sauervec.z = btvec.y(); }
+#define TO_SAUER_VEC4(sauervec4, btquat) { btVector3 axis = btquat.getAxis(); TO_SAUER_VEC_NOFACTOR(sauervec4, axis); sauervec4.w = btquat.getAngle(); }
 #define FROM_SAUER_SCALAR(value) ( value/SAUER_FACTOR )
 
 
@@ -120,7 +121,7 @@ void BulletPhysicsEngine::init()
 
     m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
 
-    btDbvtBroadphase* m_broadPhase = new btDbvtBroadphase();
+    m_broadPhase = new btDbvtBroadphase();
 
     m_constraintSolver = new btSequentialImpulseConstraintSolver();
 
@@ -130,14 +131,23 @@ void BulletPhysicsEngine::init()
 
     // Debug
     #ifdef CLIENT
-        SauerDebugDrawer* debug = new SauerDebugDrawer(); // XXX leak
-        debug->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
-        m_dynamicsWorld->setDebugDrawer(debug);
+        m_debugDrawer = new SauerDebugDrawer();
+        m_debugDrawer->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+        m_dynamicsWorld->setDebugDrawer(m_debugDrawer);
     #endif
 }
 
 void BulletPhysicsEngine::destroy()
 {
+    delete m_dynamicsWorld;
+    delete m_dispatcher;
+    delete m_collisionConfiguration;
+    delete m_broadPhase;
+    delete m_constraintSolver;
+
+    #ifdef CLIENT
+        delete m_debugDrawer;
+    #endif
 }
 
 void BulletPhysicsEngine::clearStaticGeometry()
@@ -202,12 +212,14 @@ void BulletPhysicsEngine::removeBody(physicsHandle handle)
     IntensityBulletBody* body = handleBodyMap[handle];
     m_dynamicsWorld->removeRigidBody(body);
     handleBodyMap.erase(handle);
+printf("Remove : %d\r\n", handle);
 }
 
 void BulletPhysicsEngine::addStaticCube(vec o, vec r)
 {
     btVector3 halfExtents = FROM_SAUER_VEC(r);
     physicsHandle handle = addBody(new btBoxShape(halfExtents), 0);
+printf("Add static cube: %d\r\n", handle);
     setBodyPosition(handle, o);
 }
 
@@ -272,7 +284,7 @@ void BulletPhysicsEngine::setBodyVelocity(physicsHandle handle, const vec& veloc
     body->activate();
 }
 
-void BulletPhysicsEngine::getBody(physicsHandle handle, vec& position, quat& rotation, vec& velocity)
+void BulletPhysicsEngine::getBody(physicsHandle handle, vec& position, vec4& rotation, vec& velocity)
 {
     IntensityBulletBody* body = handleBodyMap[handle];
 
@@ -282,7 +294,7 @@ void BulletPhysicsEngine::getBody(physicsHandle handle, vec& position, quat& rot
     btQuaternion btRotation = body->interpolatedRotation;
     btVector3 btVelocity = body->interpolatedVelocity;
     TO_SAUER_VEC( position, btPosition );
-    TO_SAUER_QUAT( rotation, btRotation );
+    TO_SAUER_VEC4( rotation, btRotation );
     TO_SAUER_VEC( velocity, btVelocity );
 }
 

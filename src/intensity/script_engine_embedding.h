@@ -1327,7 +1327,7 @@ V8_FUNC_i(__script__physicsGetBody, {
     arg1 = arg1;
 
     vec position;
-    quat rotation;
+    vec4 rotation;
     vec velocity;
     PhysicsManager::getEngine()->getBody(arg1, position, rotation, velocity);
 
@@ -1339,7 +1339,7 @@ V8_FUNC_i(__script__physicsGetBody, {
     );
 
     ScriptValuePtr scriptRotation = ScriptEngineManager::getGlobal()->call("__new__",
-        ScriptValueArgs().append(ScriptEngineManager::getGlobal()->getProperty("Quaternion"))
+        ScriptValueArgs().append(ScriptEngineManager::getGlobal()->getProperty("Vector4"))
             .append(rotation.x)
             .append(rotation.y)
             .append(rotation.z)
