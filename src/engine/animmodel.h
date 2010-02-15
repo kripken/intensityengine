@@ -894,7 +894,7 @@ struct animmodel : model
         }
     }
 
-    void render(int anim, int basetime, int basetime2, const vec &o, float yaw, float pitch, float roll, dynent *d, modelattach *a, const vec &color, const vec &dir, float trans) // INTENSITY: roll
+    void render(int anim, int basetime, int basetime2, const vec &o, float yaw, float pitch, float roll, dynent *d, modelattach *a, const vec &color, const vec &dir, float trans, const quat &rotation=quat(0,0,0,0)) // INTENSITY: roll, rotation
     {
         if(!loaded) return;
 
@@ -909,8 +909,20 @@ struct animmodel : model
         if(!d || !d->ragdoll || anim&ANIM_RAGDOLL)
         {
             matrixstack[0].translate(o);
-            matrixstack[0].rotate_around_z((yaw+180)*RAD);
-            if(roll) matrixstack[0].rotate_around_x(-roll*RAD); // INTENSITY: roll
+
+            if (rotation.squaredlen() == 0) // INTENSITY
+            {
+                matrixstack[0].rotate_around_z((yaw+180)*RAD);
+                if(roll) matrixstack[0].rotate_around_x(-roll*RAD); // INTENSITY: roll
+            } else {
+                // INTENSITY: use the rotation quaternions. TODO: Below us, do this also for lighting direction
+                matrix3x3 mat3_rotation(rotation);
+                matrix3x4 mat4_rotation(mat3_rotation, vec(0,0,0));
+                glmatrixf gl_rotation(mat4_rotation);
+                glmatrixf result;
+                result.mul(matrixstack[0], gl_rotation);
+                matrixstack[0] = result;
+            }
         }
         else pitch = 0;
 

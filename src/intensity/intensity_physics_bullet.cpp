@@ -34,8 +34,7 @@
 // Reverse y and z axes
 #define FROM_SAUER_VEC(sauervec) ( btVector3(sauervec.x/SAUER_FACTOR, sauervec.z/SAUER_FACTOR, sauervec.y/SAUER_FACTOR) )
 #define TO_SAUER_VEC(sauervec, btvec) { sauervec.x = btvec.x()*SAUER_FACTOR; sauervec.y = btvec.z()*SAUER_FACTOR; sauervec.z = btvec.y()*SAUER_FACTOR; }
-#define TO_SAUER_VEC_NOFACTOR(sauervec, btvec) { sauervec.x = btvec.x(); sauervec.y = btvec.z(); sauervec.z = btvec.y(); }
-#define TO_SAUER_VEC4(sauervec4, btquat) { btVector3 axis = btquat.getAxis(); TO_SAUER_VEC_NOFACTOR(sauervec4, axis); sauervec4.w = btquat.getAngle(); }
+#define TO_SAUER_QUAT(sauerquat, btquat) { sauerquat.x = -btquat.x(); sauerquat.y = -btquat.z(); sauerquat.z = -btquat.y(); sauerquat.w = btquat.w(); }
 #define FROM_SAUER_SCALAR(value) ( value/SAUER_FACTOR )
 
 
@@ -77,6 +76,7 @@ int handleBodyCounter = 0;
 
 
 #ifdef CLIENT
+    //! The green axis is 'forward'
     class SauerDebugDrawer : public btIDebugDraw
     {
         int m_debugMode;
@@ -262,7 +262,8 @@ void BulletPhysicsEngine::setBodyPosition(physicsHandle handle, const vec& posit
     
     transform.setIdentity();
     transform.setOrigin( FROM_SAUER_VEC(position) );
-    transform.setRotation(body->interpolatedRotation); // XXX?
+    transform.setRotation(body->getOrientation());
+//    transform.setRotation(body->interpolatedRotation); // XXX?
     body->setCenterOfMassTransform(transform);
 
     // Save in interpolated values, since we might read them soon
@@ -284,17 +285,16 @@ void BulletPhysicsEngine::setBodyVelocity(physicsHandle handle, const vec& veloc
     body->activate();
 }
 
-void BulletPhysicsEngine::getBody(physicsHandle handle, vec& position, vec4& rotation, vec& velocity)
+void BulletPhysicsEngine::getBody(physicsHandle handle, vec& position, quat& rotation, vec& velocity)
 {
     IntensityBulletBody* body = handleBodyMap[handle];
 
-//    btVector3 btPosition = body->getCenterOfMassPosition();
-//    btVector3 btVelocity = body->getLinearVelocity();
-    btVector3 btPosition = body->interpolatedPosition;
-    btQuaternion btRotation = body->interpolatedRotation;
-    btVector3 btVelocity = body->interpolatedVelocity;
+    btTransform trans = body->getWorldTransform();
+    btVector3 btPosition = trans.getOrigin();
+    btQuaternion btRotation = trans.getRotation();
+    btVector3 btVelocity = body->getLinearVelocity();
     TO_SAUER_VEC( position, btPosition );
-    TO_SAUER_VEC4( rotation, btRotation );
+    TO_SAUER_QUAT( rotation, btRotation );
     TO_SAUER_VEC( velocity, btVelocity );
 }
 

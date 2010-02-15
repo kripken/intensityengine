@@ -224,6 +224,7 @@ EMBED_CAPI_FUNC("getMaterial", __script__getMaterial, 3);
 
 #ifdef CLIENT
     EMBED_CAPI_FUNC("renderModel2", __script__renderModel2, 11);
+    EMBED_CAPI_FUNC("renderModel3", __script__renderModel3, 15);
 #endif
 
 // GUI

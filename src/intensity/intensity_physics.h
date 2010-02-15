@@ -58,7 +58,7 @@ public:
     virtual void setBodyVelocity(physicsHandle handle, const vec& velocity) = 0;
 
     //! Outputs a body's properties. Called to get information from the physics engine outside into the rest of the engine
-    virtual void getBody(physicsHandle handle, vec& position, vec4& rotation, vec& velocity) = 0;
+    virtual void getBody(physicsHandle handle, vec& position, quat& rotation, vec& velocity) = 0;
 
     virtual void simulate(float seconds) = 0;
 };

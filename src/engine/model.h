@@ -23,7 +23,7 @@ struct model
         {}
     virtual ~model() { DELETEP(bih); }
     virtual void calcbb(int frame, vec &center, vec &radius) = 0;
-    virtual void render(int anim, int basetime, int basetime2, const vec &o, float yaw, float pitch, float roll, dynent *d, modelattach *a = NULL, const vec &color = vec(0, 0, 0), const vec &dir = vec(0, 0, 0), float transparent = 1) = 0; // INTENSITY: roll
+    virtual void render(int anim, int basetime, int basetime2, const vec &o, float yaw, float pitch, float roll, dynent *d, modelattach *a = NULL, const vec &color = vec(0, 0, 0), const vec &dir = vec(0, 0, 0), float transparent = 1, const quat &rotation=quat(0,0,0,0)) = 0; // INTENSITY: roll, rotation
     virtual bool load() = 0;
     virtual char *name() = 0;
     virtual int type() const = 0;

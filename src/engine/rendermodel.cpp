@@ -479,6 +479,7 @@ struct batchedmodel
     dynent *d;
     int attached;
     occludequery *query;
+    quat rotation; // INTENSITY
 };  
 struct modelbatch
 {
@@ -532,7 +533,7 @@ void renderbatchedmodel(model *m, batchedmodel &b)
         if(b.flags&MDL_FULLBRIGHT) anim |= ANIM_FULLBRIGHT;
     }
 
-    m->render(anim, b.basetime, b.basetime2, b.pos, b.yaw, b.pitch, b.roll, b.d, a, b.color, b.dir, b.transparent); // INTENSITY: roll
+    m->render(anim, b.basetime, b.basetime2, b.pos, b.yaw, b.pitch, b.roll, b.d, a, b.color, b.dir, b.transparent, b.rotation); // INTENSITY: roll, rotation
 }
 
 struct transparentmodel
@@ -688,7 +689,7 @@ void rendermodelquery(model *m, dynent *d, const vec &center, float radius)
 
 extern int oqfrags;
 
-void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, LogicEntityPtr entity, float yaw, float pitch, float roll, int flags, dynent *d, modelattach *a, int basetime, int basetime2, float trans) // INTENSITY: roll
+void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, LogicEntityPtr entity, float yaw, float pitch, float roll, int flags, dynent *d, modelattach *a, int basetime, int basetime2, float trans, const quat &rotation) // INTENSITY: entity, roll, rotation
 {
     if(shadowmapping && !(flags&(MDL_SHADOW|MDL_DYNSHADOW))) return;
     model *m = loadmodel(mdl); 
@@ -837,6 +838,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, Lo
         b.yaw = yaw;
         b.pitch = pitch;
         b.roll = roll; // INTENSITY: roll
+        b.rotation = rotation; // INTENSITY
         b.basetime = basetime;
         b.basetime2 = basetime2;
         b.transparent = trans;
@@ -879,7 +881,7 @@ void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, Lo
         if(d->query) startquery(d->query);
     }
 
-    m->render(anim, basetime, basetime2, o, yaw, pitch, roll, d, a, lightcolor, lightdir, trans); // INTENSITY: roll
+    m->render(anim, basetime, basetime2, o, yaw, pitch, roll, d, a, lightcolor, lightdir, trans, rotation); // INTENSITY: roll, rotation
 
     if(doOQ && d->query) endquery(d->query);
 

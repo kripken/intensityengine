@@ -141,7 +141,7 @@ Physics = {
                     this.lastPosition = this.position.copy();
                 }
 
-                this.position = data.position;
+//                this.position = data.position;
                 this.velocity = data.velocity;
             },
 
@@ -150,6 +150,23 @@ Physics = {
                     this.velocity.z += this.movementSpeed*2;
 //                }
             },
+
+
+        renderDynamic: function() {
+            var data = CAPI.physicsGetBody(this.physicsHandle);
+            var o = data.position;
+            var orientation = data.rotation;//.toYawPitchRoll();
+//            orientation.x *= -1;
+//            if (Math.abs(orientation.y) >= 179 && Math.abs(orientation.z) >= 179) orientation.x *= -1;
+//            orientation.y *= -1;
+//            orientation.z *= -1;
+//orientation.yaw = -orientation.roll//(Math.PI/180.0);
+//orientation.roll = 0;
+//log(ERROR, serializeJSON(data.rotation));// + ' , ' + serializeJSON(orientation));
+            var flags = MODEL.LIGHT | MODEL.FULLBRIGHT;
+            var args = [this, 'box', ANIM_IDLE|ANIM_LOOP, o.x, o.y, o.z, 0, 0, 0, flags, 0, orientation.x, orientation.y, orientation.z, orientation.w];
+            CAPI.renderModel3.apply(this, args);
+        },
         },
     },
 };
@@ -169,14 +186,15 @@ Physics.Engine.Entity = registerEntityClass(bakePlugins(LogicEntity, [
         },
 
         renderDynamic: function() {
+q = w;
             var data = CAPI.physicsGetBody(this.physicsHandle);
             var o = data.position;
-            var orientation = data.rotation.toYawPitchRoll();
+            var orientation = data.rotation;//.toYawPitchRoll();
 //orientation.yaw = -orientation.roll//(Math.PI/180.0);
 //orientation.roll = 0;
-//log(ERROR, serializeJSON(data.rotation) + ' , ' + serializeJSON(orientation));
+log(ERROR, serializeJSON(data.rotation) + ' , ' + serializeJSON(orientation));
             var flags = MODEL.LIGHT | MODEL.FULLBRIGHT;
-            var args = [this, 'box', ANIM_IDLE|ANIM_LOOP, o.x, o.y, o.z, orientation.yaw, orientation.pitch, orientation.roll, flags, 0];
+            var args = [this, 'box', ANIM_IDLE|ANIM_LOOP, o.x, o.y, o.z, orientation.x, orientation.y, orientation.z, flags, 0];
             CAPI.renderModel2.apply(this, args);
         },
 

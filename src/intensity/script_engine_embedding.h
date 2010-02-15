@@ -1000,6 +1000,16 @@ V8_FUNC_ddd(__script__getMaterial, {
         }
         rendermodel(NULL, arg2, anim, o, self, arg7, arg8, arg9, arg10, fpsEntity, self->attachments, arg11);
     });
+
+    V8_FUNC_T(__script__renderModel3, siddddddiidddd, {
+        vec o(arg4, arg5, arg6);
+        fpsent *fpsEntity = NULL;
+        if (self->dynamicEntity)
+            fpsEntity = dynamic_cast<fpsent*>(self->dynamicEntity);
+        quat rotation(arg12, arg13, arg14, arg15);
+        rendermodel(NULL, arg2, arg3, o, self, arg7, arg8, arg9, arg10, fpsEntity, self->attachments, arg11, 0, 1, rotation);
+    });
+
 #endif
 
 // GUI
@@ -1327,7 +1337,7 @@ V8_FUNC_i(__script__physicsGetBody, {
     arg1 = arg1;
 
     vec position;
-    vec4 rotation;
+    quat rotation;
     vec velocity;
     PhysicsManager::getEngine()->getBody(arg1, position, rotation, velocity);
 

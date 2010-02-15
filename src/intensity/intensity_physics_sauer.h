@@ -35,7 +35,7 @@ public:
     virtual void removeBody(physicsHandle handle) { assert(0); };
     virtual void setBodyPosition(physicsHandle handle, const vec& position) { assert(0); };
     virtual void setBodyVelocity(physicsHandle handle, const vec& velocity) { assert(0); };
-    virtual void getBody(physicsHandle handle, vec& position, vec4& rotation, vec& velocity) { assert(0); };
+    virtual void getBody(physicsHandle handle, vec& position, quat& rotation, vec& velocity) { assert(0); };
 
     virtual void simulate(float seconds);
 };

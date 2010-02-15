@@ -108,27 +108,3 @@ function replaceNaN(value, fallback) {
     return !isNaN(value) ? value : fallback;
 }
 
-Vector4 = Vector3.extend({
-    create: function(x, y, z, w) {
-        if (x.length === 4) {
-            this.x = x[0]; this.y = x[1]; this.z = x[2]; this.w = x[3];
-        } else {
-            this.x = x; this.y = y; this.z = z; this.w = w;
-        }
-    },
-
-    toYawPitchRoll: function() {
-        if (Math.abs(this.z) < 0.99) {
-            var ret = this.toYawPitch();
-            ret.roll = this.w/(Math.PI/180.0);
-            return ret;
-        } else {
-            return {
-                yaw: this.w/(Math.PI/180.0) * (this.z < 0 ? 1 : -1),
-                pitch: this.z > 0 ? -90 : 90,
-                roll: 0,
-            };
-        }
-    },
-});
-
