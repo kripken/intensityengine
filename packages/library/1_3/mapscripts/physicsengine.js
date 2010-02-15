@@ -91,8 +91,8 @@ if (Global.SERVER) { // Run this only on the server - not the clients
 
     Global.queuedActions.push(function() {
         var SIZE = 20.5;
-        for (var i = 0; i < 1; i++) {
-            for (var j = 5; j < 5; j++) {
+        for (var i = 0; i < 2; i++) {
+            for (var j = 0; j < 2; j++) {
                 newEntity('PhysicsEngineEntity', { position: new Vector3(600+i*SIZE, 600, 520+j*SIZE) });
             }
         }
