@@ -191,7 +191,7 @@ void finishWorldGeometryVerts()
                 loopi(8) if(vertused&(1<<i))
                 {
                     vec t = vv[i].tovec(o);
-//                    printf("vv: %f,%f,%f\r\n", t.x, t.y, t.z);
+                    printf("vv: %f,%f,%f\r\n", t.x, t.y, t.z);
                     vecs.push_back(t);
                 }
                 assert(vecs.size() > 0);
@@ -221,6 +221,29 @@ void finishWorldGeometryVerts()
                         engine->addStaticConvex(vecs);
                         return;
                     }
+                // This might be a cube - check that it fills the bounded space
+                int found[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+                for (int i = 0; i < 2; i++)
+                    for (int j = 0; j < 2; j++)
+                        for (int k = 0; k < 2; k++)
+                            for (unsigned int l = 0; l < vecs.size(); l++)
+                            {
+                                vec target(
+                                    i ? dimensionMaxes[0] : dimensionMins[0],
+                                    j ? dimensionMaxes[1] : dimensionMins[1],
+                                    k ? dimensionMaxes[2] : dimensionMins[2]
+                                );
+                                if (vecs[l] == target)
+                                    found[i+j*2+k*4]=1;
+                            }
+                for (int i = 0; i < 8; i++)
+                    if (!found[i])
+                    {
+                        Logging::log(Logging::WARNING, "In the end, adding as Convex\r\n");
+                        engine->addStaticConvex(vecs);
+                        return;
+                    }
+
                 Logging::log(Logging::WARNING, "Adding as Cube\r\n");
                 engine->addStaticCube(vec(
                     (dimensionMins[0]+dimensionMaxes[0])/2,
