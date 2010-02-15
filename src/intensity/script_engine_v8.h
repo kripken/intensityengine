@@ -178,3 +178,11 @@ v8::Handle<v8::Value> new_func(const v8::Arguments& args) \
         return ((V8Value*)_value.get())->value; \
     }
 
+#define V8_RETURN_FARRAY(_value, num)\
+    { \
+        Handle<Object> _ret = Array::New(num); \
+        for (unsigned int i = 0; i < num; i++) \
+            _ret->Set(Number::New(i), Number::New(_value[i])); \
+        return _ret; \
+    }
+

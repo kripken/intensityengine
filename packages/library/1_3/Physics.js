@@ -107,24 +107,27 @@ Physics = {
 
             renderPhysical: function() {
                 var data = CAPI.physicsGetBody(this.physicsHandle);
+//log(ERROR, data);
                 var o = data.position;
                 var orientation = data.rotation;
-                var flags = MODEL.LIGHT | MODEL.FULLBRIGHT;
-                var args = [this, 'box', ANIM_IDLE|ANIM_LOOP, o.x, o.y, o.z, 0, 0, 0, flags, 0, orientation.x, orientation.y, orientation.z, orientation.w];
+                var flags = MODEL.LIGHT | MODEL.DYNSHADOW;
+                var args = [this, 'box', ANIM_IDLE|ANIM_LOOP, data[0], data[1], data[2], 0, 0, 0, flags, 0, data[3], data[4], data[5], data[6]];
                 CAPI.renderModel3.apply(this, args);
             },
         },
 
         playerPlugin: {
             createPhysicalObject: function() {
-                return CAPI.physicsAddBox(10, 30, 30, 30);
-//                return CAPI.physicsAddSphere(10, 10);
+//                return CAPI.physicsAddBox(10, 30, 30, 30);
+                return CAPI.physicsAddSphere(10, 10);
             },
             clientActivate: function() {
                 this.lastPosition = new Vector3(0, 0, 0);
             },
             clientAct: function(seconds) {
                 var data = CAPI.physicsGetBody(this.physicsHandle);
+                data.position = new Vector3(data[0], data[1], data[2]);
+                data.velocity = new Vector3(data[7], data[8], data[9]);
 
                 if (this === getPlayerEntity()) {
                     var speed = this.movementSpeed*2;

@@ -1341,33 +1341,17 @@ V8_FUNC_i(__script__physicsGetBody, {
     vec velocity;
     PhysicsManager::getEngine()->getBody(arg1, position, rotation, velocity);
 
-    ScriptValuePtr scriptPosition = ScriptEngineManager::getGlobal()->call("__new__",
-        ScriptValueArgs().append(ScriptEngineManager::getGlobal()->getProperty("Vector3"))
-            .append(position.x)
-            .append(position.y)
-            .append(position.z)
-    );
-
-    ScriptValuePtr scriptRotation = ScriptEngineManager::getGlobal()->call("__new__",
-        ScriptValueArgs().append(ScriptEngineManager::getGlobal()->getProperty("Vector4"))
-            .append(rotation.x)
-            .append(rotation.y)
-            .append(rotation.z)
-            .append(rotation.w)
-    );
-
-    ScriptValuePtr scriptVelocity = ScriptEngineManager::getGlobal()->call("__new__",
-        ScriptValueArgs().append(ScriptEngineManager::getGlobal()->getProperty("Vector3"))
-            .append(velocity.x)
-            .append(velocity.y)
-            .append(velocity.z)
-    );
-
-    ScriptValuePtr ret = ScriptEngineManager::createScriptObject();
-    ret->setProperty("position", scriptPosition);
-    ret->setProperty("rotation", scriptRotation);
-    ret->setProperty("velocity", scriptVelocity);
-
-    V8_RETURN_VALUE(ret);
+    float ret[10];
+    ret[0] = position.x;
+    ret[1] = position.y;
+    ret[2] = position.z;
+    ret[3] = rotation.x;
+    ret[4] = rotation.y;
+    ret[5] = rotation.z;
+    ret[6] = rotation.w;
+    ret[7] = velocity.x;
+    ret[8] = velocity.y;
+    ret[9] = velocity.z;
+    V8_RETURN_FARRAY(ret, 10);
 });
 
