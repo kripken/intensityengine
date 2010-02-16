@@ -107,19 +107,6 @@ Vector3.prototype.isZero = function() {
     return this.x === 0 && this.y === 0 && this.z === 0;
 };
 
-// New variables
-
-//! An array of float values
-StateArrayInteger = StateArray.extend({
-    _class: "StateArrayInteger",
-
-    toWireItem: string,
-    fromWireItem: integer,
-
-    toDataItem: string,
-    fromDataItem: integer,
-});
-
 
 // New CAPI stuff
 

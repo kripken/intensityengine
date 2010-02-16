@@ -244,6 +244,10 @@ Vector4 = Vector3.extend({
         }
     },
 
+    toString: function() {
+        return '{' + this.x.toString() + ',' + this.y.toString() + ',' + this.z.toString() + ',' + this.w.toString() + '}';
+    },
+
     toYawPitchRoll: function() {
         var ret = this.toYawPitch();
         ret.roll = 0;

@@ -60,7 +60,7 @@ public:
     IntensityBulletBody* parent;
 
     virtual void getWorldTransform (btTransform &worldTrans) const
-    { printf("getWorldTransform\r\n"); } // No need - we set the position/velocity manually
+    { /* printf("getWorldTransform\r\n"); */ } // No need - we set the position/velocity manually
 
     virtual void setWorldTransform (const btTransform &worldTrans)
     {
@@ -285,16 +285,29 @@ void BulletPhysicsEngine::setBodyVelocity(physicsHandle handle, const vec& veloc
     body->activate();
 }
 
-void BulletPhysicsEngine::getBody(physicsHandle handle, vec& position, quat& rotation, vec& velocity)
+void BulletPhysicsEngine::getBodyPosition(physicsHandle handle, vec& position)
 {
     IntensityBulletBody* body = handleBodyMap[handle];
 
     btTransform trans = body->getWorldTransform();
     btVector3 btPosition = trans.getOrigin();
-    btQuaternion btRotation = trans.getRotation();
-    btVector3 btVelocity = body->getLinearVelocity();
     TO_SAUER_VEC( position, btPosition );
+}
+
+void BulletPhysicsEngine::getBodyRotation(physicsHandle handle, quat& rotation)
+{
+    IntensityBulletBody* body = handleBodyMap[handle];
+
+    btTransform trans = body->getWorldTransform();
+    btQuaternion btRotation = trans.getRotation();
     TO_SAUER_QUAT( rotation, btRotation );
+}
+
+void BulletPhysicsEngine::getBodyVelocity(physicsHandle handle, vec& velocity)
+{
+    IntensityBulletBody* body = handleBodyMap[handle];
+
+    btVector3 btVelocity = body->getLinearVelocity();
     TO_SAUER_VEC( velocity, btVelocity );
 }
 

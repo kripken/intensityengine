@@ -1333,25 +1333,38 @@ V8_FUNC_iddd(__script__physicsSetBodyVelocity, {
     PhysicsManager::getEngine()->setBodyVelocity(arg1, vec(arg2, arg3, arg4));
 });
 
-V8_FUNC_i(__script__physicsGetBody, {
-    arg1 = arg1;
-
+V8_FUNC_i(__script__physicsGetBodyPosition, {
     vec position;
-    quat rotation;
-    vec velocity;
-    PhysicsManager::getEngine()->getBody(arg1, position, rotation, velocity);
+    PhysicsManager::getEngine()->getBodyPosition(arg1, position);
 
-    float ret[10];
+    float ret[3];
     ret[0] = position.x;
     ret[1] = position.y;
     ret[2] = position.z;
-    ret[3] = rotation.x;
-    ret[4] = rotation.y;
-    ret[5] = rotation.z;
-    ret[6] = rotation.w;
-    ret[7] = velocity.x;
-    ret[8] = velocity.y;
-    ret[9] = velocity.z;
-    V8_RETURN_FARRAY(ret, 10);
+
+    V8_RETURN_FARRAY(ret, 3);
+});
+
+V8_FUNC_i(__script__physicsGetBodyRotation, {
+    quat rotation;
+    PhysicsManager::getEngine()->getBodyRotation(arg1, rotation);
+
+    float ret[4];
+    ret[0] = rotation.x;
+    ret[1] = rotation.y;
+    ret[2] = rotation.z;
+    ret[3] = rotation.w;
+    V8_RETURN_FARRAY(ret, 4);
+});
+
+V8_FUNC_i(__script__physicsGetBodyVelocity, {
+    vec velocity;
+    PhysicsManager::getEngine()->getBodyVelocity(arg1, velocity);
+
+    float ret[3];
+    ret[0] = velocity.x;
+    ret[1] = velocity.y;
+    ret[2] = velocity.z;
+    V8_RETURN_FARRAY(ret, 3);
 });
 

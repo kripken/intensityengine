@@ -502,7 +502,7 @@ StateArray = StateVariable.extend({
     //! Gets a raw array from the data. By default this is the
     //! stateData, but it can be overridden in child classes.
     getRaw: function(entity) {
-        log(INFO, "getRaw:");
+        log(INFO, "getRaw:" + this._class);
         log(INFO, serializeJSON(entity.stateVariableValues));
         var value = entity.stateVariableValues[this._name];
 
@@ -567,6 +567,15 @@ StateArrayFloat = StateArray.extend({
     fromDataItem: parseFloat
 });
 
+StateArrayInteger = StateArray.extend({
+    _class: "StateArrayInteger",
+
+    toWireItem: string,
+    fromWireItem: integer,
+
+    toDataItem: string,
+    fromDataItem: integer,
+});
 
 //! A generic wrapper around an actual Variable. In effect creates an alias for an attribute, giving
 //! it a nicer name. Used to wrap around attributes such as WrappedCVariable, to
@@ -815,6 +824,8 @@ var Vector3Surrogate = ArraySurrogate.extend(
 );
 
 Vector3ArrayPlugin = {
+    _class: 'Vector3ArrayPlugin',
+
     surrogateClass: Vector3Surrogate,
 
     // Our empty value is still a triple 
@@ -833,9 +844,75 @@ Vector3ArrayPlugin = {
     }*/
 };
 
-WrappedCVector3 = WrappedCArray.extend(Vector3ArrayPlugin);
+WrappedCVector3 = WrappedCArray.extend(Vector3ArrayPlugin).extend({ _class: 'WrappedCVector3' });
 
-StateVector3 = StateArray.extend(Vector3ArrayPlugin);
+StateVector3 = StateArray.extend(Vector3ArrayPlugin).extend({ _class: 'StateVector3' });
+
+var Vector4Surrogate = ArraySurrogate.extend(
+    merge(
+        Vector4.prototype,
+        {
+            _class: "Vector4Surrogate", // Debugging XXX
+
+            create: function(entity, variable) {
+                this._super(entity, variable);
+
+                this.entity = entity;
+                this.variable = variable;
+
+                this.__defineGetter__("length", function() {
+                    log(INFO, "Vector4Surrogate.length: always 4");
+                    return 4;
+                });
+
+                this.__defineGetter__("x", function() {
+                    return this.get(0);
+                });
+                this.__defineGetter__("y", function() {
+                    return this.get(1);
+                });
+                this.__defineGetter__("z", function() {
+                    return this.get(2);
+                });
+                this.__defineGetter__("w", function() {
+                    return this.get(3);
+                });
+
+                this.__defineSetter__("x", function(value) {
+                    this.set(0, value);
+                });
+                this.__defineSetter__("y", function(value) {
+                    this.set(1, value);
+                });
+                this.__defineSetter__("z", function(value) {
+                    this.set(2, value);
+                });
+                this.__defineSetter__("w", function(value) {
+                    this.set(3, value);
+                });
+            },
+
+            // 'Remove' super's function of the same name
+            push: function(value) {
+                eval(assert(' false /* No such thing as .push() for Vector4Surrogate '));
+            },
+        }
+    )
+);
+
+Vector4ArrayPlugin = merge(
+    Vector3ArrayPlugin,
+    {
+        surrogateClass: Vector4Surrogate,
+
+        // Our empty value is still a triple 
+        emptyValue: function() { return [0,0,0,0]; },
+    }
+);
+
+WrappedCVector4 = WrappedCArray.extend(Vector4ArrayPlugin);
+
+StateVector4 = StateArray.extend(Vector4ArrayPlugin);
 
 //! JSON StateVariable. Note: No surrogate, so will not notice changes to internals
 StateJSON = StateVariable.extend({
