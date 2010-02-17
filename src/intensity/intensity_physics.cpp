@@ -98,7 +98,7 @@ void clearWorldGeometry()
 {
     REQUIRE_ENGINE
 
-    printf("*** Clear world geometry ***\r\n");
+    Logging::log(Logging::DEBUG, "*** Clear world geometry ***\r\n");
 
     engine->clearStaticGeometry();
 }
@@ -173,14 +173,17 @@ void finishWorldGeometryVerts()
     {
         if (!c->children)
         {
-            Logging::log(Logging::WARNING, "processOctanode: %4d,%4d,%4d : %4d,%4d,%4d   (%.8x,%.8x,%.8x)\r\n", o.x, o.y, o.z, o.x+size, o.y+size, o.z+size, c->faces[0], c->faces[1], c->faces[2]);
+            renderprogress(float(o.x)/getworldsize(), "processing octree for physics...");
+
+            Logging::log(Logging::DEBUG, "processOctanode: %4d,%4d,%4d : %4d,%4d,%4d   (%.8x,%.8x,%.8x)\r\n", o.x, o.y, o.z, o.x+size, o.y+size, o.z+size, c->faces[0], c->faces[1], c->faces[2]);
+
             if (isentirelysolid(*c))
                 engine->addStaticCube(vec(o.x+size/2, o.y+size/2, o.z+size/2), vec(size/2));
             else if (!isempty(*c))
             {
                 // Not fully solid, create convex shape with the verts
                 // TODO: Optimize, use addStaticCube when rectangular
-                printf("Not fully solid nor empty\r\n");
+                Logging::log(Logging::DEBUG, "Not fully solid nor empty\r\n");
                 vvec vv[8];
                 bool usefaces[8];
                 int vertused = calcverts(*c, o.x, o.y, o.z, size, vv, usefaces);
@@ -188,7 +191,7 @@ void finishWorldGeometryVerts()
                 loopi(8) if(vertused&(1<<i))
                 {
                     vec t = vv[i].tovec(o);
-                    printf("vv: %f,%f,%f\r\n", t.x, t.y, t.z);
+                    Logging::log(Logging::INFO, "vv: %f,%f,%f\r\n", t.x, t.y, t.z);
                     vecs.push_back(t);
                 }
                 assert(vecs.size() > 0);
@@ -214,7 +217,7 @@ void finishWorldGeometryVerts()
                 for (int k = 0; k < 3; k++)
                     if (dimensionValues[k].size() > 2)
                     {
-                        Logging::log(Logging::WARNING, "Adding as Convex\r\n");
+                        Logging::log(Logging::DEBUG, "Adding as Convex\r\n");
                         engine->addStaticConvex(vecs);
                         return;
                     }
@@ -236,12 +239,12 @@ void finishWorldGeometryVerts()
                 for (int i = 0; i < 8; i++)
                     if (!found[i])
                     {
-                        Logging::log(Logging::WARNING, "In the end, adding as Convex\r\n");
+                        Logging::log(Logging::DEBUG, "In the end, adding as Convex\r\n");
                         engine->addStaticConvex(vecs);
                         return;
                     }
 
-                Logging::log(Logging::WARNING, "Adding as Cube\r\n");
+                Logging::log(Logging::DEBUG, "Adding as Cube\r\n");
                 engine->addStaticCube(vec(
                     (dimensionMins[0]+dimensionMaxes[0])/2,
                     (dimensionMins[1]+dimensionMaxes[1])/2,
@@ -269,7 +272,7 @@ void finalizeWorldGeometry()
 {
     REQUIRE_ENGINE
 
-    printf("*** Finalize world geometry ***\r\n");
+    Logging::log(Logging::DEBUG, "*** Finalize world geometry ***\r\n");
 
     if (engine->requiresStaticCubes())
     {

@@ -26,6 +26,8 @@
 #include "btBulletDynamicsCommon.h"
 
 
+#define BULLET_STATIC_POLYGONS 1
+
 class BulletPhysicsEngine : public RealisticPhysicsEngine
 {
     btBroadphaseInterface*	m_overlappingPairCache;
@@ -47,10 +49,18 @@ public:
     virtual void destroy();
 
     virtual void clearStaticGeometry();
+#ifdef BULLET_STATIC_POLYGONS
+    virtual bool requiresStaticPolygons() { return true; };
+#else
     virtual bool requiresStaticPolygons() { return false; };
+#endif
     virtual void addStaticPolygon(std::vector<vec> vertexes);
 
+#ifdef BULLET_STATIC_POLYGONS
+    virtual bool requiresStaticCubes() { return false; };
+#else
     virtual bool requiresStaticCubes() { return true; };
+#endif
     virtual void addStaticCube(vec o, vec r);
     virtual void addStaticConvex(std::vector<vec>& vecs);
 

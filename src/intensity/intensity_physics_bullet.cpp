@@ -172,8 +172,6 @@ void BulletPhysicsEngine::clearStaticGeometry()
 
 void BulletPhysicsEngine::addStaticPolygon(std::vector<vec> vertexes)
 {
-    assert(0);
-
 //    btBvhTriangleMeshShape shape =  TODO: Use a single one of these for all the world geomerty? Should be much faster. Can
 //                                          even be saved to disk.
 
@@ -189,10 +187,7 @@ void BulletPhysicsEngine::addStaticPolygon(std::vector<vec> vertexes)
         btVector3 currBtVec = FROM_SAUER_VEC(currVec);
         shape->addPoint(currBtVec);
     }
-
-    btRigidBody* body = new btRigidBody(0, NULL, shape); // No mass === static geometry
-
-    m_dynamicsWorld->addRigidBody(body);
+    addBody(shape, 0);
 }
 
 physicsHandle BulletPhysicsEngine::addBody(btCollisionShape *shape, float mass)
