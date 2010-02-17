@@ -808,7 +808,15 @@ bool setuplistenserver(bool dedicated)
         else serveraddress.host = address.host;
     }
     serverhost = enet_host_create(&address, min(maxclients + server::reserveclients(), MAXCLIENTS), 0, serveruprate);
-    if(!serverhost) return servererror(dedicated, "could not create server host");
+    if(!serverhost)
+    {
+        // INTENSITY: Do *NOT* fatally quit on this error. It can lead to repeated restarts etc.
+        // of the sort that standby mode is meant to prevent, but standby does not protect from this.
+        // So, just wait to be manually restarted.
+        //return servererror(dedicated, "could not create server host");
+        Logging::log(Logging::ERROR, "***!!! could not create server host (awaiting manual restart) !!!***");
+        return false;
+    }
     loopi(maxclients) serverhost->peers[i].data = NULL;
     address.port = server::serverinfoport(serverport > 0 ? serverport : -1);
 #if 0 // INTENSITY: no need for pongsock
