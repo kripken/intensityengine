@@ -81,6 +81,9 @@ public:
     virtual void getBodyRotation(physicsHandle handle, quat& rotation);
     virtual void getBodyVelocity(physicsHandle handle, vec& velocity);
 
+    virtual void setLinearFactor(physicsHandle handle, vec& factor);
+    virtual void setAngularFactor(physicsHandle handle, vec& factor);
+
     virtual void simulate(float seconds);
 };
 

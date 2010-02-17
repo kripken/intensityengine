@@ -317,4 +317,6 @@ EMBED_CAPI_FUNC_STD(physicsSetBodyVelocity, 4);
 EMBED_CAPI_FUNC_STD(physicsGetBodyPosition, 1);
 EMBED_CAPI_FUNC_STD(physicsGetBodyRotation, 1);
 EMBED_CAPI_FUNC_STD(physicsGetBodyVelocity, 1);
+EMBED_CAPI_FUNC_STD(physicsSetLinearFactor, 4);
+EMBED_CAPI_FUNC_STD(physicsSetAngularFactor, 4);
 

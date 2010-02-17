@@ -33,6 +33,7 @@
 #define SAUER_FACTOR 17.0
 // Reverse y and z axes
 #define FROM_SAUER_VEC(sauervec) ( btVector3(sauervec.x/SAUER_FACTOR, sauervec.z/SAUER_FACTOR, sauervec.y/SAUER_FACTOR) )
+#define FROM_SAUER_VEC_NORM(sauervec) ( btVector3(sauervec.x, sauervec.z, sauervec.y) )
 #define TO_SAUER_VEC(sauervec, btvec) { sauervec.x = btvec.x()*SAUER_FACTOR; sauervec.y = btvec.z()*SAUER_FACTOR; sauervec.z = btvec.y()*SAUER_FACTOR; }
 #define TO_SAUER_QUAT(sauerquat, btquat) { sauerquat.x = -btquat.x(); sauerquat.y = -btquat.z(); sauerquat.z = -btquat.y(); sauerquat.w = btquat.w(); }
 #define FROM_SAUER_SCALAR(value) ( value/SAUER_FACTOR )
@@ -370,6 +371,18 @@ void BulletPhysicsEngine::getBodyVelocity(physicsHandle handle, vec& velocity)
 
     btVector3 btVelocity = body->getLinearVelocity();
     TO_SAUER_VEC( velocity, btVelocity );
+}
+
+void BulletPhysicsEngine::setLinearFactor(physicsHandle handle, vec& factor)
+{
+    IntensityBulletBody* body = handleBodyMap[handle];
+    body->setLinearFactor(FROM_SAUER_VEC_NORM(factor));
+}
+
+void BulletPhysicsEngine::setAngularFactor(physicsHandle handle, vec& factor)
+{
+    IntensityBulletBody* body = handleBodyMap[handle];
+    body->setAngularFactor(FROM_SAUER_VEC_NORM(factor));
 }
 
 VAR(bulletdebug, 0, 0, 1);

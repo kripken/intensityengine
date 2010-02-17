@@ -144,7 +144,9 @@ Physics = {
 
         playerPlugin: {
             createPhysicalObject: function() {
-                return CAPI.physicsAddBox(10, 20, 20, 20);
+                var ret = CAPI.physicsAddBox(10, 20, 20, 20);
+                CAPI.physicsSetAngularFactor(ret, 0, 0, 1);
+                return ret;
 //                return CAPI.physicsAddSphere(10, 10);
             },
             clientActivate: function() {

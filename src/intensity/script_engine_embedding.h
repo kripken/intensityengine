@@ -1372,3 +1372,13 @@ V8_FUNC_i(__script__physicsGetBodyVelocity, {
     V8_RETURN_FARRAY(ret, 3);
 });
 
+V8_FUNC_iddd(__script__physicsSetLinearFactor, {
+    vec factor(arg2, arg3, arg4);
+    PhysicsManager::getEngine()->setLinearFactor(arg1, factor);
+});
+
+V8_FUNC_iddd(__script__physicsSetAngularFactor, {
+    vec factor(arg2, arg3, arg4);
+    PhysicsManager::getEngine()->setAngularFactor(arg1, factor);
+});
+

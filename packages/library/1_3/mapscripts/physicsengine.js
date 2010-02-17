@@ -12,6 +12,10 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/World');
 
 Physics.Engine.create('bullet');
 
+// Default materials, etc.
+
+Library.include('library/' + Global.LIBRARY_VERSION + '/MapDefaults');
+
 // Textures
 
 Library.include('yo_frankie/');
@@ -103,8 +107,8 @@ if (Global.SERVER) { // Run this only on the server - not the clients
 
     Global.queuedActions.push(function() {
         var SIZE = 20.5;
-        for (var i = 0; i < 10; i++) {
-            for (var j = 0; j < 10; j++) {
+        for (var i = 0; i < 0; i++) {
+            for (var j = 1; j < 0; j++) {
                 newEntity('PhysicsEngineEntity', { position: new Vector3(600+i*SIZE, 600, 520+j*SIZE) });
             }
         }
