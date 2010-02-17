@@ -68,7 +68,7 @@ public:
 namespace PhysicsManager
 {
     //! Initialize physics engine
-    extern void createEngine();
+    extern void createEngine(std::string type="sauer");
 
     extern void destroyEngine();
 

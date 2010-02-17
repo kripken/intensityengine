@@ -8,7 +8,9 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/GameManager');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Physics');
 Library.include('library/' + Global.LIBRARY_VERSION + '/World');
 
-Global.physicsEngineType = 'bullet';
+//// Setup physics
+
+Physics.Engine.create('bullet');
 
 // Textures
 

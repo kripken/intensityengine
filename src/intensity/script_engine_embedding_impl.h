@@ -308,6 +308,7 @@ EMBED_CAPI_FUNC_STD(mdlEnvmap, 2);
 
 // Physics
 
+EMBED_CAPI_FUNC_STD(physicsCreateEngine, 1);
 EMBED_CAPI_FUNC_STD(physicsAddSphere, 2);
 EMBED_CAPI_FUNC_STD(physicsAddBox, 4);
 EMBED_CAPI_FUNC_STD(physicsRemoveBody, 1);

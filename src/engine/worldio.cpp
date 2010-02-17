@@ -724,8 +724,6 @@ bool load_world(const char *mname, const char *cname)        // still supports a
 #endif
     overrideidents = false;
    
-    PhysicsManager::createEngine();
-
 #ifdef CLIENT // INTENSITY: Stop, finish loading later when we have all the entities
     renderprogress(0, "requesting entities...");
     Logging::log(Logging::DEBUG, "Requesting active entities...\r\n");

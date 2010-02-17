@@ -381,9 +381,7 @@ void LogicSystem::init()
 
     ScriptEngineManager::createEngine();
 
-    // Note: We do not create the physics engine here, as we need for scripting
-    // to not only be set up, but to run the map script and so forth. So we
-    // create the engine in game::startmap, which is run right after the map loads
+    PhysicsManager::createEngine();
 }
 
 void LogicSystem::registerLogicEntity(LogicEntityPtr newEntity)

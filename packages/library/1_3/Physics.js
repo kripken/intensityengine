@@ -77,6 +77,10 @@ Physics = {
     },
 
     Engine: {
+        create: function(type) {
+            CAPI.physicsCreateEngine(type);
+        },
+
         setupPhysicalEntity: function(entity) {
             entity.physicsHandle = entity.createPhysicalObject();
 
@@ -101,9 +105,13 @@ Physics = {
         getRotation: function(entity) { return CAPI.physicsGetBodyRotation(entity.physicsHandle); },
         getVelocity: function(entity) { return CAPI.physicsGetBodyVelocity(entity.physicsHandle); },
 
-        setPosition: function(entity, v) { CAPI.physicsSetBodyPosition(entity.physicsHandle, v[0], v[1], v[2]); },
+        setPosition: function(entity, v) { // TODO: queue this and other setX things, if no handle yet
+            if (entity.physicsHandle !== undefined) CAPI.physicsSetBodyPosition(entity.physicsHandle, v[0], v[1], v[2]);
+        },
         setRotation: function(entity, v) { log(ERROR, "TODO: Set rotation"); /* CAPI.physicsSetBodyRotation(entity.physicsHandle, v[0], v[1], v[2], [3]); */ },
-        setVelocity: function(entity, v) { CAPI.physicsSetBodyVelocity(entity.physicsHandle, v[0], v[1], v[2]); },
+        setVelocity: function(entity, v) {
+            if (entity.physicsHandle !== undefined) CAPI.physicsSetBodyVelocity(entity.physicsHandle, v[0], v[1], v[2]);
+        },
 
         objectPlugin: {
             position: new WrappedCVector3({ cGetter: 'Physics.Engine.getPosition', cSetter: 'Physics.Engine.setPosition', customSynch: true }),
@@ -136,8 +144,8 @@ Physics = {
 
         playerPlugin: {
             createPhysicalObject: function() {
-//                return CAPI.physicsAddBox(10, 30, 30, 30);
-                return CAPI.physicsAddSphere(10, 10);
+                return CAPI.physicsAddBox(10, 20, 20, 20);
+//                return CAPI.physicsAddSphere(10, 10);
             },
             clientActivate: function() {
                 this.lastPosition = new Vector3(0, 0, 0);
@@ -179,6 +187,10 @@ Physics = {
 //                if (this.isOnFloor() || World.getMaterial(this.position) === MATERIAL.WATER) {
                     this.velocity.z += this.movementSpeed*2;
 //                }
+            },
+
+            renderDynamic: function() {
+                this.renderPhysical();
             },
         },
     },

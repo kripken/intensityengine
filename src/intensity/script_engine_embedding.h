@@ -1311,6 +1311,10 @@ CUBESCRIPT_dd(mdlEnvmap, mdlenvmap);
 
 // Physics
 
+V8_FUNC_s(__script__physicsCreateEngine, {
+    PhysicsManager::createEngine(arg1);
+});
+
 V8_FUNC_dd(__script__physicsAddSphere, {
     physicsHandle ret = PhysicsManager::getEngine()->addSphere(arg1, arg2);
     V8_RETURN_INT(ret);

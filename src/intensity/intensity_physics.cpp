@@ -42,16 +42,11 @@ PhysicsEngine *engine = NULL;
 
 //
 
-void createEngine()
+void createEngine(std::string type)
 {
-    if (!ScriptEngineManager::hasEngine()) return;
+    destroyEngine();
 
-    std::string type = "sauer";
-
-    if (ScriptEngineManager::getGlobal()->getProperty("Global")->hasProperty("physicsEngineType"))
-        type = ScriptEngineManager::getGlobal()->getProperty("Global")->getProperty("physicsEngineType")->getString();
-
-    Logging::log(Logging::WARNING, "Physics engine: %s\r\n", type.c_str());
+    Logging::log(Logging::DEBUG, "Creating physics engine: %s\r\n", type.c_str());
 
     if (type == "sauer")
     {
@@ -78,6 +73,8 @@ void destroyEngine()
 {
     if (engine != NULL)
     {
+        Logging::log(Logging::DEBUG, "Destroying physics engine\r\n");
+
         engine->destroy();
         delete engine;
         engine = NULL;

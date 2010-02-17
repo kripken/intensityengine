@@ -139,6 +139,12 @@ void BulletPhysicsEngine::init()
 
 void BulletPhysicsEngine::destroy()
 {
+    std::vector<physicsHandle> toErase;
+    for(handleBodyMap_t::iterator iter = handleBodyMap.begin(); iter != handleBodyMap.end(); iter++)
+        toErase.push_back(iter->first);
+    for (unsigned int i = 0; i < toErase.size(); i++)
+        removeBody(toErase[i]);
+
     delete m_dynamicsWorld;
     delete m_dispatcher;
     delete m_collisionConfiguration;
@@ -212,14 +218,12 @@ void BulletPhysicsEngine::removeBody(physicsHandle handle)
     IntensityBulletBody* body = handleBodyMap[handle];
     m_dynamicsWorld->removeRigidBody(body);
     handleBodyMap.erase(handle);
-printf("Remove : %d\r\n", handle);
 }
 
 void BulletPhysicsEngine::addStaticCube(vec o, vec r)
 {
     btVector3 halfExtents = FROM_SAUER_VEC(r);
     physicsHandle handle = addBody(new btBoxShape(halfExtents), 0);
-printf("Add static cube: %d\r\n", handle);
     setBodyPosition(handle, o);
 }
 
