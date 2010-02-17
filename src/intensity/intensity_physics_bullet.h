@@ -40,6 +40,12 @@ class BulletPhysicsEngine : public RealisticPhysicsEngine
         btIDebugDraw* m_debugDrawer;
     #endif
 
+    std::vector<btVector3> m_staticTriangles;
+    btVector3* m_staticTriangleVertices;
+    int* m_staticTriangleIndexes;
+    btStridingMeshInterface* m_indexVertexArrays;
+    btCollisionShape* m_globalStaticGeometry;
+
     //! Adds a bullet body. Takes ownership of 'shape'.
     physicsHandle addBody(btCollisionShape *shape, float mass);
 
@@ -55,6 +61,7 @@ public:
     virtual bool requiresStaticPolygons() { return false; };
 #endif
     virtual void addStaticPolygon(std::vector<vec> vertexes);
+    virtual void finalizeStaticGeometry();
 
 #ifdef BULLET_STATIC_POLYGONS
     virtual bool requiresStaticCubes() { return false; };

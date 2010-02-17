@@ -42,6 +42,8 @@ public:
     //! Add a polygon to be collided against, that is treated as completely fixed - static geometry
     virtual void addStaticPolygon(std::vector<vec> vertexes) { };
 
+    virtual void finalizeStaticGeometry() { };
+
     virtual bool requiresStaticCubes() { return false; };
     //! Provides the info for a static cube
     virtual void addStaticCube(vec o, vec r) { };

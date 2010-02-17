@@ -130,9 +130,9 @@ void setupWorldGeometryTriGroup(usvector& data, int tex, int lightmapTex, int or
     if (!engine->requiresStaticPolygons()) return;
 
     static int counter = 0;
-    renderprogress(-float(counter)/100, "generating physics simulation verts");
+    renderprogress(-float(counter)/1000, "generating physics simulation verts");
     counter++;
-    if (counter == 100) counter = 0;
+    if (counter == 1000) counter = 0;
 
     // Count indexes (three indexes to a triangle)
     unsigned int ibufCount = data.length();
@@ -281,6 +281,8 @@ void finalizeWorldGeometry()
         // Loop the octree and provide the physics engine with the cube info
         loopOctree(worldroot, worldsize, vec(0));
     }
+
+    engine->finalizeStaticGeometry();
 }
 
 

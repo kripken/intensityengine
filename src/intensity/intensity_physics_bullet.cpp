@@ -135,6 +135,11 @@ void BulletPhysicsEngine::init()
         m_debugDrawer->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
         m_dynamicsWorld->setDebugDrawer(m_debugDrawer);
     #endif
+
+    m_staticTriangleVertices = NULL;
+    m_staticTriangleIndexes = NULL;
+    m_indexVertexArrays = NULL;
+    m_globalStaticGeometry = NULL;
 }
 
 void BulletPhysicsEngine::destroy()
@@ -150,6 +155,11 @@ void BulletPhysicsEngine::destroy()
     delete m_collisionConfiguration;
     delete m_broadPhase;
     delete m_constraintSolver;
+
+    DELETEP(m_globalStaticGeometry);
+    DELETEP(m_indexVertexArrays);
+    DELETEP(m_staticTriangleVertices);
+    DELETEP(m_staticTriangleIndexes);
 
     #ifdef CLIENT
         delete m_debugDrawer;
@@ -168,18 +178,23 @@ void BulletPhysicsEngine::clearStaticGeometry()
 
     for (unsigned int i = 0; i < toErase.size(); i++)
         removeBody(toErase[i]);
+
+    // Prepare global static
+    if (requiresStaticPolygons())
+    {
+        m_staticTriangles.clear();
+    }
 }
 
 void BulletPhysicsEngine::addStaticPolygon(std::vector<vec> vertexes)
 {
-//    btBvhTriangleMeshShape shape =  TODO: Use a single one of these for all the world geomerty? Should be much faster. Can
-//                                          even be saved to disk.
-
 // XXX "Avoid huge or degenerate triangles in a triangle mesh Keep the size of triangles reasonable, say below 10 units/meters."
 // - from PDF
 // Perhaps we should subdivide triangles that are too big?
 // "Also degenerate triangles with large size ratios between each sides or close to zero area can better be avoided."
 
+    // Simple, naive method: a convex hull for each polygon.
+    /*
     btConvexHullShape* shape = new btConvexHullShape();
     for (unsigned int i = 0; i < vertexes.size(); i++)
     {
@@ -188,6 +203,53 @@ void BulletPhysicsEngine::addStaticPolygon(std::vector<vec> vertexes)
         shape->addPoint(currBtVec);
     }
     addBody(shape, 0);
+    */
+
+    // btBvhTriangleMeshShape method
+    assert(vertexes.size() == 3);
+    for (unsigned int i = 0; i < vertexes.size(); i++)
+    {
+        vec& currVec = vertexes[i];
+        btVector3 currBtVec = FROM_SAUER_VEC(currVec);
+        m_staticTriangles.push_back(currBtVec);
+    }
+}
+
+void BulletPhysicsEngine::finalizeStaticGeometry()
+{
+    if (!requiresStaticPolygons()) return;
+
+    assert(m_staticTriangles.size() % 3 == 0);
+    int num3 = m_staticTriangles.size();
+    int num = num3/3;
+
+    DELETEP(m_staticTriangleVertices);
+    m_staticTriangleVertices = new btVector3[num3];
+    DELETEP(m_staticTriangleIndexes);
+    m_staticTriangleIndexes = new int[num3];
+
+    // TODO: Merge shared verts?
+    for (int i = 0; i < num3; i++)
+    {
+        m_staticTriangleVertices[i] = m_staticTriangles[i];
+        m_staticTriangleIndexes[i] = i;
+    }
+
+    int vertStride = sizeof(btVector3);
+    int indexStride = 3*sizeof(int);
+    DELETEP(m_indexVertexArrays);
+    m_indexVertexArrays = new btTriangleIndexVertexArray(
+        num,
+        m_staticTriangleIndexes,
+        indexStride,
+        num3,
+        (btScalar*) &m_staticTriangleVertices[0].x(),
+        vertStride
+    );
+
+    DELETEP(m_globalStaticGeometry);
+    m_globalStaticGeometry = new btBvhTriangleMeshShape(m_indexVertexArrays, true);
+    addBody(m_globalStaticGeometry, 0); // We rely on removal of static bodies elsewhere in the code
 }
 
 physicsHandle BulletPhysicsEngine::addBody(btCollisionShape *shape, float mass)
