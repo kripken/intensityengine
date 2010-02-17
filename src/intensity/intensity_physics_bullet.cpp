@@ -378,7 +378,14 @@ void BulletPhysicsEngine::simulate(float seconds)
 {
     m_dynamicsWorld->stepSimulation(seconds);
 
-    if (bulletdebug) m_dynamicsWorld->debugDrawWorld();
+    #ifdef CLIENT
+        if (bulletdebug)
+        {
+            m_debugDrawer->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+            m_dynamicsWorld->debugDrawWorld();
+        } else
+            m_debugDrawer->setDebugMode(0);
+    #endif
 
 /*
 This will happen in predictplayer: So need to counter it?

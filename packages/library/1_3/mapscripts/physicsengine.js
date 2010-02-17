@@ -16,6 +16,18 @@ Physics.Engine.create('bullet');
 
 Library.include('yo_frankie/');
 
+Library.include('textures/gk/brick3/');
+Library.include('textures/gk/concrete3/');
+Library.include('textures/gk/deco3/');
+Library.include('textures/gk/ground3/');
+Library.include('textures/gk/metal3/');
+Library.include('textures/gk/morter3/');
+Library.include('textures/gk/rock3/');
+Library.include('textures/gk/walls3/');
+Library.include('textures/gk/wood3/');
+Library.include('textures/gk/set4/');
+Library.include('textures/gk/set5/');
+
 // Map settings
 
 Map.fogColor(0, 0, 0);

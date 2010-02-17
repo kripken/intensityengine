@@ -30,11 +30,11 @@
 
 class BulletPhysicsEngine : public RealisticPhysicsEngine
 {
-    btBroadphaseInterface*	m_overlappingPairCache;
-	btCollisionDispatcher*	m_dispatcher;
+    btBroadphaseInterface* m_overlappingPairCache;
+    btCollisionDispatcher* m_dispatcher;
     btDbvtBroadphase* m_broadPhase;
-	btConstraintSolver*	m_constraintSolver;
-	btDefaultCollisionConfiguration* m_collisionConfiguration;
+    btConstraintSolver* m_constraintSolver;
+    btDefaultCollisionConfiguration* m_collisionConfiguration;
     btDynamicsWorld *m_dynamicsWorld;
     #ifdef CLIENT
         btIDebugDraw* m_debugDrawer;
