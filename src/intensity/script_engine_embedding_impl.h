@@ -311,6 +311,7 @@ EMBED_CAPI_FUNC_STD(mdlEnvmap, 2);
 EMBED_CAPI_FUNC_STD(physicsCreateEngine, 1);
 EMBED_CAPI_FUNC_STD(physicsAddSphere, 2);
 EMBED_CAPI_FUNC_STD(physicsAddBox, 4);
+EMBED_CAPI_FUNC_STD(physicsAddCapsule, 3);
 EMBED_CAPI_FUNC_STD(physicsRemoveBody, 1);
 EMBED_CAPI_FUNC_STD(physicsSetBodyPosition, 4);
 EMBED_CAPI_FUNC_STD(physicsSetBodyVelocity, 4);

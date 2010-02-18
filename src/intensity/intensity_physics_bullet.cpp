@@ -316,6 +316,11 @@ physicsHandle BulletPhysicsEngine::addBox(float mass, float rx, float ry, float 
     return addBody(new btBoxShape(halfExtents), mass);
 }
 
+physicsHandle BulletPhysicsEngine::addCapsule(float mass, float radius, float height)
+{
+    return addBody(new btCapsuleShape(FROM_SAUER_SCALAR(radius), FROM_SAUER_SCALAR(height)), mass);
+}
+
 void BulletPhysicsEngine::setBodyPosition(physicsHandle handle, const vec& position)
 {
     IntensityBulletBody* body = handleBodyMap[handle];

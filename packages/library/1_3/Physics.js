@@ -144,10 +144,11 @@ Physics = {
 
         playerPlugin: {
             createPhysicalObject: function() {
-                var ret = CAPI.physicsAddBox(10, 20, 20, 20);
-                CAPI.physicsSetAngularFactor(ret, 0, 0, 1);
+//                var ret = CAPI.physicsAddBox(10, 20, 20, 20);
+                var ret = CAPI.physicsAddCapsule(10, 7, 20);
+//                var ret = CAPI.physicsAddSphere(10, 10);
+                CAPI.physicsSetAngularFactor(ret, 0, 0, 0);
                 return ret;
-//                return CAPI.physicsAddSphere(10, 10);
             },
             clientActivate: function() {
                 this.lastPosition = new Vector3(0, 0, 0);
@@ -192,7 +193,7 @@ Physics = {
             },
 
             renderDynamic: function() {
-                this.renderPhysical();
+//                this.renderPhysical();
             },
         },
     },

@@ -51,6 +51,7 @@ public:
 
     virtual physicsHandle addSphere(float mass, float radius) = 0;
     virtual physicsHandle addBox(float mass, float rx, float ry, float rz) = 0;
+    virtual physicsHandle addCapsule(float mass, float radius, float height) = 0;
 
     //!
     virtual void removeBody(physicsHandle handle) = 0;

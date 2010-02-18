@@ -75,6 +75,8 @@ public:
 
     virtual physicsHandle addSphere(float mass, float radius);
     virtual physicsHandle addBox(float mass, float rx, float ry, float rz);
+    virtual physicsHandle addCapsule(float mass, float radius, float height);
+
     virtual void setBodyPosition(physicsHandle handle, const vec& position);
     virtual void setBodyVelocity(physicsHandle handle, const vec& velocity);
     virtual void getBodyPosition(physicsHandle handle, vec& position);

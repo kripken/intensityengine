@@ -32,6 +32,8 @@ public:
 
     virtual physicsHandle addSphere(float mass, float radius) { assert(0); return 0; };
     virtual physicsHandle addBox(float mass, float rx, float ry, float rz) { assert(0); return 0; };
+    virtual physicsHandle addCapsule(float mass, float radius, float height) { assert(0); return 0; };
+
     virtual void removeBody(physicsHandle handle) { assert(0); };
     virtual void setBodyPosition(physicsHandle handle, const vec& position) { assert(0); };
     virtual void setBodyVelocity(physicsHandle handle, const vec& velocity) { assert(0); };

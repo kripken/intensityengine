@@ -1325,6 +1325,11 @@ V8_FUNC_dddd(__script__physicsAddBox, {
     V8_RETURN_INT(ret);
 });
 
+V8_FUNC_ddd(__script__physicsAddCapsule, {
+    physicsHandle ret = PhysicsManager::getEngine()->addCapsule(arg1, arg2, arg3);
+    V8_RETURN_INT(ret);
+});
+
 V8_FUNC_i(__script__physicsRemoveBody, {
     PhysicsManager::getEngine()->removeBody(arg1);
 });
