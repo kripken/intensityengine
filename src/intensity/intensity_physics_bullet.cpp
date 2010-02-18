@@ -312,7 +312,8 @@ physicsHandle BulletPhysicsEngine::addSphere(float mass, float radius)
 
 physicsHandle BulletPhysicsEngine::addBox(float mass, float rx, float ry, float rz)
 {
-    btVector3 halfExtents(FROM_SAUER_SCALAR(rx/2), FROM_SAUER_SCALAR(ry/2), FROM_SAUER_SCALAR(rz/2));
+    vec sauerVec(rx/2, ry/2, rz/2);
+    btVector3 halfExtents = FROM_SAUER_VEC( sauerVec );
     return addBody(new btBoxShape(halfExtents), mass);
 }
 
