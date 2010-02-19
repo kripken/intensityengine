@@ -441,6 +441,20 @@
         , wrapped_code);
 
 
+// iidddddd
+#define V8_FUNC_iidddddd(new_func, wrapped_code) \
+    V8_FUNC_GEN(new_func, \
+        int arg1 = args[0]->IntegerValue(); \
+        int arg2 = args[1]->IntegerValue(); \
+        double arg3 = args[2]->NumberValue(); if (ISNAN(arg3)) RAISE_SCRIPT_ERROR(isNAN failed on argument 2 in #new_func); \
+        double arg4 = args[3]->NumberValue(); if (ISNAN(arg4)) RAISE_SCRIPT_ERROR(isNAN failed on argument 3 in #new_func); \
+        double arg5 = args[4]->NumberValue(); if (ISNAN(arg5)) RAISE_SCRIPT_ERROR(isNAN failed on argument 4 in #new_func); \
+        double arg6 = args[5]->NumberValue(); if (ISNAN(arg6)) RAISE_SCRIPT_ERROR(isNAN failed on argument 5 in #new_func); \
+        double arg7 = args[6]->NumberValue(); if (ISNAN(arg7)) RAISE_SCRIPT_ERROR(isNAN failed on argument 6 in #new_func); \
+        double arg8 = args[7]->NumberValue(); if (ISNAN(arg8)) RAISE_SCRIPT_ERROR(isNAN failed on argument 7 in #new_func); \
+        , wrapped_code);
+
+
 // ddddddiii
 #define V8_FUNC_ddddddiii(new_func, wrapped_code) \
     V8_FUNC_GEN(new_func, \

@@ -56,6 +56,8 @@ public:
     //!
     virtual void removeBody(physicsHandle handle) = 0;
 
+    virtual void removeConstraint(physicsHandle handle) = 0;
+
     //! Sets a body's properties. Called to get changes due to scripting or position updates, etc.
     virtual void setBodyPosition(physicsHandle handle, const vec& position) = 0;
     virtual void setBodyVelocity(physicsHandle handle, const vec& velocity) = 0;
@@ -67,6 +69,8 @@ public:
 
     virtual void setLinearFactor(physicsHandle handle, vec& factor) = 0;
     virtual void setAngularFactor(physicsHandle handle, vec& factor) = 0;
+
+    virtual physicsHandle addConstraintP2P(physicsHandle handleA, physicsHandle handleB, vec& pivotA, vec& pivotB) = 0;
 
     virtual void simulate(float seconds) = 0;
 };

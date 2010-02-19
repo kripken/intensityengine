@@ -35,6 +35,8 @@ public:
     virtual physicsHandle addCapsule(float mass, float radius, float height) { assert(0); return 0; };
 
     virtual void removeBody(physicsHandle handle) { assert(0); };
+    virtual void removeConstraint(physicsHandle handle) { assert(0); };
+
     virtual void setBodyPosition(physicsHandle handle, const vec& position) { assert(0); };
     virtual void setBodyVelocity(physicsHandle handle, const vec& velocity) { assert(0); };
 
@@ -44,6 +46,8 @@ public:
 
     virtual void setLinearFactor(physicsHandle handle, vec& factor) { assert(0); };
     virtual void setAngularFactor(physicsHandle handle, vec& factor) { assert(0); };
+
+    virtual physicsHandle addConstraintP2P(physicsHandle handleA, physicsHandle handleB, vec& pivotA, vec& pivotB) { assert(0); };
 
     virtual void simulate(float seconds);
 };

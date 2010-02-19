@@ -320,4 +320,6 @@ EMBED_CAPI_FUNC_STD(physicsGetBodyRotation, 1);
 EMBED_CAPI_FUNC_STD(physicsGetBodyVelocity, 1);
 EMBED_CAPI_FUNC_STD(physicsSetLinearFactor, 4);
 EMBED_CAPI_FUNC_STD(physicsSetAngularFactor, 4);
+EMBED_CAPI_FUNC_STD(physicsAddConstraintP2P, 8);
+EMBED_CAPI_FUNC_STD(physicsRemoveConstraint, 1);
 

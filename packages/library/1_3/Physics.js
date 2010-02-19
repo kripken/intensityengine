@@ -126,28 +126,34 @@ Physics = {
             clientActivate: function() { Physics.Engine.setupPhysicalEntity(this); },
             clientDeactivate: function() { Physics.Engine.teardownPhysicalEntity(this); },
 
-            renderPhysical: function() {
+            renderPhysical: function(modelName) {
                 var flags = MODEL.LIGHT | MODEL.DYNSHADOW;
 
                 // Optimized version
                 var o = CAPI.physicsGetBodyPosition(this.physicsHandle);
                 var r = CAPI.physicsGetBodyRotation(this.physicsHandle);
-                var args = [this, 'box', ANIM_IDLE|ANIM_LOOP, o[0], o[1], o[2], 0, 0, 0, flags, 0, r[0], r[1], r[2], r[3]];
+                var args = [this, modelName, ANIM_IDLE|ANIM_LOOP, o[0], o[1], o[2], 0, 0, 0, flags, 0, r[0], r[1], r[2], r[3]];
 
 //                // Normal version
 //                var o = this.position;
 //                var r = this.rotation;
-//                var args = [this, 'box', ANIM_IDLE|ANIM_LOOP, o.x, o.y, o.z, 0, 0, 0, flags, 0, r.x, r.y, r.z, r.w];
+//                var args = [this, modelName, ANIM_IDLE|ANIM_LOOP, o.x, o.y, o.z, 0, 0, 0, flags, 0, r.x, r.y, r.z, r.w];
                 CAPI.renderModel3.apply(this, args);
             },
         },
 
         playerPlugin: {
             createPhysicalObject: function() {
-//                var ret = CAPI.physicsAddBox(10, 20, 20, 20);
-                var ret = CAPI.physicsAddCapsule(10, 7, 20);
-//                var ret = CAPI.physicsAddSphere(10, 10);
-                CAPI.physicsSetAngularFactor(ret, 0, 0, 0);
+//                // Typical character setup
+//                var ret = CAPI.physicsAddCapsule(10, 7, 20);
+//                CAPI.physicsSetAngularFactor(ret, 0, 0, 0);
+
+//                var ret = CAPI.physicsAddBox(10, 25, 15, 10);
+                var ret = CAPI.physicsAddSphere(10, 10);
+
+var other = CAPI.physicsAddBox(1, 5, 5, 5);
+var cons = CAPI.physicsAddConstraintP2P(ret, other, 0, 0, 0, 0, 0, 20);
+
                 return ret;
             },
             clientActivate: function() {
@@ -193,7 +199,7 @@ Physics = {
             },
 
             renderDynamic: function() {
-//                this.renderPhysical();
+                this.renderPhysical('speedtank');
             },
         },
     },
@@ -213,7 +219,7 @@ Physics.Engine.Entity = registerEntityClass(bakePlugins(LogicEntity, [
         },
 
         renderDynamic: function() {
-            this.renderPhysical();
+            this.renderPhysical('box');
         },
     },
 ]));

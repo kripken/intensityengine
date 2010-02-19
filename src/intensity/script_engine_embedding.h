@@ -1387,3 +1387,14 @@ V8_FUNC_iddd(__script__physicsSetAngularFactor, {
     PhysicsManager::getEngine()->setAngularFactor(arg1, factor);
 });
 
+V8_FUNC_iidddddd(__script__physicsAddConstraintP2P, {
+    vec pivotA(arg3, arg4, arg5);
+    vec pivotB(arg6, arg7, arg8);
+    int ret = PhysicsManager::getEngine()->addConstraintP2P(arg1, arg2, pivotA, pivotB);
+    V8_RETURN_INT(ret);
+});
+
+V8_FUNC_i(__script__physicsRemoveConstraint, {
+    PhysicsManager::getEngine()->removeConstraint(arg1);
+});
+

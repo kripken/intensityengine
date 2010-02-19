@@ -278,6 +278,19 @@ void BulletPhysicsEngine::removeBody(physicsHandle handle)
     handleBodyMap.erase(handle);
 }
 
+physicsHandle BulletPhysicsEngine::addConstraint(btTypedConstraint *constraint)
+{
+// TODO: a map for these, so can remove them etc.
+    m_dynamicsWorld->addConstraint(constraint);
+    //constraint->setDbgDrawSize(btScalar(5.f));
+    return 0; // XXX
+}
+
+void BulletPhysicsEngine::removeConstraint(physicsHandle handle)
+{
+    assert(0);
+}
+
 void BulletPhysicsEngine::addStaticCube(vec o, vec r)
 {
     btVector3 halfExtents = FROM_SAUER_VEC(r);
@@ -389,6 +402,19 @@ void BulletPhysicsEngine::setAngularFactor(physicsHandle handle, vec& factor)
 {
     IntensityBulletBody* body = handleBodyMap[handle];
     body->setAngularFactor(FROM_SAUER_VEC_NORM(factor));
+}
+
+physicsHandle BulletPhysicsEngine::addConstraintP2P(physicsHandle handleA, physicsHandle handleB, vec& pivotA, vec& pivotB)
+{
+    IntensityBulletBody* bodyA = handleBodyMap[handleA];
+    IntensityBulletBody* bodyB = handleBodyMap[handleB];
+
+    return addConstraint(new btPoint2PointConstraint(
+        *bodyA,
+        *bodyB,
+        FROM_SAUER_VEC(pivotA),
+        FROM_SAUER_VEC(pivotB)
+    ));
 }
 
 VAR(bulletdebug, 0, 0, 1);

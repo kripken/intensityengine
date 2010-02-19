@@ -49,6 +49,8 @@ class BulletPhysicsEngine : public RealisticPhysicsEngine
     //! Adds a bullet body. Takes ownership of 'shape'.
     physicsHandle addBody(btCollisionShape *shape, float mass);
 
+    physicsHandle addConstraint(btTypedConstraint *constraint);
+
 public:
     virtual void init();
 
@@ -72,6 +74,7 @@ public:
     virtual void addStaticConvex(std::vector<vec>& vecs);
 
     virtual void removeBody(physicsHandle handle);
+    virtual void removeConstraint(physicsHandle handle);
 
     virtual physicsHandle addSphere(float mass, float radius);
     virtual physicsHandle addBox(float mass, float rx, float ry, float rz);
@@ -85,6 +88,8 @@ public:
 
     virtual void setLinearFactor(physicsHandle handle, vec& factor);
     virtual void setAngularFactor(physicsHandle handle, vec& factor);
+
+    virtual physicsHandle addConstraintP2P(physicsHandle handleA, physicsHandle handleB, vec& pivotA, vec& pivotB);
 
     virtual void simulate(float seconds);
 };

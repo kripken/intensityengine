@@ -32,7 +32,7 @@ strings = [
     'oddd', 'dddd', 'iddd', 'iiss', 'iiis', 'ssdd',
     'sdddi', 'sssdd', 'ddddi', 'sdddd', 'iiiss', 'iiisi', 'iiiii',
     'dddddd', 'iidddi', 'iiiddd', 'ddddii', 'idddsi', 'ssiiid', 'ddddddd', 'iiiiddd', 'iiddddd',
-    'ddddddii', 'ddddiiid', 'ssiiidi',
+    'ddddddii', 'ddddiiid', 'ssiiidi', 'iidddddd',
     'ddddddiii', 'oidddiiii', 'idddidddi', 'dddsiiidi',
     'iiidddidii', 'ddddddiiid', 'osiddddddii',
     'iissdddiiii', 'iiddddddidi',
