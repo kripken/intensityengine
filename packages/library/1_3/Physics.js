@@ -191,16 +191,26 @@ Physics = {
                         velocity.mul(0);
                     }
 
+                    var targetVelocity = new Vector3(0,0,0);
+
                     if (this.move) {
-                        velocity.add(new Vector3().fromYawPitch(this.yaw, !editing ? 0 : this.pitch).mul(seconds*speed*this.move));
+                        targetVelocity.add(new Vector3().fromYawPitch(this.yaw, !editing ? 0 : this.pitch).mul(speed*this.move));
                     }
                     if (this.strafe) {
-                        velocity.add(new Vector3().fromYawPitch(this.yaw-90, 0).mul(seconds*speed*this.strafe));
+                        targetVelocity.add(new Vector3().fromYawPitch(this.yaw-90, 0).mul(speed*this.strafe));
                     }
                     if (this.move || this.strafe) {
                         if (editing) {
-                            position.add(velocity.mulNew(speed*seconds));
+                            position.add(targetVelocity.mulNew(seconds));
                         }
+                    }
+
+                    if (!editing) {
+                        var flatVelocity = velocity.copy();
+                        flatVelocity.z = 0;
+                        velocity.add(targetVelocity.subNew(flatVelocity).mul(seconds*
+                            ( (this.move || this.strafe) ? 6 : 2)
+                        ));
                     }
 
                     this.lastPosition = this.position.copy();
