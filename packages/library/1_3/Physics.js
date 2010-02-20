@@ -126,11 +126,12 @@ Physics = {
             clientActivate: function() { Physics.Engine.setupPhysicalEntity(this); },
             clientDeactivate: function() { Physics.Engine.teardownPhysicalEntity(this); },
 
-            renderPhysical: function(modelName) {
+            renderPhysical: function(modelName, offset) {
                 var flags = MODEL.LIGHT | MODEL.DYNSHADOW;
 
                 // Optimized version
                 var o = CAPI.physicsGetBodyPosition(this.physicsHandle);
+                if (offset) { o[0] += offset.x; o[1] += offset.y; o[2] += offset.z; }
                 var r = CAPI.physicsGetBodyRotation(this.physicsHandle);
                 var args = [this, modelName, ANIM_IDLE|ANIM_LOOP, o[0], o[1], o[2], 0, 0, 0, flags, 0, r[0], r[1], r[2], r[3]];
 
@@ -144,15 +145,30 @@ Physics = {
 
         playerPlugin: {
             createPhysicalObject: function() {
-//                // Typical character setup
-//                var ret = CAPI.physicsAddCapsule(10, 7, 20);
-//                CAPI.physicsSetAngularFactor(ret, 0, 0, 0);
+                // Typical character setup
+                this.physicsSize = {
+                    height: 5,
+                    radius: 5,
+                };
+                var ret = CAPI.physicsAddCapsule(10, this.physicsSize.radius, this.physicsSize.height);
+                CAPI.physicsSetAngularFactor(ret, 0, 0, 0);
 
 //                var ret = CAPI.physicsAddBox(10, 25, 15, 10);
-                var ret = CAPI.physicsAddSphere(10, 10);
-
-var other = CAPI.physicsAddBox(1, 5, 5, 5);
-var cons = CAPI.physicsAddConstraintP2P(ret, other, 0, 0, 0, 0, 0, 20);
+////                var ret = CAPI.physicsAddSphere(10, 10);
+//
+//var other;
+//other = CAPI.physicsAddSphere(1, 5);
+////CAPI.physicsSetAngularFactor(other, 0, 0, 0);
+//CAPI.physicsAddConstraintP2P(ret, other, 15, 15, -5, 0, 0, 0);
+//other = CAPI.physicsAddSphere(1, 5);
+////CAPI.physicsSetAngularFactor(other, 0, 0, 0);
+//CAPI.physicsAddConstraintP2P(ret, other, 15, -15, -5, 0, 0, 0);
+//other = CAPI.physicsAddSphere(1, 5);
+////CAPI.physicsSetAngularFactor(other, 0, 0, 0);
+//CAPI.physicsAddConstraintP2P(ret, other, -15, 15, -5, 0, 0, 0);
+//other = CAPI.physicsAddSphere(1, 5);
+////CAPI.physicsSetAngularFactor(other, 0, 0, 0);
+//CAPI.physicsAddConstraintP2P(ret, other, -15, -15, -5, 0, 0, 0);
 
                 return ret;
             },
@@ -199,7 +215,8 @@ var cons = CAPI.physicsAddConstraintP2P(ret, other, 0, 0, 0, 0, 0, 20);
             },
 
             renderDynamic: function() {
-                this.renderPhysical('speedtank');
+                // Appropriate for a capsule
+                this.renderPhysical('stromar', new Vector3(0, 0, - this.physicsSize.height/2 - this.physicsSize.radius));
             },
         },
     },

@@ -39,7 +39,7 @@ Map.fog(9999);
 Map.loadSky("skyboxes/philo/sky3");
 Map.skylight(100, 100, 100);
 Map.ambient(20);
-Map.shadowmapAmbient("0x505050");
+Map.shadowmapAmbient("0x010101");
 Map.shadowmapAngle(300);
 
 //// Player class
@@ -99,7 +99,7 @@ if (Global.SERVER) { // Run this only on the server - not the clients
         {
             _name: 'players',
             setup: function(player) {
-                player.defaultModelName = 'stromar/red';
+                player.defaultModelName = 'stomar/red';
                 player.defaultHUDModelName = '';
             },
         },
