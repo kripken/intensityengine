@@ -237,15 +237,31 @@ Vector3 = Class.extend({
 
 Vector4 = Vector3.extend({
     create: function(x, y, z, w) {
-        if (x.length === 4) {
+        if (typeof x === 'object' && x.length === 4) {
             this.x = x[0]; this.y = x[1]; this.z = x[2]; this.w = x[3];
         } else {
             this.x = x; this.y = y; this.z = z; this.w = w;
         }
+
+        this.__defineGetter__("length", function() { return 4; });
     },
 
     toString: function() {
         return '{' + this.x.toString() + ',' + this.y.toString() + ',' + this.z.toString() + ',' + this.w.toString() + '}';
+    },
+
+    asArray: function() {
+        return [ this.x, this.y, this.z, this.w ];
+    },
+
+    quatFromAxisAngle: function(axis, angle) {
+        angle = angle*Math.PI/180;
+        this.w = Math.cos(angle/2);
+        var s = Math.sin(angle/2);
+        this.x = s*axis.x;
+        this.y = s*axis.y;
+        this.z = s*axis.z;
+        return this;
     },
 
     toYawPitchRoll: function() {

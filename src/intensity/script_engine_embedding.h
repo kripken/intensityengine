@@ -1338,6 +1338,10 @@ V8_FUNC_iddd(__script__physicsSetBodyPosition, {
     PhysicsManager::getEngine()->setBodyPosition(arg1, vec(arg2, arg3, arg4));
 });
 
+V8_FUNC_idddd(__script__physicsSetBodyRotation, {
+    PhysicsManager::getEngine()->setBodyRotation(arg1, quat(arg2, arg3, arg4, arg5));
+});
+
 V8_FUNC_iddd(__script__physicsSetBodyVelocity, {
     PhysicsManager::getEngine()->setBodyVelocity(arg1, vec(arg2, arg3, arg4));
 });

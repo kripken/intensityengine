@@ -314,6 +314,7 @@ EMBED_CAPI_FUNC_STD(physicsAddBox, 4);
 EMBED_CAPI_FUNC_STD(physicsAddCapsule, 3);
 EMBED_CAPI_FUNC_STD(physicsRemoveBody, 1);
 EMBED_CAPI_FUNC_STD(physicsSetBodyPosition, 4);
+EMBED_CAPI_FUNC_STD(physicsSetBodyRotation, 5);
 EMBED_CAPI_FUNC_STD(physicsSetBodyVelocity, 4);
 EMBED_CAPI_FUNC_STD(physicsGetBodyPosition, 1);
 EMBED_CAPI_FUNC_STD(physicsGetBodyRotation, 1);

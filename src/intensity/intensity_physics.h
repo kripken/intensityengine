@@ -60,6 +60,7 @@ public:
 
     //! Sets a body's properties. Called to get changes due to scripting or position updates, etc.
     virtual void setBodyPosition(physicsHandle handle, const vec& position) = 0;
+    virtual void setBodyRotation(physicsHandle handle, const quat& rotation) = 0;
     virtual void setBodyVelocity(physicsHandle handle, const vec& velocity) = 0;
 
     //! Outputs a body's properties. Called to get information from the physics engine outside into the rest of the engine

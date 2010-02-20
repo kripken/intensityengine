@@ -30,7 +30,7 @@ strings = [
     'ii', 'is', 'ss', 'sd', 'si', 'oi', 'ob', 'os', 'od', 'dd',
     'iis', 'iii', 'iid', 'ddd', 'sss',
     'oddd', 'dddd', 'iddd', 'iiss', 'iiis', 'ssdd',
-    'sdddi', 'sssdd', 'ddddi', 'sdddd', 'iiiss', 'iiisi', 'iiiii',
+    'sdddi', 'sssdd', 'ddddi', 'sdddd', 'iiiss', 'iiisi', 'iiiii', 'idddd',
     'dddddd', 'iidddi', 'iiiddd', 'ddddii', 'idddsi', 'ssiiid', 'ddddddd', 'iiiiddd', 'iiddddd',
     'ddddddii', 'ddddiiid', 'ssiiidi', 'iidddddd',
     'ddddddiii', 'oidddiiii', 'idddidddi', 'dddsiiidi',

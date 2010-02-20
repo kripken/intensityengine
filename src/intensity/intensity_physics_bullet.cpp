@@ -36,6 +36,7 @@
 #define FROM_SAUER_VEC_NORM(sauervec) ( btVector3(sauervec.x, sauervec.z, sauervec.y) )
 #define TO_SAUER_VEC(sauervec, btvec) { sauervec.x = btvec.x()*SAUER_FACTOR; sauervec.y = btvec.z()*SAUER_FACTOR; sauervec.z = btvec.y()*SAUER_FACTOR; }
 #define TO_SAUER_QUAT(sauerquat, btquat) { sauerquat.x = -btquat.x(); sauerquat.y = -btquat.z(); sauerquat.z = -btquat.y(); sauerquat.w = btquat.w(); }
+#define FROM_SAUER_QUAT(sauerquat) ( btQuaternion(-sauerquat.x, -sauerquat.z, -sauerquat.y, sauerquat.w) )
 #define FROM_SAUER_SCALAR(value) ( value/SAUER_FACTOR )
 
 
@@ -349,6 +350,24 @@ void BulletPhysicsEngine::setBodyPosition(physicsHandle handle, const vec& posit
 
     // Save in interpolated values, since we might read them soon
     body->interpolatedPosition = transform.getOrigin();
+
+    body->activate();
+}
+
+void BulletPhysicsEngine::setBodyRotation(physicsHandle handle, const quat& rotation)
+{
+    IntensityBulletBody* body = handleBodyMap[handle];
+
+    btQuaternion btRotation = FROM_SAUER_QUAT(rotation);
+    btTransform transform;
+    
+    transform.setIdentity();
+    transform.setOrigin(body->getCenterOfMassTransform().getOrigin());
+    transform.setRotation( btRotation );
+    body->setCenterOfMassTransform(transform);
+
+    // Save in interpolated values, since we might read them soon
+    body->interpolatedRotation = btRotation;
 
     body->activate();
 }

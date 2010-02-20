@@ -108,7 +108,9 @@ Physics = {
         setPosition: function(entity, v) { // TODO: queue this and other setX things, if no handle yet
             if (entity.physicsHandle !== undefined) CAPI.physicsSetBodyPosition(entity.physicsHandle, v[0], v[1], v[2]);
         },
-        setRotation: function(entity, v) { log(ERROR, "TODO: Set rotation"); /* CAPI.physicsSetBodyRotation(entity.physicsHandle, v[0], v[1], v[2], [3]); */ },
+        setRotation: function(entity, v) {
+            if (entity.physicsHandle !== undefined) CAPI.physicsSetBodyRotation(entity.physicsHandle, v[0], v[1], v[2], v[3]);
+        },
         setVelocity: function(entity, v) {
             if (entity.physicsHandle !== undefined) CAPI.physicsSetBodyVelocity(entity.physicsHandle, v[0], v[1], v[2]);
         },
@@ -151,7 +153,7 @@ Physics = {
                     radius: 5,
                 };
                 var ret = CAPI.physicsAddCapsule(10, this.physicsSize.radius, this.physicsSize.height);
-                CAPI.physicsSetAngularFactor(ret, 0, 0, 0);
+                CAPI.physicsSetAngularFactor(ret, 0, 0, 1);
 
 //                var ret = CAPI.physicsAddBox(10, 25, 15, 10);
 ////                var ret = CAPI.physicsAddSphere(10, 10);
@@ -205,6 +207,7 @@ Physics = {
                 }
 
                 this.position = position;
+                this.rotation = new Vector4().quatFromAxisAngle(new Vector3(0,0,1), this.yaw-90);
                 this.velocity = velocity;
             },
 
