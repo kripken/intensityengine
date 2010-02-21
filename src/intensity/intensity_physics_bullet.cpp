@@ -275,6 +275,7 @@ void BulletPhysicsEngine::removeBody(physicsHandle handle)
 {
     assert(handleBodyMap.count(handle) == 1);
     IntensityBulletBody* body = handleBodyMap[handle];
+    assert(body);
     m_dynamicsWorld->removeRigidBody(body);
     handleBodyMap.erase(handle);
 }
@@ -339,6 +340,7 @@ physicsHandle BulletPhysicsEngine::addCapsule(float mass, float radius, float he
 void BulletPhysicsEngine::setBodyPosition(physicsHandle handle, const vec& position)
 {
     IntensityBulletBody* body = handleBodyMap[handle];
+    assert(body);
 
     btTransform transform;
     
@@ -357,6 +359,7 @@ void BulletPhysicsEngine::setBodyPosition(physicsHandle handle, const vec& posit
 void BulletPhysicsEngine::setBodyRotation(physicsHandle handle, const quat& rotation)
 {
     IntensityBulletBody* body = handleBodyMap[handle];
+    assert(body);
 
     btQuaternion btRotation = FROM_SAUER_QUAT(rotation);
     btTransform transform;
@@ -375,6 +378,7 @@ void BulletPhysicsEngine::setBodyRotation(physicsHandle handle, const quat& rota
 void BulletPhysicsEngine::setBodyVelocity(physicsHandle handle, const vec& velocity)
 {
     IntensityBulletBody* body = handleBodyMap[handle];
+    assert(body);
 
     btVector3 btVelocity =  FROM_SAUER_VEC(velocity);
     body->setLinearVelocity( btVelocity );
@@ -388,6 +392,7 @@ void BulletPhysicsEngine::setBodyVelocity(physicsHandle handle, const vec& veloc
 void BulletPhysicsEngine::addBodyImpulse(physicsHandle handle, const vec& impulse)
 {
     IntensityBulletBody* body = handleBodyMap[handle];
+    assert(body);
 
     body->applyCentralImpulse(FROM_SAUER_VEC(impulse));
 
@@ -397,6 +402,7 @@ void BulletPhysicsEngine::addBodyImpulse(physicsHandle handle, const vec& impuls
 void BulletPhysicsEngine::getBodyPosition(physicsHandle handle, vec& position)
 {
     IntensityBulletBody* body = handleBodyMap[handle];
+    assert(body);
 
     btTransform trans = body->getWorldTransform();
     btVector3 btPosition = trans.getOrigin();
@@ -406,6 +412,7 @@ void BulletPhysicsEngine::getBodyPosition(physicsHandle handle, vec& position)
 void BulletPhysicsEngine::getBodyRotation(physicsHandle handle, quat& rotation)
 {
     IntensityBulletBody* body = handleBodyMap[handle];
+    assert(body);
 
     btTransform trans = body->getWorldTransform();
     btQuaternion btRotation = trans.getRotation();
@@ -415,6 +422,7 @@ void BulletPhysicsEngine::getBodyRotation(physicsHandle handle, quat& rotation)
 void BulletPhysicsEngine::getBodyVelocity(physicsHandle handle, vec& velocity)
 {
     IntensityBulletBody* body = handleBodyMap[handle];
+    assert(body);
 
     btVector3 btVelocity = body->getLinearVelocity();
     TO_SAUER_VEC( velocity, btVelocity );
@@ -423,12 +431,16 @@ void BulletPhysicsEngine::getBodyVelocity(physicsHandle handle, vec& velocity)
 void BulletPhysicsEngine::setLinearFactor(physicsHandle handle, vec& factor)
 {
     IntensityBulletBody* body = handleBodyMap[handle];
+    assert(body);
+
     body->setLinearFactor(FROM_SAUER_VEC_NORM(factor));
 }
 
 void BulletPhysicsEngine::setAngularFactor(physicsHandle handle, vec& factor)
 {
     IntensityBulletBody* body = handleBodyMap[handle];
+    assert(body);
+
     body->setAngularFactor(FROM_SAUER_VEC_NORM(factor));
 }
 
@@ -436,6 +448,8 @@ physicsHandle BulletPhysicsEngine::addConstraintP2P(physicsHandle handleA, physi
 {
     IntensityBulletBody* bodyA = handleBodyMap[handleA];
     IntensityBulletBody* bodyB = handleBodyMap[handleB];
+    assert(bodyA);
+    assert(bodyB);
 
     return addConstraint(new btPoint2PointConstraint(
         *bodyA,

@@ -82,37 +82,53 @@ Physics = {
         },
 
         setupPhysicalEntity: function(entity) {
-            entity.physicsHandle = entity.createPhysicalObject();
+            Global.queuedActions.push(bind(function() {
+                entity.physicsHandle = entity.createPhysicalObject();
 
-            if (entity instanceof Character) {
-                entity.connect((Global.CLIENT ? 'client_' : '') + 'onModify_position', function(position) {
-                    position = new Vector3(position);
-                    CAPI.setDynentO(this, position);
-                });
+                if (entity instanceof Character) {
+                    entity.connect((Global.CLIENT ? 'client_' : '') + 'onModify_position', function(position) {
+                        position = new Vector3(position);
+                        CAPI.setDynentO(this, position);
+                    });
 
-                entity.connect((Global.CLIENT ? 'client_' : '') + 'onModify_velocity', function(velocity) {
-                    velocity = new Vector3(velocity);
-                    CAPI.setDynentVel(this, velocity);
-                });
-            }
+                    entity.connect((Global.CLIENT ? 'client_' : '') + 'onModify_velocity', function(velocity) {
+                        velocity = new Vector3(velocity);
+                        CAPI.setDynentVel(this, velocity);
+                    });
+                }
+            }, this));
         },
 
         teardownPhysicalEntity: function(entity) {
-            CAPI.physicsRemoveBody(entity.physicsHandle);
+            if (entity.physicsHandle !== undefined) {
+                CAPI.physicsRemoveBody(entity.physicsHandle);
+            }
         },
 
         getPosition: function(entity) { return CAPI.physicsGetBodyPosition(entity.physicsHandle); },
         getRotation: function(entity) { return CAPI.physicsGetBodyRotation(entity.physicsHandle); },
         getVelocity: function(entity) { return CAPI.physicsGetBodyVelocity(entity.physicsHandle); },
 
-        setPosition: function(entity, v) { // TODO: queue this and other setX things, if no handle yet
-            if (entity.physicsHandle !== undefined) CAPI.physicsSetBodyPosition(entity.physicsHandle, v[0], v[1], v[2]);
+        setPosition: function(entity, v) {
+            if (entity.physicsHandle !== undefined) {
+                CAPI.physicsSetBodyPosition(entity.physicsHandle, v[0], v[1], v[2]);
+            } else {
+                Global.queuedActions.push(partial(arguments.callee, entity, v));
+            }
         },
         setRotation: function(entity, v) {
-            if (entity.physicsHandle !== undefined) CAPI.physicsSetBodyRotation(entity.physicsHandle, v[0], v[1], v[2], v[3]);
+            if (entity.physicsHandle !== undefined) {
+                CAPI.physicsSetBodyRotation(entity.physicsHandle, v[0], v[1], v[2], v[3]);
+            } else {
+                Global.queuedActions.push(partial(arguments.callee, entity, v));
+            }
         },
         setVelocity: function(entity, v) {
-            if (entity.physicsHandle !== undefined) CAPI.physicsSetBodyVelocity(entity.physicsHandle, v[0], v[1], v[2]);
+            if (entity.physicsHandle !== undefined) {
+                CAPI.physicsSetBodyVelocity(entity.physicsHandle, v[0], v[1], v[2]);
+            } else {
+                Global.queuedActions.push(partial(arguments.callee, entity, v));
+            }
         },
 
         objectPlugin: {
@@ -120,8 +136,13 @@ Physics = {
             rotation: new WrappedCVector4({ cGetter: 'Physics.Engine.getRotation', cSetter: 'Physics.Engine.setRotation', customSynch: true }),
             velocity: new WrappedCVector3({ cGetter: 'Physics.Engine.getVelocity', cSetter: 'Physics.Engine.setVelocity', customSynch: true }),
 
+            mass: new StateFloat(),
+
             createPhysicalObject: function() {
-                return CAPI.physicsAddBox(1, 20, 20, 20);
+                return CAPI.physicsAddBox(this.mass, 20, 20, 20);
+            },
+            init: function() {
+                this.mass = 40;
             },
             activate: function() { Physics.Engine.setupPhysicalEntity(this); },
             deactivate: function() { Physics.Engine.teardownPhysicalEntity(this); },
@@ -129,6 +150,8 @@ Physics = {
             clientDeactivate: function() { Physics.Engine.teardownPhysicalEntity(this); },
 
             renderPhysical: function(modelName, offset, animation) {
+                if (this.physicsHandle === undefined) return;
+
                 var flags = MODEL.LIGHT | MODEL.DYNSHADOW;
 
                 // Optimized version
@@ -146,9 +169,13 @@ Physics = {
         },
 
         playerPlugin: {
+            init: function() {
+                this.mass = 10;
+            },
+
             createPhysicalObject: function() {
                 // Typical character setup
-                var ret = CAPI.physicsAddCapsule(10, this.radius, this.aboveEye+this.eyeHeight-this.radius*2);
+                var ret = CAPI.physicsAddCapsule(this.mass, this.radius, this.aboveEye+this.eyeHeight-this.radius*2);
                 CAPI.physicsSetAngularFactor(ret, 0, 0, 1);
 
 //                var ret = CAPI.physicsAddBox(10, 25, 15, 10);
@@ -175,6 +202,8 @@ Physics = {
             },
 
             clientAct: function(seconds) {
+                if (this.physicsHandle === undefined) return;
+
                 var position = this.position.copy();
                 var velocity = this.velocity.copy();
 
@@ -205,7 +234,7 @@ Physics = {
                         var flatVelocity = velocity.copy();
                         flatVelocity.z = 0;
                         var cap = speed;
-                        targetVelocity.sub(flatVelocity).cap(cap).mul(seconds*30);
+                        targetVelocity.sub(flatVelocity).cap(cap).mul(seconds*3*this.mass);
                         CAPI.physicsAddBodyImpulse(this.physicsHandle, targetVelocity.x, targetVelocity.y, targetVelocity.z);
                     }
 
@@ -218,12 +247,21 @@ Physics = {
 
             jump: function() {
 //                if (this.isOnFloor() || World.getMaterial(this.position) === MATERIAL.WATER) {
-                    this.velocity.z += this.movementSpeed*2;
+//                    this.velocity.z += this.movementSpeed*2;
+                        var delta = Global.currTimeDelta;
+                        CAPI.physicsAddBodyImpulse(this.physicsHandle, 0, 0, this.mass*this.movementSpeed);
+
 //                }
             },
 
             createRenderingArgs: function(mdlname, anim, o, yaw, pitch, flags, basetime) {
-                var r = CAPI.physicsGetBodyRotation(this.physicsHandle);
+                var r;
+                if (this.physicsHandle !== undefined) {
+                    r = CAPI.physicsGetBodyRotation(this.physicsHandle);
+                } else {
+                    r = [0,0,0,1];
+                    mdlname = '';
+                }
                 return [this, mdlname, anim, o.x, o.y, o.z - (this.aboveEye+this.eyeHeight)/2, 0, 0, 0, flags, basetime, r[0], r[1], r[2], r[3]];
             },
 

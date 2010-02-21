@@ -54,6 +54,9 @@ GamePlayer = registerEntityClass(
             Physics.Engine.playerPlugin,
             {
                 _class: "GamePlayer",
+                init: function() {
+                    this.movementSpeed = 75;
+                },
             },
         ]
     )
@@ -107,8 +110,8 @@ if (Global.SERVER) { // Run this only on the server - not the clients
 
     Global.queuedActions.push(function() {
         var SIZE = 20.5;
-        for (var i = 0; i < 10; i++) {
-            for (var j = 1; j < 10; j++) {
+        for (var i = 0; i < 5; i++) {
+            for (var j = 1; j < 6; j++) {
                 newEntity('PhysicsEngineEntity', { position: new Vector3(600+i*SIZE, 600, 520+j*SIZE) });
             }
         }
