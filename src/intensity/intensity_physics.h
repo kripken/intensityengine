@@ -58,6 +58,8 @@ public:
 
     virtual void removeConstraint(physicsHandle handle) = 0;
 
+    virtual void setBodyEntity(physicsHandle handle, CLogicEntity* entity) = 0;
+
     //! Sets a body's properties. Called to get changes due to scripting or position updates, etc.
     virtual void setBodyPosition(physicsHandle handle, const vec& position) = 0;
     virtual void setBodyRotation(physicsHandle handle, const quat& rotation) = 0;

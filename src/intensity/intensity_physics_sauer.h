@@ -37,6 +37,8 @@ public:
     virtual void removeBody(physicsHandle handle) { assert(0); };
     virtual void removeConstraint(physicsHandle handle) { assert(0); };
 
+    virtual void setBodyEntity(physicsHandle handle, CLogicEntity* entity) { assert(0); };
+
     virtual void setBodyPosition(physicsHandle handle, const vec& position) { assert(0); };
     virtual void setBodyRotation(physicsHandle handle, const quat& rotation) { assert(0); };
     virtual void setBodyVelocity(physicsHandle handle, const vec& velocity) { assert(0); };

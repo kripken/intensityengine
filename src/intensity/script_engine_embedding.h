@@ -1334,6 +1334,10 @@ V8_FUNC_i(__script__physicsRemoveBody, {
     PhysicsManager::getEngine()->removeBody(arg1);
 });
 
+V8_FUNC_ii(__script__physicsSetBodyEntity, {
+    PhysicsManager::getEngine()->setBodyEntity(arg1, LogicSystem::getLogicEntity(arg2).get());
+});
+
 V8_FUNC_iddd(__script__physicsSetBodyPosition, {
     PhysicsManager::getEngine()->setBodyPosition(arg1, vec(arg2, arg3, arg4));
 });

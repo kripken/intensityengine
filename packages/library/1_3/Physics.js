@@ -84,6 +84,7 @@ Physics = {
         setupPhysicalEntity: function(entity) {
             Global.queuedActions.push(bind(function() {
                 entity.physicsHandle = entity.createPhysicalObject();
+                CAPI.physicsSetBodyEntity(entity.physicsHandle, entity.uniqueId);
 
                 if (entity instanceof Character) {
                     entity.connect((Global.CLIENT ? 'client_' : '') + 'onModify_position', function(position) {

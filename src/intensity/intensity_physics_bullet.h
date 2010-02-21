@@ -80,6 +80,8 @@ public:
     virtual physicsHandle addBox(float mass, float rx, float ry, float rz);
     virtual physicsHandle addCapsule(float mass, float radius, float height);
 
+    virtual void setBodyEntity(physicsHandle handle, CLogicEntity* entity);
+
     virtual void setBodyPosition(physicsHandle handle, const vec& position);
     virtual void setBodyRotation(physicsHandle handle, const quat& rotation);
     virtual void setBodyVelocity(physicsHandle handle, const vec& velocity);
