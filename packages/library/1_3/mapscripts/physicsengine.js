@@ -99,7 +99,7 @@ if (Global.SERVER) { // Run this only on the server - not the clients
         {
             _name: 'players',
             setup: function(player) {
-                player.defaultModelName = 'stomar/red';
+                player.defaultModelName = 'stromar/red';
                 player.defaultHUDModelName = '';
             },
         },

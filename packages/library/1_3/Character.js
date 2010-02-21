@@ -265,7 +265,11 @@ Character = AnimatableLogicEntity.extend({
             this.renderingArgsTimestamp = currTimestamp;
         }
 
-        CAPI.renderModel.apply(this, this.renderingArgs);
+        this.getRenderModelFunc().apply(this, this.renderingArgs);
+    },
+
+    getRenderModelFunc: function() {
+        return CAPI.renderModel;
     },
 
     createRenderingArgs: function(mdlname, anim, o, yaw, pitch, flags, basetime) {

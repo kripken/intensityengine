@@ -128,14 +128,14 @@ Physics = {
             clientActivate: function() { Physics.Engine.setupPhysicalEntity(this); },
             clientDeactivate: function() { Physics.Engine.teardownPhysicalEntity(this); },
 
-            renderPhysical: function(modelName, offset) {
+            renderPhysical: function(modelName, offset, animation) {
                 var flags = MODEL.LIGHT | MODEL.DYNSHADOW;
 
                 // Optimized version
                 var o = CAPI.physicsGetBodyPosition(this.physicsHandle);
                 if (offset) { o[0] += offset.x; o[1] += offset.y; o[2] += offset.z; }
                 var r = CAPI.physicsGetBodyRotation(this.physicsHandle);
-                var args = [this, modelName, ANIM_IDLE|ANIM_LOOP, o[0], o[1], o[2], 0, 0, 0, flags, 0, r[0], r[1], r[2], r[3]];
+                var args = [this, modelName, defaultValue(animation, ANIM_IDLE|ANIM_LOOP), o[0], o[1], o[2], 0, 0, 0, flags, 0, r[0], r[1], r[2], r[3]];
 
 //                // Normal version
 //                var o = this.position;
@@ -222,9 +222,13 @@ Physics = {
 //                }
             },
 
-            renderDynamic: function() {
-                // Appropriate for a capsule
-                this.renderPhysical('stromar', new Vector3(0, 0, - (this.aboveEye+this.eyeHeight)/2));
+            createRenderingArgs: function(mdlname, anim, o, yaw, pitch, flags, basetime) {
+                var r = CAPI.physicsGetBodyRotation(this.physicsHandle);
+                return [this, mdlname, anim, o.x, o.y, o.z - (this.aboveEye+this.eyeHeight)/2, 0, 0, 0, flags, basetime, r[0], r[1], r[2], r[3]];
+            },
+
+            getRenderModelFunc: function() {
+                return CAPI.renderModel3;
             },
         },
     },
