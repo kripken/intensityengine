@@ -40,6 +40,7 @@ public:
     virtual void setBodyPosition(physicsHandle handle, const vec& position) { assert(0); };
     virtual void setBodyRotation(physicsHandle handle, const quat& rotation) { assert(0); };
     virtual void setBodyVelocity(physicsHandle handle, const vec& velocity) { assert(0); };
+    virtual void addBodyImpulse(physicsHandle handle, const vec& impulse) { assert(0); };
 
     virtual void getBodyPosition(physicsHandle handle, vec& position) { assert(0); };
     virtual void getBodyRotation(physicsHandle handle, quat& rotation) { assert(0); };

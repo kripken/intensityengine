@@ -129,6 +129,12 @@ Vector3 = Class.extend({
         return this;
     },
 
+    cap: function(size) {
+        var mag = this.magnitude();
+        if (mag > size) this.mul(size/mag);
+        return this;
+    },
+
     subNew: function(other) {
         return new Vector3(this.x - other.x, this.y - other.y, this.z - other.z);
     },

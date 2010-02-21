@@ -385,6 +385,15 @@ void BulletPhysicsEngine::setBodyVelocity(physicsHandle handle, const vec& veloc
     body->activate();
 }
 
+void BulletPhysicsEngine::addBodyImpulse(physicsHandle handle, const vec& impulse)
+{
+    IntensityBulletBody* body = handleBodyMap[handle];
+
+    body->applyCentralImpulse(FROM_SAUER_VEC(impulse));
+
+    body->activate();
+}
+
 void BulletPhysicsEngine::getBodyPosition(physicsHandle handle, vec& position)
 {
     IntensityBulletBody* body = handleBodyMap[handle];

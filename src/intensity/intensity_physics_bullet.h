@@ -83,6 +83,7 @@ public:
     virtual void setBodyPosition(physicsHandle handle, const vec& position);
     virtual void setBodyRotation(physicsHandle handle, const quat& rotation);
     virtual void setBodyVelocity(physicsHandle handle, const vec& velocity);
+    virtual void addBodyImpulse(physicsHandle handle, const vec& impulse);
 
     virtual void getBodyPosition(physicsHandle handle, vec& position);
     virtual void getBodyRotation(physicsHandle handle, quat& rotation);

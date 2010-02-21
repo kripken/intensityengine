@@ -148,11 +148,7 @@ Physics = {
         playerPlugin: {
             createPhysicalObject: function() {
                 // Typical character setup
-                this.physicsSize = {
-                    height: 5,
-                    radius: 5,
-                };
-                var ret = CAPI.physicsAddCapsule(10, this.physicsSize.radius, this.physicsSize.height);
+                var ret = CAPI.physicsAddCapsule(10, this.radius, this.aboveEye+this.eyeHeight-this.radius*2);
                 CAPI.physicsSetAngularFactor(ret, 0, 0, 1);
 
 //                var ret = CAPI.physicsAddBox(10, 25, 15, 10);
@@ -208,9 +204,9 @@ Physics = {
                     if (!editing) {
                         var flatVelocity = velocity.copy();
                         flatVelocity.z = 0;
-                        velocity.add(targetVelocity.subNew(flatVelocity).mul(seconds*
-                            ( (this.move || this.strafe) ? 6 : 2)
-                        ));
+                        var cap = speed;
+                        targetVelocity.sub(flatVelocity).cap(cap).mul(seconds*30);
+                        CAPI.physicsAddBodyImpulse(this.physicsHandle, targetVelocity.x, targetVelocity.y, targetVelocity.z);
                     }
 
                     this.lastPosition = this.position.copy();
@@ -218,7 +214,6 @@ Physics = {
 
                 this.position = position;
                 this.rotation = new Vector4().quatFromAxisAngle(new Vector3(0,0,1), this.yaw-90);
-                this.velocity = velocity;
             },
 
             jump: function() {
@@ -229,7 +224,7 @@ Physics = {
 
             renderDynamic: function() {
                 // Appropriate for a capsule
-                this.renderPhysical('stromar', new Vector3(0, 0, - this.physicsSize.height/2 - this.physicsSize.radius));
+                this.renderPhysical('stromar', new Vector3(0, 0, - (this.aboveEye+this.eyeHeight)/2));
             },
         },
     },
