@@ -899,7 +899,7 @@ V8_FUNC_sss(__script__combineImages, {
 
 V8_FUNC_ddddi(__script__isColliding, {
     vec position(arg1, arg2, arg3);
-    V8_RETURN_BOOL( WorldSystem::isColliding(
+    V8_RETURN_BOOL( PhysicsManager::getEngine()->isColliding(
         position,
         arg4,
         arg5 != -1 ? LogicSystem::getLogicEntity(arg5).get() : NULL)

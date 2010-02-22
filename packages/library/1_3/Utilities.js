@@ -241,6 +241,8 @@ Vector3 = Class.extend({
     },
 });
 
+Vector3.zero = new Vector3(0, 0, 0);
+
 Vector4 = Vector3.extend({
     create: function(x, y, z, w) {
         if (typeof x === 'object' && x.length === 4) {
@@ -288,6 +290,8 @@ Vector4 = Vector3.extend({
         }
     },
 });
+
+Vector4.zero = new Vector4(0, 0, 0, 0);
 
 /*
 //! Internal function to simplify the API. Many API functions expect a Vector3, but

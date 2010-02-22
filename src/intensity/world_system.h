@@ -37,12 +37,6 @@ struct WorldSystem
     //! Runs the startup script for the current map. Called from worldio.loadworld
     static void runMapScript();
 
-    //! Check for collision with anything at a particular point+radius. Note that
-    //! we return true on collision - the opposite of sauer.
-    //! @param ignore An entity to ignore. Note that due to sauer limits this only
-    //!               works with dynamic entities for now
-    static bool isColliding(vec position, float radius, CLogicEntity *ignore=NULL);
-
     //! Used inside sauer to know if we are checking area triggering
     static bool triggeringCollisions;
 

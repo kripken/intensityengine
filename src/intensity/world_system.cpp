@@ -169,38 +169,6 @@ void removeentity(extentity *entity)
     removeentity(getEntId(entity));
 }
 
-// Convenices
-
-bool WorldSystem::isColliding(vec position, float radius, CLogicEntity *ignore)
-{
-//printf("Ignore? %d       %d\r\n", ignore != NULL, LogicSystem::getUniqueId(ignore->dynamicEntity));
-    physent tester;
-    tester.reset();
-    tester.type = ENT_BOUNCE;
-    tester.o = position;
-    tester.radius = tester.xradius = tester.yradius = radius;
-    tester.eyeheight = radius;
-    tester.aboveeye = radius;
-
-    if (!collide(&tester, vec(0, 0, 0)))
-    {
-        extern physent *hitplayer; // physics.cpp
-//        printf("Hit: %d\r\n", hitplayer ? LogicSystem::getUniqueId(hitplayer) : -1337);
-
-        if (ignore && ignore->isDynamic() && ignore->dynamicEntity == hitplayer)
-        {
-            // Try to see if the ignore was the sole cause of collision - move it away, test, then move it back
-            vec save = ignore->dynamicEntity->o;
-            avoidcollision(ignore->dynamicEntity, vec(1,1,1), &tester, 0.1f);
-            bool ret = !collide(&tester, vec(0, 0, 0));
-            ignore->dynamicEntity->o = save;
-            return ret;
-        } else
-            return true;
-    } else
-        return false;
-}
-
 
 // AreaTrigger collisions
 

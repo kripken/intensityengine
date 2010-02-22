@@ -54,5 +54,7 @@ public:
     virtual physicsHandle addConstraintP2P(physicsHandle handleA, physicsHandle handleB, vec& pivotA, vec& pivotB) { assert(0); };
 
     virtual void simulate(float seconds);
+
+    virtual bool isColliding(vec& position, float radius, CLogicEntity *ignore=NULL);
 };
 

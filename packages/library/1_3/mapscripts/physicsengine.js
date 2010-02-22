@@ -7,6 +7,9 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/Health');
 Library.include('library/' + Global.LIBRARY_VERSION + '/GameManager');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Physics');
 Library.include('library/' + Global.LIBRARY_VERSION + '/World');
+Library.include('library/' + Global.LIBRARY_VERSION + '/Projectiles');
+Library.include('library/' + Global.LIBRARY_VERSION + '/Firing');
+Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Rocket');
 
 //// Setup physics
 
@@ -44,6 +47,8 @@ Map.shadowmapAngle(300);
 
 //// Player class
 
+playerRocketLauncher = Firing.registerGun(new RocketGun(), 'Rocket Launcher', 'packages/hud/gui_gk_Icon_w02.png');
+
 GamePlayer = registerEntityClass(
     bakePlugins(
         Player,
@@ -52,10 +57,15 @@ GamePlayer = registerEntityClass(
             GameManager.playerPlugin,
             Physics.Engine.objectPlugin,
             Physics.Engine.playerPlugin,
+            Firing.plugins.protocol,
+            Firing.plugins.player,
+            Projectiles.plugin,
             {
                 _class: "GamePlayer",
                 init: function() {
                     this.movementSpeed = 75;
+                    this.gunIndexes = [playerRocketLauncher];
+                    this.currGunIndex = playerRocketLauncher;
                 },
             },
         ]
@@ -75,7 +85,9 @@ ApplicationManager.setApplicationClass(Application.extend({
     clientOnEntityOffMap: function(entity) {
 log(ERROR, "off map!");
         entity.position = [600,600,600];
-    }
+    },
+
+    clientClick: Firing.clientClick,
 }));
 
 GameManager.setup([

@@ -77,6 +77,12 @@ public:
     virtual physicsHandle addConstraintP2P(physicsHandle handleA, physicsHandle handleB, vec& pivotA, vec& pivotB) = 0;
 
     virtual void simulate(float seconds) = 0;
+
+    //! Check for collision with anything at a particular point+radius. Note that
+    //! we return true on collision - the opposite of sauer.
+    //! @param ignore An entity to ignore. Note that due to sauer limits this only
+    //!               works with dynamic entities for now
+    virtual bool isColliding(vec& position, float radius, CLogicEntity *ignore=NULL) = 0;
 };
 
 namespace PhysicsManager

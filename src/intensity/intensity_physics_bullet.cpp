@@ -269,10 +269,14 @@ physicsHandle BulletPhysicsEngine::addBody(btCollisionShape *shape, float mass)
     handleBodyMap[handle] = body;
     handleBodyCounter += 1; // TODO: Handle overflow etc. etc. etc.
 
+    Logging::log(Logging::DEBUG, "Physics: Created body: %d\r\n", handle);
+
     return handle; // XXX garbage collect ***shape***. Also body also motionstate in previous func, etc.}
 
 void BulletPhysicsEngine::removeBody(physicsHandle handle)
 {
+    Logging::log(Logging::DEBUG, "Physics: Removing body: %d\r\n", handle);
+
     assert(handleBodyMap.count(handle) == 1);
     IntensityBulletBody* body = handleBodyMap[handle];
     assert(body);
@@ -338,6 +342,7 @@ physicsHandle BulletPhysicsEngine::addCapsule(float mass, float radius, float he
 }
 
 #define GET_BODY(handle, body) \
+    Logging::log(Logging::DEBUG, "Physics: Accessing body: %d (line %d)\r\n", handle, __LINE__); \
     IntensityBulletBody* body = handleBodyMap[handle]; \
     assert(body);
 
@@ -482,7 +487,16 @@ This will happen in predictplayer: So need to counter it?
 // XXX TODO:    game::predictplayer(*, false); - interpolate remote players
 }
 
-
+bool BulletPhysicsEngine::isColliding(vec& position, float radius, CLogicEntity *ignore)
+{
+    btSphereShape sphere(FROM_SAUER_SCALAR(radius));
+    btTransform from;
+    from.setIdentity();
+    from.setOrigin(FROM_SAUER_VEC(position));
+    btCollisionWorld::ClosestConvexResultCallback cb(from.getOrigin(), from.getOrigin() );
+    m_dynamicsWorld->convexSweepTest(&sphere, from, from, cb);
+    return cb.hasHit();
+}
 
 
 

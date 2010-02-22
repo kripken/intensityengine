@@ -106,9 +106,15 @@ Physics = {
             }
         },
 
-        getPosition: function(entity) { return CAPI.physicsGetBodyPosition(entity.physicsHandle); },
-        getRotation: function(entity) { return CAPI.physicsGetBodyRotation(entity.physicsHandle); },
-        getVelocity: function(entity) { return CAPI.physicsGetBodyVelocity(entity.physicsHandle); },
+        getPosition: function(entity) {
+            return (entity.physicsHandle !== undefined) ? CAPI.physicsGetBodyPosition(entity.physicsHandle) : Vector3.zero;
+        },
+        getRotation: function(entity) {
+            return (entity.physicsHandle !== undefined) ? CAPI.physicsGetBodyRotation(entity.physicsHandle) : Vector4.zero;
+        },
+        getVelocity: function(entity) {
+            return (entity.physicsHandle !== undefined) ? CAPI.physicsGetBodyVelocity(entity.physicsHandle) : Vector3.zero;
+        },
 
         setPosition: function(entity, v) {
             if (entity.physicsHandle !== undefined) {
