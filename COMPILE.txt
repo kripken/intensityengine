@@ -148,6 +148,10 @@ Some specific comments:
 
     Slackware gurus, can you help us understand this issue?
 
+  * A similar issue seems to happen on Ubuntu 8.04, "undefined reference to
+    shm_open". Adding "rt" to CLIENT_LIBRARIES in src/client/CMakeLists.txt
+    should fix that.
+
 
 OS X
 ====
