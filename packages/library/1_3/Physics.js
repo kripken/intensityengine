@@ -87,7 +87,7 @@ Physics = {
                     old.apply(this, arguments);
 
                     // Create physics body
-                    this.physicsHandle = CAPI.physicsAddSphere(this.radius, this.radius);
+                    this.physicsHandle = CAPI.physicsAddSphere(1, this.radius);
                     Physics.Engine.setPosition(this, this.position.asArray());
                     Physics.Engine.setVelocity(this, this.velocity.asArray());
                 },
@@ -104,13 +104,19 @@ Physics = {
                     }
 
                     // Check for changes in velocity. In z, maybe just gravity, ignore. Otherwise - explode.
-                    var oldVelocity = Physics.Engine.getVelocity(this);
+                    var oldVelocity = this.velocity.copy();
                     this.position = new Vector3(Physics.Engine.getPosition(this));
                     this.velocity = new Vector3(Physics.Engine.getVelocity(this));
+                    this.velocity.z = oldVelocity.z; // Do not care about gravity
+                    Physics.Engine.setVelocity(this, this.velocity.asArray());
+
                     var diff = this.velocity.subNew(oldVelocity).magnitude();
-                    if (diff >= 1*seconds) return false; // XXX
+                    if (diff >= 10*seconds) return this.onExplode();
                     return true;
                 };
+
+                Projectiles.Projectile.prototype.shooterSafety = 2.0;
+
             }
         },
 

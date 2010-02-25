@@ -92,6 +92,7 @@ Projectiles = {
         gravity: 0,
         radius: 1.0,
         explosionPower: 0,
+        shooterSafety: 0.1,
 
         create: function(position, velocity, owner, targetEntity) {
             //! The start position of the projectile

@@ -117,7 +117,7 @@ RocketGun = Projectiles.Gun.extend({
                     var dir = shooterPosition.subNew(currentOriginPosition);
                     var dist = dir.magnitude() + that.projectileClass.prototype.radius;
                     if (dist > shooter.radius) {
-                        currentOriginPosition.add(dir.normalize().mul(dist - shooter.radius + 0.1));
+                        currentOriginPosition.add(dir.normalize().mul(dist - shooter.radius + that.projectileClass.prototype.shooterSafety));
                     }
                 }
 
