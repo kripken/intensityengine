@@ -263,6 +263,9 @@ physicsHandle BulletPhysicsEngine::addBody(btCollisionShape *shape, float mass)
     IntensityBulletBody* body = new IntensityBulletBody(mass, motionState, shape, localInertia);
     motionState->parent = body;
 
+// XXX   body->setCollisionFlags( body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT); 
+// XXX   body->setActivationState(DISABLE_DEACTIVATION);
+
     m_dynamicsWorld->addRigidBody(body);
 
     physicsHandle handle = handleBodyCounter;
@@ -489,12 +492,15 @@ This will happen in predictplayer: So need to counter it?
 
 bool BulletPhysicsEngine::isColliding(vec& position, float radius, CLogicEntity *ignore)
 {
+printf("WARNING - faulty code. Collide? %f,%f,%f   %f\r\n", position.x, position.y, position.z, radius);
     btSphereShape sphere(FROM_SAUER_SCALAR(radius));
     btTransform from;
     from.setIdentity();
     from.setOrigin(FROM_SAUER_VEC(position));
     btCollisionWorld::ClosestConvexResultCallback cb(from.getOrigin(), from.getOrigin() );
+//	cb.m_closestHitFraction = 0.5;
     m_dynamicsWorld->convexSweepTest(&sphere, from, from, cb);
+//printf("hit? %d\r\n", cb.hasHit());
     return cb.hasHit();
 }
 
