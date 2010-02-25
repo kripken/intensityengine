@@ -114,6 +114,8 @@ Projectiles = {
             this.collideFunc = World.isColliding;
         },
 
+        destroy: function() {},
+
         tick: function(seconds) {
             this.timeLeft -= seconds;
             if (this.timeLeft < 0) {
@@ -187,7 +189,11 @@ Projectiles = {
         },
 
         tick: function(seconds) {
-            this.projectiles = filter(function(projectile) { return projectile.tick(seconds); }, this.projectiles);
+            this.projectiles = filter(function(projectile) {
+                var persist = projectile.tick(seconds);
+                if (!persist) projectile.destroy();
+                return persist;
+            }, this.projectiles);
         },
 
         render: function() {

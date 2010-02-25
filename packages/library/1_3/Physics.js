@@ -79,6 +79,39 @@ Physics = {
     Engine: {
         create: function(type) {
             CAPI.physicsCreateEngine(type);
+
+            // Patch projectiles to run on physics engine
+            if (Projectiles) {
+                var old = Projectiles.Projectile.prototype.create;
+                Projectiles.Projectile.prototype.create = function() {
+                    old.apply(this, arguments);
+
+                    // Create physics body
+                    this.physicsHandle = CAPI.physicsAddSphere(this.radius, this.radius);
+                    Physics.Engine.setPosition(this, this.position.asArray());
+                    Physics.Engine.setVelocity(this, this.velocity.asArray());
+                },
+
+                Projectiles.Projectile.prototype.destroy = function() {
+                    // Remove physics body
+                    Physics.Engine.teardownPhysicalEntity(this);
+                };
+
+                Projectiles.Projectile.prototype.tick = function(seconds) {
+                    this.timeLeft -= seconds;
+                    if (this.timeLeft < 0) {
+                        return false;
+                    }
+
+                    // Check for changes in velocity. In z, maybe just gravity, ignore. Otherwise - explode.
+                    var oldVelocity = Physics.Engine.getVelocity(this);
+                    this.position = new Vector3(Physics.Engine.getPosition(this));
+                    this.velocity = new Vector3(Physics.Engine.getVelocity(this));
+                    var diff = this.velocity.subNew(oldVelocity).magnitude();
+                    if (diff >= 1*seconds) return false; // XXX
+                    return true;
+                };
+            }
         },
 
         setupPhysicalEntity: function(entity) {
