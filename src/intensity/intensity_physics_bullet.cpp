@@ -479,10 +479,10 @@ void BulletPhysicsEngine::simulate(float seconds)
             m_dynamicsWorld->debugDrawWorld();
         } else
             m_debugDrawer->setDebugMode(0);
-    #endif
 
-    // Stuff sauer does in its physics simulations: roll decreasing, etc.
-    player->roll = player->roll/(1+(float)sqrtf((float)curtime)/25);
+        // Stuff sauer does in its physics simulations: roll decreasing, etc.
+        player->roll = player->roll/(1+(float)sqrtf((float)curtime)/25);
+    #endif
 
 /*
 This will happen in predictplayer: So need to counter it?
