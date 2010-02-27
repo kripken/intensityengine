@@ -935,9 +935,8 @@ V8_FUNC_ddd(__script__getMaterial, {
     VARP(ragdoll, 0, 1, 1);
     static int oldThirdperson = -1;
 
-    V8_FUNC_T(__script__renderModel2, siddddddii, {
-
-        int anim = arg3;
+    void prepareRagdoll(int& anim, LogicEntityPtr self)
+    {
         if (anim&ANIM_RAGDOLL)
         {
 //            if (!ragdoll || loadmodel(mdl);
@@ -970,44 +969,50 @@ V8_FUNC_ddd(__script__getMaterial, {
                 }
             }
         }
+    }
 
-        vec o(arg4, arg5, arg6);
-
-        fpsent *fpsEntity = NULL;
-
-        if (self->dynamicEntity)
-            fpsEntity = dynamic_cast<fpsent*>(self->dynamicEntity);
-        else
+    fpsent* getProxyFpsEntity(LogicEntityPtr self)
+    {
+        if (self->scriptEntity->hasProperty("renderingHashHint"))
         {
-            if (self->scriptEntity->hasProperty("renderingHashHint"))
+            static bool initialized = false;
+            static fpsent* fpsEntitiesForRendering[1024];
+
+            if (!initialized)
             {
-                static bool initialized = false;
-                static fpsent* fpsEntitiesForRendering[1024];
+                for (int i = 0; i < 1024; i++)
+                    fpsEntitiesForRendering[i] = new fpsent;
 
-                if (!initialized)
-                {
-                    for (int i = 0; i < 1024; i++)
-                        fpsEntitiesForRendering[i] = new fpsent;
-
-                    initialized = true;
-                }
-
-                int renderingHashHint = self->scriptEntity->getPropertyInt("renderingHashHint");
-                renderingHashHint = renderingHashHint & 1023;
-                assert(renderingHashHint >= 0 && renderingHashHint < 1024);
-                fpsEntity = fpsEntitiesForRendering[renderingHashHint];
+                initialized = true;
             }
-        }
+
+            int renderingHashHint = self->scriptEntity->getPropertyInt("renderingHashHint");
+            renderingHashHint = renderingHashHint & 1023;
+            assert(renderingHashHint >= 0 && renderingHashHint < 1024);
+            return fpsEntitiesForRendering[renderingHashHint];
+        } else
+            return NULL;
+    }
+
+    #define PREP_RENDER_MODEL \
+        int anim = arg3; \
+        prepareRagdoll(anim, self); \
+        vec o(arg4, arg5, arg6); \
+        fpsent *fpsEntity = NULL; \
+        if (self->dynamicEntity) \
+            fpsEntity = dynamic_cast<fpsent*>(self->dynamicEntity); \
+        else \
+            fpsEntity = getProxyFpsEntity(self);
+
+    V8_FUNC_T(__script__renderModel2, siddddddii, {
+        PREP_RENDER_MODEL
         rendermodel(NULL, arg2, anim, o, self, arg7, arg8, arg9, arg10, fpsEntity, self->attachments, arg11);
     });
 
     V8_FUNC_T(__script__renderModel3, siddddddiidddd, {
-        vec o(arg4, arg5, arg6);
-        fpsent *fpsEntity = NULL;
-        if (self->dynamicEntity)
-            fpsEntity = dynamic_cast<fpsent*>(self->dynamicEntity);
+        PREP_RENDER_MODEL
         quat rotation(arg12, arg13, arg14, arg15);
-        rendermodel(NULL, arg2, arg3, o, self, arg7, arg8, arg9, arg10, fpsEntity, self->attachments, arg11, 0, 1, rotation);
+        rendermodel(NULL, arg2, anim, o, self, arg7, arg8, arg9, arg10, fpsEntity, self->attachments, arg11, 0, 1, rotation);
     });
 
 #endif
