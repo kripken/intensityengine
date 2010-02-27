@@ -507,6 +507,22 @@ printf("WARNING - faulty code. Collide? %f,%f,%f   %f\r\n", position.x, position
     return cb.hasHit();
 }
 
+void BulletPhysicsEngine::rayCastClosest(vec &from, vec &to, float& hitDist, LogicEntityPtr& hitEntity, CLogicEntity* ignore)
+{
+    btVector3 btFrom = FROM_SAUER_VEC(from),
+              btTo   = FROM_SAUER_VEC(to);
+    btCollisionWorld::ClosestRayResultCallback cb(btFrom, btTo);
+    m_dynamicsWorld->rayTest(btFrom, btTo, cb);
+    if (cb.m_closestHitFraction < 1.0)
+    {
+        vec temp(to);
+        temp.sub(from);
+        hitDist = cb.m_closestHitFraction * temp.magnitude();
+    } else {
+        hitDist = -1;
+    }
+    hitEntity.reset(); // XXX TODO, also ignore
+}
 
 
 // Utilities

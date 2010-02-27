@@ -115,18 +115,16 @@ if (Global.SERVER) { // Run this only on the server - not the clients
         {
             _name: 'players',
             setup: function(player) {
-                player.defaultModelName = 'stromar/red';
+                player.defaultModelName = 'stromar_1_1/red';
                 player.defaultHUDModelName = '';
             },
         },
     ]);
 
     Global.queuedActions.push(function() {
-        var SIZE = 20.5;
-
-        for (var i = 0; i < 5; i++) {
-            for (var j = 1; j < 6; j++) {
-                newEntity('PhysicsEngineEntity', { position: new Vector3(600+i*SIZE, 600, 520+j*SIZE) });
+        for (var i = 0; i < 10; i++) {
+            for (var j = 1; j < 11; j++) {
+                newEntity('PhysicsEngineEntity', { position: new Vector3(600+i*20, 600, 500+j*20) });
             }
         }
     });

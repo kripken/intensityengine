@@ -26,6 +26,8 @@
 #include "engine.h"
 #include "game.h"
 
+#include "targeting.h"
+
 #include "intensity_physics.h"
 #include "intensity_physics_sauer.h"
 
@@ -101,5 +103,40 @@ bool SauerPhysicsEngine::isColliding(vec& position, float radius, CLogicEntity *
             return true;
     } else
         return false;
+}
+
+void SauerPhysicsEngine::rayCastClosest(vec &from, vec &to, float& hitDist, LogicEntityPtr& hitEntity, CLogicEntity* ignore)
+{
+    static LogicEntityPtr placeholderLogicEntity(new CLogicEntity());
+
+    // Manually check if we are hovering, using ray intersections. TODO: Not needed for extents?
+    float dynamicDist, staticDist;
+    dynent* dynamicEntity;
+    extentity* staticEntity;
+    TargetingControl::intersectClosestDynamicEntity(from, to, ignore ? ignore->dynamicEntity : NULL, dynamicDist,  dynamicEntity);
+    TargetingControl::intersectClosestMapmodel     (from, to,                                        staticDist, staticEntity);
+
+    hitDist = -1;
+
+    if (dynamicEntity == NULL && staticEntity == NULL)
+    {
+        hitDist = -1;
+        hitEntity = placeholderLogicEntity;
+    } else if (dynamicEntity != NULL && staticEntity == NULL)
+    {
+        hitDist = dynamicDist;
+        hitEntity = LogicSystem::getLogicEntity(dynamicEntity);
+    } else if (dynamicEntity == NULL && staticEntity != NULL)
+    {
+        hitDist = staticDist;
+        hitEntity = LogicSystem::getLogicEntity(*staticEntity);
+    } else if (staticDist < dynamicDist)
+    {
+        hitDist = staticDist;
+        hitEntity = LogicSystem::getLogicEntity(*staticEntity);
+    } else {
+        hitDist = dynamicDist;
+        hitEntity = LogicSystem::getLogicEntity(dynamicEntity);
+    }
 }
 

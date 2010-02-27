@@ -84,6 +84,8 @@ public:
     //!               works with dynamic entities for now
     virtual bool isColliding(vec& position, float radius, CLogicEntity *ignore=NULL) = 0;
 
+    virtual void rayCastClosest(vec &from, vec &to, float& hitDist, LogicEntityPtr& hitEntity, CLogicEntity* ignore=NULL) = 0;
+
     //! Prepare a ragdoll.
     //! @return true if we should continue with the ragdoll processing, in the sauer pipeline. Otherwise,
     //!         the ragdoll is 'cancelled', and the engine can handle it however it wants.
