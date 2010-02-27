@@ -952,7 +952,7 @@ V8_FUNC_ddd(__script__getMaterial, {
                 }
             }
 
-            if (fpsEntity->ragdoll || !ragdoll)
+            if (fpsEntity->ragdoll || !ragdoll || !PhysicsManager::getEngine()->prepareRagdoll(self))
             {
                 anim &= ~ANIM_RAGDOLL;
                 self->scriptEntity->call("setLocalAnimation", anim); // Set new animation locally - in state data and C++

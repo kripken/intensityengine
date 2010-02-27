@@ -99,5 +99,7 @@ public:
     virtual void simulate(float seconds);
 
     virtual bool isColliding(vec& position, float radius, CLogicEntity *ignore=NULL);
+
+    virtual bool prepareRagdoll(LogicEntityPtr self) { return false; };
 };
 

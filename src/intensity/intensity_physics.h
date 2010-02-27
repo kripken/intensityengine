@@ -83,6 +83,11 @@ public:
     //! @param ignore An entity to ignore. Note that due to sauer limits this only
     //!               works with dynamic entities for now
     virtual bool isColliding(vec& position, float radius, CLogicEntity *ignore=NULL) = 0;
+
+    //! Prepare a ragdoll.
+    //! @return true if we should continue with the ragdoll processing, in the sauer pipeline. Otherwise,
+    //!         the ragdoll is 'cancelled', and the engine can handle it however it wants.
+    virtual bool prepareRagdoll(LogicEntityPtr self) { return true; };
 };
 
 namespace PhysicsManager
