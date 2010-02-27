@@ -276,7 +276,7 @@ Physics = {
                         }
                     }
 
-                    if (!editing) {
+                    if (!editing && Health.isActiveEntity(this)) {
                         var flatVelocity = velocity.copy();
                         flatVelocity.z = 0;
                         var cap = speed;
@@ -292,6 +292,7 @@ Physics = {
             },
 
             jump: function() {
+                if (!Health.isActiveEntity(this)) return;
 //                if (this.isOnFloor() || World.getMaterial(this.position) === MATERIAL.WATER) {
 //                    this.velocity.z += this.movementSpeed*2;
                         var delta = Global.currTimeDelta;
