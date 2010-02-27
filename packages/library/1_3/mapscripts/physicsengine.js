@@ -13,6 +13,7 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Rocket');
 
 //// Setup physics
 
+Projectiles.serverside = false;
 Physics.Engine.create('bullet');
 
 // Default materials, etc.

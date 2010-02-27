@@ -335,6 +335,11 @@ Physics.Engine.Entity = registerEntityClass(bakePlugins(LogicEntity, [
         renderDynamic: function() {
             this.renderPhysical('box');
         },
+
+        // TODO: getCenter and getBottom functions, in general in the API?
+        getCenter: function() { return this.position.copy(); },
+
+        sufferDamage: function() { }, //!< Necessary so explosions etc. affect us
     },
 ]));
 
