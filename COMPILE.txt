@@ -321,5 +321,5 @@ Bullet without the extras and demos by doing
 
 when you prepare to build Bullet.
 
-Bullet 2.75 (February 2010) was used in testing.
+Bullet 2.75 and 2.76 (February 2010) were used in testing.
 
