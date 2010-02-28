@@ -238,13 +238,19 @@ def set_config(section, option, value):
 
 ### Components
 
-DEFAULT_COMPONENTS = []
-
 ## Loads the components in [Components]list. They should be normal python
 ## import paths, e.g., list=intensity.components.example_component,some.other.component
 def load_components():
     components = get_config('Components', 'list', '').replace(' ', '').split(',')
-    components += DEFAULT_COMPONENTS
+
+    # Load additional commandline-specific components
+    MARKER = '-component:'
+    for arg in sys.argv:
+        if arg[:len(MARKER)] == MARKER:
+            component = arg[len(MARKER):]
+            if component not in components:
+                components.append(component)
+
     print "Loading components...", components
     for component in components:
         if component == '': continue
