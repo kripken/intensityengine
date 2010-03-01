@@ -224,3 +224,14 @@ void private_edit_mode()
 
 COMMAND(private_edit_mode, "");
 
+
+// Plugins
+
+void show_plugins()
+{
+    REFLECT_PYTHON( signal_show_components );
+    signal_show_components();
+}
+
+COMMAND(show_plugins, "");
+

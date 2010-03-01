@@ -69,3 +69,7 @@ signal_component = Signal(providing_args=['component_id', 'data'])
 def signal_signal_component(component_id, data):
     return str( multiple_send(signal_component, None, component_id=component_id, data=data) )
 
+show_components = Signal()
+def signal_show_components(): # C++ access is to this
+    show_components.send(None)
+
