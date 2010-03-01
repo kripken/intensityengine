@@ -203,6 +203,14 @@ def init_config(path, template):
     configFile = ConfigParser.ConfigParser()
     configFile.read(CONFIG_FILE)
 
+    # Apply changes based on commandline options
+    MARKER = '-config:'
+    for arg in sys.argv:
+        if arg[:len(MARKER)] == MARKER:
+            arg = arg[len(MARKER):]
+            section, option, value = arg.split(':')
+            set_config(section, option, value)
+
 ## Write out config options - safely
 def save_config():
     global CONFIG_FILE

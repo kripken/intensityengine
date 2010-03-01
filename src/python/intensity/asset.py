@@ -89,6 +89,10 @@ class AssetMetadata:
 
     ## Gets an asset metadata using the path of an asset. The asset metadata
     ## must already exist, so we can read the asset_id from it
+    ## TODO: Allow an (optional?) fallback, where if there is no such asset,
+    ## we query the master server for it. Must handle the case of multiple
+    ## assets with the same location, on the master (or disallow them - but
+    ## currently they are possible).
     @staticmethod
     def get_by_path(asset_path):
         data = AssetMetadata.load_raw( AssetMetadata.get_metadata_path(asset_path) )

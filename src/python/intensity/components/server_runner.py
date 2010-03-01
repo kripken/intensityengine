@@ -30,6 +30,7 @@ import os, signal # Python 2.5 killing method, see below
 from intensity.base import *
 from intensity.logging import *
 from intensity.signals import shutdown, show_components
+from intensity.asset import AssetMetadata
 
 
 class Module:
@@ -38,11 +39,22 @@ class Module:
 def get_output_file():
     return os.path.join(get_home_subdir(), 'out_server.txt')
 
-def run_server():
+def run_server(location=None):
     CModule.run_cubescript('echo "Starting server, please wait..."')
 
+    if location is not None:
+        try:
+            location = AssetMetadata.get_by_path('packages/base/'+location+'.tar.gz').asset_id
+        except Exception, e:
+            log(logging.ERROR, "Error in getting asset info for map: %s" % location)
+            return
+
     Module.server_proc = subprocess.Popen(
-        "%s -component:intensity.components.shutdown_if_idle" % ('exec ./intensity_server.sh' if UNIX else 'intensity_server.bat'),
+        "%s %s %s -component:intensity.components.shutdown_if_idle" % (
+            'exec ./intensity_server.sh' if UNIX else 'intensity_server.bat',
+            '-config:Activity:force_activity_id:' if location is not None else '',
+            ('-config:Activity:force_map_asset_id:%s' % location) if location is not None else '',
+        ),
         shell=True,
         stdout=open(get_output_file(), 'w'),
         stderr=subprocess.STDOUT,
@@ -100,7 +112,12 @@ def show_gui(sender, **kwargs):
         CModule.run_cubescript('''
             if ( = $logged_into_master 1 ) [
                 guitext "Local server: (not active)"
-                guibutton "  start" [ (run_python "intensity.components.server_runner.run_server()") ]
+                guilist [
+                    guitext "Map location to run: base/"
+                    guifield local_server_location 30 []
+                    guitext ".tar.gz"
+                ]
+                guibutton "  start" [ (run_python (format "intensity.components.server_runner.run_server('%1')" $local_server_location)) ]
             ] [
                 guitext "Local server: (need master login)"
             ]
