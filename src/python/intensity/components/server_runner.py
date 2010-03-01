@@ -103,11 +103,16 @@ shutdown.connect(stop_server, weak=False)
 def show_gui(sender, **kwargs):
     if has_server():
         if check_server_ready():
-            CModule.run_cubescript('guitext "Local server: Running"')
-            CModule.run_cubescript('guibutton "  stop" [ (run_python "intensity.components.server_runner.stop_server()") ]')
+            CModule.run_cubescript('''
+                guitext "Local server: Running"
+                guistayopen [
+                    guibutton "  stop" [ (run_python "intensity.components.server_runner.stop_server()") ]
+                ]
+                guibutton "  show output" [ showgui local_server_output ]
+            ''')
         elif check_server_terminated():
             Module.server_proc = None
-            log(logging.ERROR, "Server output: %s" % open(get_output_file(), 'r').read()) # XXX Show in GUI? last few lines at least?
+            log(logging.ERROR, "Local server terminated due to an error")
         else:
             CModule.run_cubescript('guitext "Local server: ...preparing..."')
     else:
@@ -119,7 +124,10 @@ def show_gui(sender, **kwargs):
                     guifield local_server_location 30 []
                     guitext ".tar.gz"
                 ]
-                guibutton "  start" [ (run_python (format "intensity.components.server_runner.run_server('%1')" $local_server_location)) ]
+                guistayopen [
+                    guibutton "  start" [ (run_python (format "intensity.components.server_runner.run_server('%1')" $local_server_location)) ]
+                ]
+                guibutton "  show output" [ showgui local_server_output ]
             ] [
                 guitext "Local server: (need master login)"
             ]
@@ -127,4 +135,17 @@ def show_gui(sender, **kwargs):
     CModule.run_cubescript('guibar')
 
 show_components.connect(show_gui, weak=False)
+
+CModule.run_cubescript('''
+    newgui local_server_output [
+        guinoautotab [
+            guibar
+            guieditor "%(name)s" -80 20
+            guibar
+            guistayopen [
+                guibutton "refresh" [textfocus "%(name)s"; textload "%(name)s"; showgui -1]
+            ]
+        ]
+    ]
+''' % { 'name': get_output_file() })
 
