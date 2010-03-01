@@ -2,5 +2,5 @@
 abspath="$(cd "${0%/*}" 2>/dev/null; echo "$PWD"/"${0##*/}")"
 path_only=`dirname "$abspath"`
 cd ${path_only}
-./cbuild/src/server/Intensity_CServer $@
+exec ./cbuild/src/server/Intensity_CServer $@
 
