@@ -39,6 +39,8 @@ def get_output_file():
     return os.path.join(get_home_subdir(), 'out_server.txt')
 
 def run_server():
+    CModule.run_cubescript('echo "Starting server, please wait..."')
+
     Module.server_proc = subprocess.Popen(
         "%s -component:intensity.components.shutdown_if_idle" % ('exec ./intensity_server.sh' if UNIX else 'intensity_server.bat'),
         shell=True,
