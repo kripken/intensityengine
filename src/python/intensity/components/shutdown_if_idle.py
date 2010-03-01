@@ -43,7 +43,7 @@ def halt_on_excess():
 def watcher():
     consecutives = 0
     while True:
-        time.sleep(10.0)
+        time.sleep(60.0)
         if Clients.count() > 0:
             consecutives = 0
         else:

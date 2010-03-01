@@ -24,7 +24,7 @@
 Runs a server in a side process in a convenient way, for local gameplay.
 '''
 
-import subprocess
+import subprocess, time
 import os, signal # Python 2.5 killing method, see below
 
 from intensity.base import *
@@ -46,19 +46,31 @@ def run_server():
         stderr=subprocess.STDOUT,
     )
     #process.communicate()
+    Module.server_proc.connected_to = False
     log(logging.WARNING, "Starting server process: %d" % Module.server_proc.pid)
+
+    def prepare_to_connect():
+        while True:
+            time.sleep(1.0)
+            if check_server_ready():
+                def do_connect():
+                    assert(not Module.server_proc.connected_to)
+                    Module.server_proc.connected_to = True
+                    CModule.run_cubescript('connect 127.0.0.1 28787') # XXX: hard-coded
+                main_actionqueue.add_action(do_connect)
+                break
+    side_actionqueue.add_action(prepare_to_connect)
 
 def has_server():
     return Module.server_proc is not None
 
-# If the server terminated, return its output (perhaps to show to the user as a
-# crash log). Otherwise, return None
-def check_server():
-    if Module.server_proc is not None and Module.server_proc.poll():
-        Module.server_proc = None
-        return open(get_output_file(), 'r').read()
-    else:
-        return None
+# Check if the server is ready to be connected to
+def check_server_ready():
+    INDICATOR = '[[MAP LOADING]] - Success'
+    return INDICATOR in open(get_output_file(), 'r').read()
+
+def check_server_terminated():
+    return Module.server_proc.poll()
 
 def stop_server(sender=None, **kwargs):
     if Module.server_proc is not None:
@@ -74,11 +86,23 @@ shutdown.connect(stop_server, weak=False)
 
 def show_gui(sender, **kwargs):
     if has_server():
-        CModule.run_cubescript('guitext "Local server: Running"')
-        CModule.run_cubescript('guibutton "  stop" [ (run_python "intensity.components.server_runner.stop_server()") ]')
+        if check_server_ready():
+            CModule.run_cubescript('guitext "Local server: Running"')
+            CModule.run_cubescript('guibutton "  stop" [ (run_python "intensity.components.server_runner.stop_server()") ]')
+        elif check_server_terminated():
+            Module.server_proc = None
+            log(logging.ERROR, "Server output: %s" % open(get_output_file(), 'r').read()) # XXX Show in GUI? last few lines at least?
+        else:
+            CModule.run_cubescript('guitext "Local server: ...preparing..."')
     else:
-        CModule.run_cubescript('guitext "Local server: (not active)"')
-        CModule.run_cubescript('guibutton "  start" [ (run_python "intensity.components.server_runner.run_server()") ]')
+        CModule.run_cubescript('''
+            if ( = $logged_into_master 1 ) [
+                guitext "Local server: (not active)"
+                guibutton "  start" [ (run_python "intensity.components.server_runner.run_server()") ]
+            ] [
+                guitext "Local server: (need master login)"
+            ]
+        ''')
     CModule.run_cubescript('guibar')
 
 show_components.connect(show_gui, weak=False)
