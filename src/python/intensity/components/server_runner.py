@@ -73,6 +73,8 @@ def run_server(location=None):
                     CModule.run_cubescript('connect 127.0.0.1 28787') # XXX: hard-coded
                 main_actionqueue.add_action(do_connect)
                 break
+            else:
+                CModule.run_cubescript('echo "Waiting for server to finish starting up..."')
     side_actionqueue.add_action(prepare_to_connect)
 
 def has_server():

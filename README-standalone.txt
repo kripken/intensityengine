@@ -202,4 +202,22 @@ loaded from packages directly. Note that no attempt is made to
 check that the client and server run the same map.
 
 
+Running a local server using the server_runner plugin
+=====================================================
+
+This is an easy way to run a map, without manually setting up
+a server - the plugin will do it for you.
+
+    * Activate the plugin: Add intensity.components.server_runner to
+        "[Components] list" in your settings.cfg
+    * After logging in to the master, click on 'plugins...' in the main
+        menu. You will then see the status of the local server.
+    * Tell the plugin which map to run (simply by writing the location
+        of the map, e.g. "racetrack" for the racing map). Then click start,
+        and wait a bit while the server is started up for you. As soon as
+        it is ready you will automatically connect to it.
+    * The server will be shut down automatically when you close the client,
+        or connect to another server, so no need to worry about that. You
+        can also shut it down in the GUI if you want (which is necessary to
+        start it up with a different map).
 
