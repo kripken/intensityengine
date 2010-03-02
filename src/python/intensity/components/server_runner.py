@@ -50,7 +50,7 @@ def run_server(location=None):
             return
 
     Module.server_proc = subprocess.Popen(
-        "%s %s %s -component:intensity.components.shutdown_if_idle" % (
+        "%s %s %s -component:intensity.components.shutdown_if_idle -config:Startup:no_console:1" % (
             'exec ./intensity_server.sh' if UNIX else 'intensity_server.bat',
             '-config:Activity:force_activity_id:' if location is not None else '',
             ('-config:Activity:force_map_asset_id:%s' % location) if location is not None else '',
@@ -64,9 +64,13 @@ def run_server(location=None):
     log(logging.WARNING, "Starting server process: %d" % Module.server_proc.pid)
 
     def prepare_to_connect():
-        while True:
+        success = False
+        for i in range(20):
             time.sleep(1.0)
-            if check_server_ready():
+            if not has_server():
+                break
+            elif check_server_ready():
+                success = True
                 def do_connect():
                     assert(not Module.server_proc.connected_to)
                     Module.server_proc.connected_to = True
@@ -74,7 +78,9 @@ def run_server(location=None):
                 main_actionqueue.add_action(do_connect)
                 break
             else:
-                CModule.run_cubescript('echo "Waiting for server to finish starting up..."')
+                CModule.run_cubescript('echo "Waiting for server to finish starting up... (%d)"' % i)
+        if not success:
+            log(logging.ERROR, "Failed to start server. See out_server.txt")
     side_actionqueue.add_action(prepare_to_connect)
 
 def has_server():
@@ -91,8 +97,11 @@ def check_server_terminated():
 def stop_server(sender=None, **kwargs):
     if Module.server_proc is not None:
         log(logging.WARNING, "Stopping server process: %d" % Module.server_proc.pid)
-        os.kill(Module.server_proc.pid, signal.SIGKILL)
-        Module.server_proc.wait()
+        try:
+            os.kill(Module.server_proc.pid, signal.SIGKILL)
+            Module.server_proc.wait()
+        except OSError:
+            log(logging.ERROR, "Stopping server process failed.");
         # Or, in Python 2.6:   process.terminate()
         Module.server_proc = None
 
@@ -114,7 +123,12 @@ def show_gui(sender, **kwargs):
             Module.server_proc = None
             log(logging.ERROR, "Local server terminated due to an error")
         else:
-            CModule.run_cubescript('guitext "Local server: ...preparing..."')
+            CModule.run_cubescript('''
+                guitext "Local server: ...preparing..."
+                guistayopen [
+                    guibutton "  stop" [ (run_python "intensity.components.server_runner.stop_server()") ]
+                ]
+            ''')
     else:
         CModule.run_cubescript('''
             if ( = $logged_into_master 1 ) [
