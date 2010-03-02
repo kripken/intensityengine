@@ -1,5 +1,5 @@
 SET OLD_PATH=%PATH%
-SET PATH=windows\dll;Python26;C:\PYTHON26\;%PATH%
+SET PATH=windows\dll;Python26;C:\PYTHON26\;src\windows\sdl\lib;src\windows\sdl_image\lib;src\windows\sdl_mixer\lib;%PATH%
 
 SET OLD_PYTHONHOME=%PYTHONHOME%
 SET PYTHONHOME=Python26\lib;Python26\DLLs;C:\Python26\lib;C:\Python26\DLLs;%PYTHONHOME%
