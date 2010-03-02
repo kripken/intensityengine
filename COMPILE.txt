@@ -263,15 +263,6 @@ Some things to be aware of:
     * "LNK4098: defaultlib `LIBCMT` conflicts with use of other libs." This can be ignored for now
       (but it should be fixed).
     * Make sure to use the same windows platform sdk for both V8 and tIE (not v6.0A one place v6.1 elsewhere).
-    * For running, you should place the relevant DLL files (for SDL, etc.) in windows\dll under
-      the install directory. This is placed into the path automatically by the Intensity Engine
-      startup scripts, so the DLLs can be found. These files should already be there if you
-      download a binary version of the Intensity Engine. You should also be able to download
-      them from
-
-          http://github.com/kripken/intensityengine/downloads
-
-      The relevant file is windows_runtime.zip.
 
 
 FreeBSD
