@@ -51,7 +51,7 @@ public:
     virtual void setLinearFactor(physicsHandle handle, vec& factor) { assert(0); };
     virtual void setAngularFactor(physicsHandle handle, vec& factor) { assert(0); };
 
-    virtual physicsHandle addConstraintP2P(physicsHandle handleA, physicsHandle handleB, vec& pivotA, vec& pivotB) { assert(0); };
+    virtual physicsHandle addConstraintP2P(physicsHandle handleA, physicsHandle handleB, vec& pivotA, vec& pivotB) { assert(0); return 0; };
 
     virtual void simulate(float seconds);
 
