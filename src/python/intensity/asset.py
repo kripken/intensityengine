@@ -89,17 +89,56 @@ class AssetMetadata:
 
     ## Gets an asset metadata using the path of an asset. The asset metadata
     ## must already exist, so we can read the asset_id from it
-    ## TODO: Allow an (optional?) fallback, where if there is no such asset,
+    ## An optional fallback is available, where if there is no such asset,
     ## we query the master server for it. Must handle the case of multiple
     ## assets with the same location, on the master (or disallow them - but
     ## currently they are possible).
     @staticmethod
-    def get_by_path(asset_path):
+    def get_by_path(asset_path, check_master=True):
         data = AssetMetadata.load_raw( AssetMetadata.get_metadata_path(asset_path) )
         if data is not None:
             return AssetMetadata(data['asset_id'])
         else:
-            raise Exception("Cannot get metadata for asset %s as an error occured in reading" % asset_path)
+            if not check_master:
+                raise Exception("Cannot get metadata for asset %s as an error occured in reading" % asset_path)
+
+            # Try to scrape the master - hackish scraping
+            try:
+                log(logging.WARNING, "Trying to scrape master for asset metadata for %s" % asset_path)
+
+                import sys, traceback
+                from intensity.master import get_master_server
+                import intensity.components.thirdparty.BeautifulSoup as BeautifulSoup
+
+                html = urllib.urlopen('http://' + get_master_server() + '/tracker/assets/').read()
+                results = []
+                soup = BeautifulSoup.BeautifulSoup(html)
+                trs = soup.findAll('tr')
+                for tr in trs:
+                    if 'tracker/asset' in str(tr.contents):
+                        try:
+                            result = {
+                                'location': str(tr.contents[1].contents[0].contents[0]),
+                                'url': str(tr.contents[1].contents[0].attrs[0][1])
+                            }
+                            if 'packages/' + result['location'] == asset_path:
+                                results.append(result)
+                        except Exception, e:
+                            traceback.print_exc(file=sys.stdout)
+                            pass
+                if len(results) == 0:
+                    raise Exception("Could not find that asset, even on the master")
+                elif len(results) > 1:
+                    raise Exception("Found more than 1 relevant assets: %s" % str(results))
+                asset_id = results[0]['url'].split('/')[-2]
+                AssetManager.acquire(asset_id)
+                return AssetMetadata.get_by_path(asset_path, False)
+            except Exception, e:
+                traceback.print_exc(file=sys.stdout)
+                log(logging.WARNING, "Tried to scrape master for asset metadata for %s, but failed due to: %s" % (
+                    asset_path, str(e)
+                ))
+                raise
 
     def __init__(self, asset_id):
         self.asset_id = asset_id
