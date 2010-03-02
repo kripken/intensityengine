@@ -110,26 +110,27 @@ def autodiscover_activity(activity_id):
 ## Sets a map to be currently active, and starts a new scenario
 ## @param _map The asset id for the map (see curr_map_asset_id)
 def set_map(activity_id, map_asset_id):
-    log(logging.DEBUG, "Setting the map to %s" % (map_asset_id))
+    log(logging.DEBUG, "Setting the map to %s / %s" % (activity_id, map_asset_id))
+
+    # Determine map activity and asset and get asset info
+
+    need_lookup = True
+    if Global.SERVER:
+        forced_location = get_config('Activity', 'force_location', '')
+        if forced_location != '':
+            need_lookup = False
+            activity_id = '*FORCED*'
+            map_asset_id = forced_location # Contains 'base/'
+    else: # CLIENT
+        parts = map_asset_id.split('/')
+        if parts[0] == 'base':
+            need_lookup = False
 
     # If given a URL of an activity, or don't have the map asset id, autodiscover the activity and map asset ids
-    if '/' in activity_id or map_asset_id == '':
+    if need_lookup and '/' in activity_id or map_asset_id == '':
         activity_id, map_asset_id = autodiscover_activity(activity_id)
 
-    map_load_start.send(None, activity_id=activity_id, map_asset_id=map_asset_id)
-
-    World.start_scenario()
-
-    # Server may take a while to load and set up the map, so tell clients
-    if Global.SERVER:
-        MessageSystem.send(ALL_CLIENTS, CModule.PrepareForNewScenario, World.scenario_code)
-        CModule.force_network_flush() # Flush message immediately to clients
-
-    # Set globals
-    set_curr_activity_id(activity_id)
-    set_curr_map_asset_id(map_asset_id)
-
-    if get_config('Network', 'master_server', '') != '':
+    if need_lookup:
         try:
             asset_info = AssetManager.acquire(map_asset_id)
         except AssetRetrievalError, e:
@@ -141,8 +142,23 @@ def set_map(activity_id, map_asset_id):
             return False
     else:
         # Working entirely locally - use config location and run from there
-        asset_info = AssetInfo('xyz', get_config('Activity', 'force_location', '?'), '?', 'NONE', [], 'b')
+        asset_info = AssetInfo('xyz', map_asset_id, '?', 'NONE', [], 'b')
 
+    log(logging.DEBUG, "final setting values: %s / %s" % (activity_id, map_asset_id))
+
+    map_load_start.send(None, activity_id=activity_id, map_asset_id=map_asset_id)
+
+    World.start_scenario()
+
+    # Server may take a while to load and set up the map, so tell clients
+    if Global.SERVER:
+        MessageSystem.send(ALL_CLIENTS, CModule.PrepareForNewScenario, World.scenario_code)
+        CModule.force_network_flush() # Flush message immediately to clients
+
+    # Set globals
+
+    set_curr_activity_id(activity_id)
+    set_curr_map_asset_id(map_asset_id)
     World.asset_info = asset_info
 
     curr_map_prefix = asset_info.get_zip_location() + os.sep # asset_info.location

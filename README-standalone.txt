@@ -196,10 +196,10 @@ Running without a master
 
 It is also possible to run without a master at all. To do so,
 set master_server to an empty string in the settings.cfg for
-both the client and the server, and fill in [Activity] force_location
-to be equal to the location of the map to load. The map will be
-loaded from packages directly. Note that no attempt is made to
-check that the client and server run the same map.
+the server, and fill in [Activity] force_location to be equal to
+the location of the map to load. The map will be loaded from
+/packages directly, and the server will tell the client to do
+the same.
 
 
 Running a local server using the server_runner plugin
