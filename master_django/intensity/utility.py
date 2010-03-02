@@ -77,4 +77,13 @@ class DummyRequest:
         self.POST = {}
 
 
+## Clean up non-ascii: Also do it for name in Activity
+'''
+for x in AssetInfo.objects.all():
+    try:
+        print x.location + x.comment
+    except UnicodeEncodeError:
+        print x, "is bad"
+###        x.delete()
+'''
 
