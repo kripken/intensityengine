@@ -323,7 +323,7 @@ main_actionqueue.add_action(doit_%s)
         self.assertEquals(self.eval_script([client, server], 'getEntity(51).attr2'), [new_value, new_value])
 
         self.inject_key_press(client, 27) # escape for menu
-        self.inject_mouse_click(client, 0.417, 0.524) # restart map
+        self.inject_mouse_click(client, 0.417, 0.500) # restart map
         time.sleep(MENU_DELAY) # Let menu appear
         self.inject_mouse_click(client, 0.180, 0.605) # we are sure
         for proc in [server, client]:
