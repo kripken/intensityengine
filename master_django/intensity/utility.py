@@ -79,7 +79,7 @@ class DummyRequest:
         self.POST = {}
 
 
-## Clean up non-ascii: Also do it for name in Activity
+## Clean up non-ascii:
 '''
 from intensity.models import *
 for x in AssetInfo.objects.all():
@@ -89,6 +89,13 @@ for x in AssetInfo.objects.all():
     except UnicodeEncodeError:
         print x, "is bad"
 ###        x.delete()
+# AssetInfo.objects.filter(location__startswith="base/...") # & fix it
+for x in Activity.objects.all():
+    try:
+        h = str(x.name)
+    except UnicodeEncodeError:
+        print x, "is bad"
+# Activity.objects.filter(name__startswith="...") # & fix it
 '''
 def check_ascii(value):
     try:
