@@ -195,11 +195,15 @@ Running without a master
 ========================
 
 It is also possible to run without a master at all. To do so,
-set master_server to an empty string in the settings.cfg for
-the server, and fill in [Activity] force_location to be equal to
+in settings.cfg fill in [Activity] force_location to be equal to
 the location of the map to load. The map will be loaded from
 /packages directly, and the server will tell the client to do
 the same.
+
+For example,
+
+[Activity]
+force_location=base/mymap.tar.gz
 
 
 Running a local server using the server_runner plugin
@@ -210,8 +214,10 @@ a server - the plugin will do it for you.
 
     * Activate the plugin: Add intensity.components.server_runner to
         "[Components] list" in your settings.cfg
-    * After logging in to the master, click on 'plugins...' in the main
-        menu. You will then see the status of the local server.
+    * *Optionally*, log in to the master. (If you don't, you will
+        be running entirelly locally.)
+    * Click on 'plugins...' in the main menu. You will then see the
+        status of the local server.
     * Tell the plugin which map to run (simply by writing the location
         of the map, e.g. "racetrack" for the racing map). Then click start,
         and wait a bit while the server is started up for you. As soon as

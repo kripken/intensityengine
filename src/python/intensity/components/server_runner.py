@@ -22,6 +22,8 @@
 
 '''
 Runs a server in a side process in a convenient way, for local gameplay.
+
+Works both when logged into the master, or when not.
 '''
 
 import subprocess, time
@@ -39,21 +41,32 @@ class Module:
 def get_output_file():
     return os.path.join(get_home_subdir(), 'out_server.txt')
 
-def run_server(location=None):
+def run_server(location=None, use_master=True):
     CModule.run_cubescript('echo "Starting server, please wait..."')
 
     if location is not None:
+        location = 'base/' + location + '.tar.gz'
+
+    if location is not None and use_master:
         try:
-            location = AssetMetadata.get_by_path('packages/base/'+location+'.tar.gz').asset_id
+            location = AssetMetadata.get_by_path('packages/' + location).asset_id
         except Exception, e:
-            log(logging.ERROR, "Error in getting asset info for map: %s" % location)
+            log(logging.ERROR, "Error in getting asset info for map %s: %s" % (location, str(e)))
+#            raise
             return
+
+    if use_master:
+        activity = '-config:Activity:force_activity_id:' if location is not None else ''
+        map_asset = ('-config:Activity:force_map_asset_id:%s' % location) if location is not None else ''
+    else:
+        activity = ''
+        map_asset = '-config:Activity:force_location:%s' % location
 
     Module.server_proc = subprocess.Popen(
         "%s %s %s -component:intensity.components.shutdown_if_idle -config:Startup:no_console:1" % (
             'exec ./intensity_server.sh' if UNIX else 'intensity_server.bat',
-            '-config:Activity:force_activity_id:' if location is not None else '',
-            ('-config:Activity:force_map_asset_id:%s' % location) if location is not None else '',
+            activity,
+            map_asset,
         ),
         shell=True,
         stdout=open(get_output_file(), 'w'),
@@ -131,20 +144,26 @@ def show_gui(sender, **kwargs):
             ''')
     else:
         CModule.run_cubescript('''
-            if ( = $logged_into_master 1 ) [
-                guitext "Local server: (not active)"
-                guilist [
-                    guitext "Map location to run: base/"
-                    guifield local_server_location 30 []
-                    guitext ".tar.gz"
-                ]
-                guistayopen [
-                    guibutton "  start" [ (run_python (format "intensity.components.server_runner.run_server('%1')" $local_server_location)) ]
-                ]
-                guibutton "  show output" [ showgui local_server_output ]
-            ] [
-                guitext "Local server: (need master login)"
+            guitext "Local server: (not active)"
+            if ( = $logged_into_master 0 ) [
+                guitext "   << not logged into master >>"
             ]
+
+            guilist [
+                guitext "Map location to run: base/"
+                guifield local_server_location 30 []
+                guitext ".tar.gz"
+            ]
+            guistayopen [
+                guibutton "  start" [
+                    if ( = $logged_into_master 1 ) [
+                        (run_python (format "intensity.components.server_runner.run_server('%1')" $local_server_location))
+                    ] [
+                        (run_python (format "intensity.components.server_runner.run_server('%1', False)" $local_server_location))
+                    ]
+                ]
+            ]
+            guibutton "  show output" [ showgui local_server_output ]
         ''')
     CModule.run_cubescript('guibar')
 
