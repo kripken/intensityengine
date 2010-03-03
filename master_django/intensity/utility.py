@@ -21,8 +21,10 @@
 #=============================================================================
 
 
+from django import forms
 from django.core.files import File
 from django.contrib.auth.models import User
+from django.utils.translation import ugettext_lazy as _
 
 from intensity.models import AssetInfo, UserAccount
 from intensity.signals import multiple_send
@@ -79,11 +81,19 @@ class DummyRequest:
 
 ## Clean up non-ascii: Also do it for name in Activity
 '''
+from intensity.models import *
 for x in AssetInfo.objects.all():
     try:
-        print x.location + x.comment
+        h = str(x.location)
+        g = str(x.comment)
     except UnicodeEncodeError:
         print x, "is bad"
 ###        x.delete()
 '''
+def check_ascii(value):
+    try:
+        temp = str(value)
+    except UnicodeEncodeError:
+        raise forms.ValidationError(_("Non-ascii characters are not allowed in this field."))
+    return value
 

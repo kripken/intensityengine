@@ -19,6 +19,7 @@
     <h3>Activity Details</h3>
     <dl>
       <dt>Name:</dt><dd>{%if is_mine%}{{form.name}}{%else%}{{activity.name}}{%endif%}</dd>
+          {% if form.name.errors %} <dt></dt><dd><span class="error">{{ form.name.errors|join:", " }}</span></dd>{% endif %}
       <dt>Map asset:</dt><dd>{{activity.asset|hl_asset}}</dd>
       <dt>Owner:</dt><dd>{{activity.owner|hl_account:my_account}}</dd>
       <dt>Current players:</dt><dd>{{total_players}}</dd>

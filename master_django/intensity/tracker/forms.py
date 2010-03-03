@@ -25,6 +25,7 @@ from django.forms import Form, ModelForm
 
 from intensity.models import UserAccount, ServerInstance, AssetInfo, Activity
 from intensity.widgets import CheckboxSelectMultipleChecked
+from intensity.utility import check_ascii
 
 
 class ServerInstanceUpdateForm(ModelForm):
@@ -51,6 +52,14 @@ class AssetForm(ModelForm):
             self.fields['owners'].queryset = self.instance.owners
             self.fields['dependencies'].queryset = self.instance.dependencies
 
+    def clean_location(self):
+        self.instance.location = self.cleaned_data['location']
+        return check_ascii(self.instance.location)
+
+    def clean_comment(self):
+        self.instance.comment = self.cleaned_data['comment']
+        return check_ascii(self.instance.comment)
+
     def clean_owners(self):
         self.instance.owners = self.cleaned_data['owners']
         return self.instance.owners
@@ -76,4 +85,8 @@ class ActivityForm(ModelForm):
     class Meta:
         model = Activity
         fields = ('name',)
+
+    def clean_name(self):
+        self.instance.name = self.cleaned_data['name']
+        return check_ascii(self.instance.name)
 

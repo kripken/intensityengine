@@ -20,7 +20,9 @@
     <h1>Asset Details</h1>
     <dl>
     <dt>Location:</dt>
-        <dd>{%if is_mine%}{{form.location}}{%else%}{{asset.location}}{%endif%}</dd>
+        <dd>{%if is_mine%}{{form.location}}{%else%}{{asset.location}}{%endif%}
+            {% if form.location.errors %} <span class="error">{{ form.location.errors|join:", " }}</span>{% endif %}
+        </dd>
     <dt>Owners:</dt>
       <dd>{%for owner in asset.owners.all%}{{owner|hl_account:my_account}}{%if not forloop.last%}, {%endif%}{%endfor%}
       {%if is_mine%}
@@ -41,7 +43,9 @@
      {%endif%}
 
   <dt>Size:</dt><dd>{{asset.kb_size|mul_1000|filesizeformat}}</dd>
-  <dt>Comment:</dt><dd>{%if is_mine%}{{form.comment}}{%else%}{{asset.comment}}{%endif%}</dd>
+  <dt>Comment:</dt><dd>{%if is_mine%}{{form.comment}}{%else%}{{asset.comment}}{%endif%}
+        {% if form.comment.errors %} <span class="error">{{ form.comment.errors|join:", " }}</span>{% endif %}
+    </dd>
   <!--dt>Activities:</dt><dd>TODO</dd-->
 {%if is_mine%}
 <br>
