@@ -34,6 +34,11 @@
 #ifdef INTENSITY_BULLET
     #include "intensity_physics_bullet.h" // Just for line with creation - nothing else
 #endif
+#ifdef CLIENT
+    #include "client_system.h"
+#else // SERVER
+    #include "server_system.h"
+#endif
 
 namespace PhysicsManager
 {
@@ -62,8 +67,19 @@ void createEngine(std::string type)
 #endif
     else
     {
-        Logging::log(Logging::ERROR, "Invalid physics engine: %s\r\n", type.c_str());
-        assert(0);
+        #ifdef CLIENT
+            Logging::log(Logging::ERROR, "Invalid physics engine: %s, disconnecting\r\n", type.c_str());
+            EXEC_PYTHON(
+                "def do_disconnect():\n"
+                "    CModule.disconnect()\n"
+                "main_actionqueue.add_action(do_disconnect)\n"
+            ); // We are loading a map now - must disconnect after that is complete
+            return;
+        #else // SERVER
+            Logging::log(Logging::ERROR, "Invalid physics engine: %s, quitting\r\n", type.c_str());
+            ServerSystem::fatalMessageToClients("Invalid physics engine, quitting");
+            assert(0);
+        #endif
     }
 
     engine->init();

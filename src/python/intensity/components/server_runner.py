@@ -118,6 +118,10 @@ def stop_server(sender=None, **kwargs):
         # Or, in Python 2.6:   process.terminate()
         Module.server_proc = None
 
+        def do_disconnect():
+            CModule.disconnect()
+        main_actionqueue.add_action(do_disconnect)
+
 # Note strictly necessary, as the server will shut down if idle - but why not
 # shut it down when the client shuts down.
 shutdown.connect(stop_server, weak=False)
