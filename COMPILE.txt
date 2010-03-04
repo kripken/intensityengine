@@ -303,14 +303,9 @@ This is very experimental at this point. To try it, do
 
     cmake .. -DINTENSITY_BULLET=1
 
-You will need to build bullet and place it in src/thirdparty/bullet.
-Bullet itself requires some things, perhaps only for its internal
-demos though, like GLUT (on Ubuntu: freeglut3-dev). You can build
-Bullet without the extras and demos by doing
+Before that, you need to build bullet, which you can do by
+going to src/thirdparty/bullet and running
 
-    cmake . -DBUILD_DEMOS=OFF -DBUILD_EXTRAS=OFF
-
-when you prepare to build Bullet.
-
-Bullet 2.75 and 2.76 (February 2010) were used in testing.
+    cmake . -DBUILD_DEMOS=OFF -DBUILD_EXTRAS=OFF -DUSE_GLUT=OFF
+    make
 

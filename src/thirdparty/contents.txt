@@ -1,4 +1,5 @@
 /v8/ contains Google V8 - revision 3716, Jan 27 2010 (part of version 2.0.6)
 /openjpeg/ contains OpenJPEG v1.3
 /boost/ Boost 1.41.0
+/bullet/ Bullet 2.76
 
