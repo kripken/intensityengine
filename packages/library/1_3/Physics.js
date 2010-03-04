@@ -250,10 +250,12 @@ Physics = {
             clientAct: function(seconds) {
                 if (this.physicsHandle === undefined) return;
 
-                var position = this.position.copy();
-                var velocity = this.velocity.copy();
-
                 if (this === getPlayerEntity()) {
+                    // We control ourselves here, locally
+
+                    var position = this.position.copy();
+                    var velocity = this.velocity.copy();
+
                     var speed = this.movementSpeed*2;
                     var editing = isPlayerEditing(this);
 
@@ -285,10 +287,15 @@ Physics = {
                     }
 
                     this.lastPosition = this.position.copy();
-                }
 
-                this.position = position;
-                this.rotation = new Vector4().quatFromAxisAngle(new Vector3(0,0,1), this.yaw-90);
+                    this.position = position;
+                    this.rotation = new Vector4().quatFromAxisAngle(new Vector3(0,0,1), this.yaw-90);
+                } else {
+                    // Other clients, we read the C++ data and feed that into Bullet
+                    Physics.Engine.setPosition(this, CAPI.getDynentO(this));
+                    Physics.Engine.setVelocity(this, CAPI.getDynentVel(this));
+                    Physics.Engine.setRotation(this, new Vector4().quatFromAxisAngle(new Vector3(0,0,1), this.yaw-90).asArray());
+                }
             },
 
             jump: function() {
