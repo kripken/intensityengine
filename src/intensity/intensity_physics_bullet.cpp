@@ -22,7 +22,9 @@
  *=============================================================================
  */
 
+#include "cube.h"
 #include "engine.h"
+#include "game.h"
 
 #include "intensity_physics.h"
 #include "intensity_physics_realistic.h"
@@ -468,6 +470,12 @@ physicsHandle BulletPhysicsEngine::addConstraintP2P(physicsHandle handleA, physi
 
 VAR(bulletdebug, 0, 0, 1);
 
+namespace game
+{
+    extern int smoothmove;
+    void predictplayer(fpsent *d, bool move);
+}
+
 void BulletPhysicsEngine::simulate(float seconds)
 {
     m_dynamicsWorld->stepSimulation(seconds);
@@ -480,8 +488,21 @@ void BulletPhysicsEngine::simulate(float seconds)
         } else
             m_debugDrawer->setDebugMode(0);
 
-        // Stuff sauer does in its physics simulations: roll decreasing, etc.
-        player->roll = player->roll/(1+(float)sqrtf((float)curtime)/25);
+        // Smooth interp, and roll normalization
+        loopv(game::players)
+        {
+            fpsent* fpsEntity = game::players[i];
+            LogicEntityPtr entity = LogicSystem::getLogicEntity(fpsEntity);
+            if (!entity.get() || entity->isNone()) continue;
+
+            fpsEntity->roll = fpsEntity->roll/(1+(float)sqrtf((float)curtime)/25);
+
+            if(fpsEntity != player)
+            {
+                if (game::smoothmove && fpsEntity->smoothmillis>0)
+                    game::predictplayer(fpsEntity, false);
+            }
+        }
     #endif
 
 /*
