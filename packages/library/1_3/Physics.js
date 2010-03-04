@@ -177,6 +177,12 @@ Physics = {
             }
         },
 
+        addImpulse: function(entity, v) {
+            if (entity.physicsHandle !== undefined) {
+                CAPI.physicsAddBodyImpulse(entity.physicsHandle, v[0], v[1], v[2]);
+            }
+        },
+
         objectPlugin: {
             position: new WrappedCVector3({ cGetter: 'Physics.Engine.getPosition', cSetter: 'Physics.Engine.setPosition', customSynch: true }),
             rotation: new WrappedCVector4({ cGetter: 'Physics.Engine.getRotation', cSetter: 'Physics.Engine.setRotation', customSynch: true }),
@@ -326,6 +332,9 @@ Physics = {
     },
 };
 
+//! A generic physics engine entity - no effort is done to synchronize
+//! positions etc., so basically a separate physical body is being
+//! run on each client and the server.
 Physics.Engine.Entity = registerEntityClass(bakePlugins(LogicEntity, [
     Physics.Engine.objectPlugin,
     {
@@ -349,4 +358,39 @@ Physics.Engine.Entity = registerEntityClass(bakePlugins(LogicEntity, [
         sufferDamage: function() { }, //!< Necessary so explosions etc. affect us
     },
 ]));
+
+//! A physics engine entity that runs on the server - the server is
+//! authoritative for it. Positions etc. are synced to the client
+Physics.Engine.ServerEntity = registerEntityClass(bakePlugins(Physics.Engine.Entity, [{
+    _class: 'PhysicsEngineServerEntity',
+
+    positionUpdate: new StateArrayFloat({ reliable: false }),
+    positionUpdateRate: 1/10,
+    positionUpdatePower: 1,
+
+    activate: function() {
+        GameManager.getSingleton().eventManager.add({
+            secondsBefore: 0,
+            secondsBetween: this.positionUpdateRate,
+            func: bind(function() {
+                this.positionUpdate = this.position.asArray();
+            }, this),
+            entity: this,
+        });
+    },
+
+    clientActivate: function() {
+        this.connect('client_onModify_positionUpdate', function(position) {
+//            Physics.Engine.setPosition(this, position);
+            var dir = new Vector3(position).subNew(this.position);
+            var mag = dir.magnitude();
+            var impulse = dir.normalize().mul(
+                Math.pow(mag, 2) * this.positionUpdatePower * this.mass * Global.currTimeDelta/this.positionUpdateRate
+            );
+            if (!impulse.isZero()) {
+                Physics.Engine.addImpulse(this, impulse.asArray());
+            }
+        });
+    },
+}]));
 
