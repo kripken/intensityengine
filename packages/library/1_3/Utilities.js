@@ -289,6 +289,22 @@ Vector4 = Vector3.extend({
             };
         }
     },
+
+    subNew: function(other) {
+        return new Vector4(this.x - other.x, this.y - other.y, this.z - other.z, this.w - other.w);
+    },
+
+    addNew: function(other) {
+        return new Vector4(this.x + other.x, this.y + other.y, this.z + other.z, this.w + other.w);
+    },
+
+    mulNew: function(other) {
+        return new Vector4(this.x * other, this.y * other, this.z * other, this.w * other);
+    },
+
+    copy: function() {
+        return new Vector4(this.x, this.y, this.z, this.w);
+    },
 });
 
 Vector4.zero = new Vector4(0, 0, 0, 0);
