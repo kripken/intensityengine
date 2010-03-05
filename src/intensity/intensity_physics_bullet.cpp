@@ -476,9 +476,26 @@ namespace game
     void predictplayer(fpsent *d, bool move);
 }
 
+#define DUMP_DATA \
+    for(handleBodyMap_t::iterator iter = handleBodyMap.begin(); iter != handleBodyMap.end(); iter++) \
+    { \
+        IntensityBulletBody* body = iter->second; \
+        if (fabs(body->getInvMass() - 1/40.0) < 1/60.0) \
+        { \
+            vec pos, vel; \
+            getBodyPosition(iter->first, pos); \
+            getBodyVelocity(iter->first, vel); \
+            printf("   %d : %f,%f,%f , %f,%f,%f\r\n", iter->first, pos.x, pos.y, pos.z, vel.x, vel.y, vel.z); \
+        } \
+    }
+
 void BulletPhysicsEngine::simulate(float seconds)
 {
-    m_dynamicsWorld->stepSimulation(seconds);
+    if (Logging::shouldShow(Logging::DEBUG)) { printf("PRE\r\n"); DUMP_DATA; }
+
+    m_dynamicsWorld->stepSimulation(seconds, 3); // We may run at 30fps, so sometimes need ~2 frames
+
+    if (Logging::shouldShow(Logging::DEBUG)) { printf("POST\r\n"); DUMP_DATA; }
 
     #ifdef CLIENT
         if (bulletdebug)
