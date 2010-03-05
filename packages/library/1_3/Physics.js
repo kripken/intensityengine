@@ -346,6 +346,7 @@ Physics.Engine.Entity = registerEntityClass(bakePlugins(LogicEntity, [
         init: function(uniqueId, kwargs) {
             this.position = new Vector3(kwargs.position.x, kwargs.position.y, kwargs.position.z);
             this.velocity = new Vector3(0, 0, 0);
+            this.rotation = new Vector4(0, 0, 0, 1);
             this.radius = 5;
         },
 
@@ -365,16 +366,18 @@ Physics.Engine.Entity = registerEntityClass(bakePlugins(LogicEntity, [
 Physics.Engine.ServerEntity = registerEntityClass(bakePlugins(Physics.Engine.Entity, [{
     _class: 'PhysicsEngineServerEntity',
 
-    positionUpdate: new StateArrayFloat({ reliable: false }),
+    positionUpdate: new StateArrayFloat({ reliable: false, hasHistory: false }),
     positionUpdateRate: 1/10,
-    positionUpdatePower: 10,
+    positionUpdatePower: 1000,
 
     activate: function() {
         GameManager.getSingleton().eventManager.add({
             secondsBefore: 0,
             secondsBetween: this.positionUpdateRate,
             func: bind(function() {
-                this.positionUpdate = this.position.asArray().concat(this.velocity.asArray());
+                this.positionUpdate = this.position.asArray().
+                    concat(this.velocity.asArray()).
+                    concat(this.rotation.asArray());
             }, this),
             entity: this,
         });
@@ -384,13 +387,12 @@ Physics.Engine.ServerEntity = registerEntityClass(bakePlugins(Physics.Engine.Ent
         this.connect('client_onModify_positionUpdate', function(data) {
             var position = data.slice(0, 3);
             var velocity = data.slice(3, 6);
-//log(ERROR, position + ' : ' + this.position + '      ::      ' + velocity);
-            var interpolated = new Vector3(position).lerp(
-                this.position,
-                this.positionUpdatePower*Global.currTimeDelta*this.positionUpdateRate
-            );
-            Physics.Engine.setPosition(this, interpolated.asArray());
+            var rotation = data.slice(6, 10);
+            var alpha = this.positionUpdatePower*Global.currTimeDelta*this.positionUpdateRate;
+            Physics.Engine.setPosition(this, new Vector3(position).lerp(this.position, alpha).asArray());
+//            Physics.Engine.setPosition(this, position);
             Physics.Engine.setVelocity(this, velocity);
+//            Physics.Engine.setRotation(this, new Vector4(rotation).lerp(this.rotation, alpha).asArray());
 /*
             var dir = new Vector3(position).subNew(this.position);
             var mag = dir.magnitude();
@@ -404,4 +406,6 @@ Physics.Engine.ServerEntity = registerEntityClass(bakePlugins(Physics.Engine.Ent
         });
     },
 }]));
+
+// Restart map fails XXX
 
