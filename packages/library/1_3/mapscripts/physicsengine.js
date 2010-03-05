@@ -54,6 +54,7 @@ GamePlayer = registerEntityClass(
     bakePlugins(
         Player,
         [
+            Character.plugins.effectiveCameraHeight,
             Health.plugin,
             GameManager.playerPlugin,
             Physics.Engine.objectPlugin,
@@ -116,17 +117,19 @@ if (Global.SERVER) { // Run this only on the server - not the clients
             _name: 'players',
             setup: function(player) {
                 player.defaultModelName = 'stromar_1_1/red';
-                player.defaultHUDModelName = '';
+                player.defaultHUDModelName = 'stromar_1_1/hud/red';
             },
         },
     ]);
 
     Global.queuedActions.push(function() {
-        for (var i = 0; i < 10; i++) {
-            for (var j = 1; j < 11; j++) {
-                newEntity('PhysicsEngineEntity', { position: new Vector3(600+i*20, 600, 500+j*20) });
+        for (var i = 0; i < 1; i++) {
+            for (var j = 1; j < 2; j++) {
+                newEntity('PhysicsEngineServerEntity', { position: new Vector3(600+i*20, 600, 500+j*20) });
             }
         }
     });
 }
+
+//Global.profiling = { interval: 10.0 };
 

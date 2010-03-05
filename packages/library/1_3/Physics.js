@@ -345,6 +345,7 @@ Physics.Engine.Entity = registerEntityClass(bakePlugins(LogicEntity, [
 
         init: function(uniqueId, kwargs) {
             this.position = new Vector3(kwargs.position.x, kwargs.position.y, kwargs.position.z);
+            this.velocity = new Vector3(0, 0, 0);
             this.radius = 5;
         },
 
@@ -366,22 +367,31 @@ Physics.Engine.ServerEntity = registerEntityClass(bakePlugins(Physics.Engine.Ent
 
     positionUpdate: new StateArrayFloat({ reliable: false }),
     positionUpdateRate: 1/10,
-    positionUpdatePower: 1,
+    positionUpdatePower: 10,
 
     activate: function() {
         GameManager.getSingleton().eventManager.add({
             secondsBefore: 0,
             secondsBetween: this.positionUpdateRate,
             func: bind(function() {
-                this.positionUpdate = this.position.asArray();
+                this.positionUpdate = this.position.asArray().concat(this.velocity.asArray());
             }, this),
             entity: this,
         });
     },
 
     clientActivate: function() {
-        this.connect('client_onModify_positionUpdate', function(position) {
-//            Physics.Engine.setPosition(this, position);
+        this.connect('client_onModify_positionUpdate', function(data) {
+            var position = data.slice(0, 3);
+            var velocity = data.slice(3, 6);
+//log(ERROR, position + ' : ' + this.position + '      ::      ' + velocity);
+            var interpolated = new Vector3(position).lerp(
+                this.position,
+                this.positionUpdatePower*Global.currTimeDelta*this.positionUpdateRate
+            );
+            Physics.Engine.setPosition(this, interpolated.asArray());
+            Physics.Engine.setVelocity(this, velocity);
+/*
             var dir = new Vector3(position).subNew(this.position);
             var mag = dir.magnitude();
             var impulse = dir.normalize().mul(
@@ -390,6 +400,7 @@ Physics.Engine.ServerEntity = registerEntityClass(bakePlugins(Physics.Engine.Ent
             if (!impulse.isZero()) {
                 Physics.Engine.addImpulse(this, impulse.asArray());
             }
+*/
         });
     },
 }]));
