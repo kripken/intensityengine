@@ -79,6 +79,11 @@ Windows
 
    We hope to automate this in the future.
 
+2) On Windows 7 or Vista and AMD/ATI cards, there might be a memory leak issue. A
+   fix is available,
+
+    http://cubeengine.com/forum.php4?action=display_thread&thread_id=2288
+
 
 =====
 Linux
