@@ -127,5 +127,10 @@ struct ClientSystem
 
     //! Show the current HUD. Called once per frame
     static void drawHUD(int w, int h);
+
+    //! Called once/frame, after drawing the HUD. Cleans up temporary structures.
+    //! It is important to call this even if the HUD is not drawn (e.g. in edit
+    //! mode).
+    static void cleanupHUD();
 };
 

@@ -186,6 +186,8 @@ void ClientSystem::frameTrigger(int curtime)
         IntensityTexture::doBackgroundLoading();
     }
 
+    ClientSystem::cleanupHUD();
+
     #ifdef INTENSITY_PLUGIN
         PluginListener::frameTrigger();
     #endif
@@ -353,7 +355,6 @@ void ClientSystem::drawHUD(int w, int h)
         glEnable(GL_TEXTURE_2D);
         defaultshader->set();	
     }
-    queuedHUDRects.clear();
 
     glPopMatrix();
 
@@ -379,7 +380,6 @@ void ClientSystem::drawHUD(int w, int h)
             glTexCoord2f(0.0f, 1.0f); glVertex2f(x1, y2);
         glEnd();
     }
-    queuedHUDImages.clear();
 
     glPopMatrix();
 
@@ -401,6 +401,12 @@ void ClientSystem::drawHUD(int w, int h)
 
         glPopMatrix();
     }
+}
+
+void ClientSystem::cleanupHUD()
+{
+    queuedHUDRects.clear();
+    queuedHUDImages.clear();
     queuedHUDTexts.clear();
 }
 
