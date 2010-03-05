@@ -161,10 +161,10 @@ the following matters:
       master server documentation).
 
 
-Notes
-=====
+Production
+==========
 
-1. The example above runs the master on the Django development
+   The example above runs the master on the Django development
    server. This is *NOT* suitable for production, for
    several reasons: It is single-threaded, which will
    both lead to poor performance and prevent operations
@@ -188,7 +188,16 @@ Notes
    edit the parameter 'auth' in the settings.cfg. This will
    look for cert.crt and cert.key files in master_django/ssl/.
 
+   You should also change the settings to the production
+   settings. In the master server's settings.cfg, set it to
 
+        [Django]
+        settings = settings_production
+
+   Note that you must change both this, *AND* add 'prod'
+   as a parameter when running the master. The former sets
+   up the django parameters for production mode, and the
+   latter runs Django using CherryPy for production purposes.
 
 
 Running without a master
