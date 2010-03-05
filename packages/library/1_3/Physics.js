@@ -154,6 +154,9 @@ Physics = {
         getVelocity: function(entity) {
             return (entity.physicsHandle !== undefined) ? CAPI.physicsGetBodyVelocity(entity.physicsHandle) : Vector3.zero;
         },
+        getAngularVelocity: function(entity) {
+            return (entity.physicsHandle !== undefined) ? CAPI.physicsGetBodyAngularVelocity(entity.physicsHandle) : Vector3.zero;
+        },
 
         setPosition: function(entity, v) {
             if (entity.physicsHandle !== undefined) {
@@ -176,6 +179,13 @@ Physics = {
                 Global.queuedActions.push(partial(arguments.callee, entity, v));
             }
         },
+        setAngularVelocity: function(entity, v) {
+            if (entity.physicsHandle !== undefined) {
+                CAPI.physicsSetBodyAngularVelocity(entity.physicsHandle, v[0], v[1], v[2]);
+            } else {
+                Global.queuedActions.push(partial(arguments.callee, entity, v));
+            }
+        },
 
         addImpulse: function(entity, v) {
             if (entity.physicsHandle !== undefined) {
@@ -187,6 +197,7 @@ Physics = {
             position: new WrappedCVector3({ cGetter: 'Physics.Engine.getPosition', cSetter: 'Physics.Engine.setPosition', customSynch: true }),
             rotation: new WrappedCVector4({ cGetter: 'Physics.Engine.getRotation', cSetter: 'Physics.Engine.setRotation', customSynch: true }),
             velocity: new WrappedCVector3({ cGetter: 'Physics.Engine.getVelocity', cSetter: 'Physics.Engine.setVelocity', customSynch: true }),
+            angularVelocity: new WrappedCVector3({ cGetter: 'Physics.Engine.getAngularVelocity', cSetter: 'Physics.Engine.setAngularVelocity', customSynch: true }),
 
             mass: new StateFloat(),
 
@@ -346,6 +357,7 @@ Physics.Engine.Entity = registerEntityClass(bakePlugins(LogicEntity, [
         init: function(uniqueId, kwargs) {
             this.position = new Vector3(kwargs.position.x, kwargs.position.y, kwargs.position.z);
             this.velocity = new Vector3(0, 0, 0);
+            this.angularVelocity = new Vector3(0, 0, 0);
             this.rotation = new Vector4(0, 0, 0, 1);
             this.radius = 5;
         },
@@ -375,8 +387,11 @@ Physics.Engine.ServerEntity = registerEntityClass(bakePlugins(Physics.Engine.Ent
             secondsBefore: 0,
             secondsBetween: this.positionUpdateRate,
             func: bind(function() {
+                // TODO: Either do not send if not needed, or do not apply if not
+                // needed; as is, we are keeping all objects always awake, using CPU
                 this.positionUpdate = this.position.asArray().
                     concat(this.velocity.asArray()).
+                    concat(this.angularVelocity.asArray()).
                     concat(this.rotation.asArray());
             }, this),
             entity: this,
@@ -387,11 +402,13 @@ Physics.Engine.ServerEntity = registerEntityClass(bakePlugins(Physics.Engine.Ent
         this.connect('client_onModify_positionUpdate', function(data) {
             var position = data.slice(0, 3);
             var velocity = data.slice(3, 6);
-            var rotation = data.slice(6, 10);
+            var angularVelocity = data.slice(6, 9);
+            var rotation = data.slice(9, 13);
             var alpha = this.positionUpdatePower*Global.currTimeDelta*this.positionUpdateRate;
             Physics.Engine.setPosition(this, new Vector3(position).lerp(this.position, alpha).asArray());
 //            Physics.Engine.setPosition(this, position);
             Physics.Engine.setVelocity(this, velocity);
+            Physics.Engine.setAngularVelocity(this, angularVelocity);
 //            Physics.Engine.setRotation(this, new Vector4(rotation).lerp(this.rotation, alpha).asArray());
 /*
             var dir = new Vector3(position).subNew(this.position);
@@ -406,6 +423,4 @@ Physics.Engine.ServerEntity = registerEntityClass(bakePlugins(Physics.Engine.Ent
         });
     },
 }]));
-
-// Restart map fails XXX
 

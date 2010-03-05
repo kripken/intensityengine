@@ -64,12 +64,14 @@ public:
     virtual void setBodyPosition(physicsHandle handle, const vec& position) = 0;
     virtual void setBodyRotation(physicsHandle handle, const quat& rotation) = 0;
     virtual void setBodyVelocity(physicsHandle handle, const vec& velocity) = 0;
+    virtual void setBodyAngularVelocity(physicsHandle handle, const vec& angularVelocity) = 0;
     virtual void addBodyImpulse(physicsHandle handle, const vec& impulse) = 0;
 
     //! Outputs a body's properties. Called to get information from the physics engine outside into the rest of the engine
     virtual void getBodyPosition(physicsHandle handle, vec& position) = 0;
     virtual void getBodyRotation(physicsHandle handle, quat& rotation) = 0;
     virtual void getBodyVelocity(physicsHandle handle, vec& velocity) = 0;
+    virtual void getBodyAngularVelocity(physicsHandle handle, vec& angularVelocity) = 0;
 
     virtual void setLinearFactor(physicsHandle handle, vec& factor) = 0;
     virtual void setAngularFactor(physicsHandle handle, vec& factor) = 0;

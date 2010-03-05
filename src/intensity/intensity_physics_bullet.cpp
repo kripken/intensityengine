@@ -46,7 +46,7 @@
 class IntensityBulletBody : public btRigidBody
 {
 public:
-    btVector3 interpolatedPosition, interpolatedVelocity;
+    btVector3 interpolatedPosition, interpolatedVelocity, interpolatedAngularVelocity;
     btQuaternion interpolatedRotation;
     bool isStatic;
 
@@ -71,6 +71,7 @@ public:
         parent->interpolatedPosition = worldTrans.getOrigin();
         parent->interpolatedRotation = worldTrans.getRotation();
         parent->interpolatedVelocity = parent->getLinearVelocity();
+        parent->interpolatedAngularVelocity = parent->getAngularVelocity();
     }
 };
 
@@ -406,6 +407,19 @@ void BulletPhysicsEngine::setBodyVelocity(physicsHandle handle, const vec& veloc
     body->activate();
 }
 
+void BulletPhysicsEngine::setBodyAngularVelocity(physicsHandle handle, const vec& angularVelocity)
+{
+    GET_BODY(handle, body);
+
+    btVector3 btAngularVelocity =  FROM_SAUER_VEC(angularVelocity);
+    body->setAngularVelocity( btAngularVelocity );
+
+    // Save in interpolated values, since we might read them soon
+    body->interpolatedAngularVelocity = btAngularVelocity;
+
+    body->activate();
+}
+
 void BulletPhysicsEngine::addBodyImpulse(physicsHandle handle, const vec& impulse)
 {
     GET_BODY(handle, body);
@@ -439,6 +453,14 @@ void BulletPhysicsEngine::getBodyVelocity(physicsHandle handle, vec& velocity)
 
     btVector3 btVelocity = body->getLinearVelocity();
     TO_SAUER_VEC( velocity, btVelocity );
+}
+
+void BulletPhysicsEngine::getBodyAngularVelocity(physicsHandle handle, vec& angularVelocity)
+{
+    GET_BODY(handle, body);
+
+    btVector3 btAngularVelocity = body->getAngularVelocity();
+    TO_SAUER_VEC( angularVelocity, btAngularVelocity );
 }
 
 void BulletPhysicsEngine::setLinearFactor(physicsHandle handle, vec& factor)

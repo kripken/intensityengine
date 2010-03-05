@@ -1355,6 +1355,10 @@ V8_FUNC_iddd(__script__physicsSetBodyVelocity, {
     PhysicsManager::getEngine()->setBodyVelocity(arg1, vec(arg2, arg3, arg4));
 });
 
+V8_FUNC_iddd(__script__physicsSetBodyAngularVelocity, {
+    PhysicsManager::getEngine()->setBodyAngularVelocity(arg1, vec(arg2, arg3, arg4));
+});
+
 V8_FUNC_iddd(__script__physicsAddBodyImpulse, {
     PhysicsManager::getEngine()->addBodyImpulse(arg1, vec(arg2, arg3, arg4));
 });
@@ -1391,6 +1395,17 @@ V8_FUNC_i(__script__physicsGetBodyVelocity, {
     ret[0] = velocity.x;
     ret[1] = velocity.y;
     ret[2] = velocity.z;
+    V8_RETURN_FARRAY(ret, 3);
+});
+
+V8_FUNC_i(__script__physicsGetBodyAngularVelocity, {
+    vec angularVelocity;
+    PhysicsManager::getEngine()->getBodyAngularVelocity(arg1, angularVelocity);
+
+    float ret[3];
+    ret[0] = angularVelocity.x;
+    ret[1] = angularVelocity.y;
+    ret[2] = angularVelocity.z;
     V8_RETURN_FARRAY(ret, 3);
 });
 
