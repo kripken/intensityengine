@@ -67,23 +67,26 @@ def check_local_mode():
 def update_master(params={}, act=True):
     log(logging.DEBUG, "Updating master...")
 
-    try:
-        params.update({
-            'version': INTENSITY_VERSION_STRING,
-            'user_interface': get_instance_address() + ':' + get_config('Network', 'port', '28787'),
-            'admin_interface': get_instance_address() + ':' + get_config('Network', 'admin_port', '28789'),
-#            'instance_id': get_instance_id(),
-            'activity_id': get_curr_activity_id(),
-            'map_asset_id': get_curr_map_asset_id(),
-            'validation': get_instance_validation(),
-            'players': Clients.count(),
-            'max_players': get_max_clients(),
-        })
+    if get_config('Activity', 'force_location', '') == '':
+        try:
+            params.update({
+                'version': INTENSITY_VERSION_STRING,
+                'user_interface': get_instance_address() + ':' + get_config('Network', 'port', '28787'),
+                'admin_interface': get_instance_address() + ':' + get_config('Network', 'admin_port', '28789'),
+    #            'instance_id': get_instance_id(),
+                'activity_id': get_curr_activity_id(),
+                'map_asset_id': get_curr_map_asset_id(),
+                'validation': get_instance_validation(),
+                'players': Clients.count(),
+                'max_players': get_max_clients(),
+            })
 
-        response = contact_master("instance/update", params)
-    except MasterNetworkError, e:
-        log(logging.DEBUG, "Error in updating master: %s" % (str(e)))
-        return # No biggie, in general, hope to succeed next time...
+            response = contact_master("instance/update", params)
+        except MasterNetworkError, e:
+            log(logging.DEBUG, "Error in updating master: %s" % (str(e)))
+            return # No biggie, in general, hope to succeed next time...
+    else:
+        response = {}
 
     if 'instance_id' in response:
         set_config('Network', 'instance_id', response['instance_id'])
