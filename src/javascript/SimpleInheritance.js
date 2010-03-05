@@ -101,6 +101,7 @@ var TRACING = true;
    
     // Enforce the constructor to be what we expect
     Class.constructor = Class;
+    Class.prototype.constructor = Class;
 
     // And make this class extendable
     Class.extend = arguments.callee;
