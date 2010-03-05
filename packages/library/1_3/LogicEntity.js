@@ -446,6 +446,7 @@ var ServerLogicEntity = RootLogicEntity.extend({
         if (!this._sauerType) {
             log(DEBUG, "non-Sauer entity going to be set up:" + this._class, + "," + this._sauerType);
             CAPI.setupNonSauer(this); // Does C++ registration, etc. Sauer types need special registration, which is done by them
+            this._flushQueuedStateVariableChanges();
         }
 
 /*
