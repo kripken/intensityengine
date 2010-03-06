@@ -102,7 +102,7 @@ if __name__ == '__main__':
 
     # Run main server - using CherryPy WSGIServer 3.1, copied locally
 
-    import wsgiserver
+    import cherrypy.wsgiserver as wsgiserver
 
     dispatcher = wsgiserver.WSGIPathInfoDispatcher({
         '/': django_app,
