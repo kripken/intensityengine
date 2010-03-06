@@ -260,58 +260,68 @@ Physics = {
 
                 return ret;
             },
-            clientActivate: function() {
-                this.lastPosition = new Vector3(0, 0, 0);
+
+            lastPosition: new Vector3(0, 0, 0),
+
+            act: function(seconds) {
+                this.simulateAction(seconds, true);
             },
 
             clientAct: function(seconds) {
                 if (this.physicsHandle === undefined) return;
 
                 if (this === getPlayerEntity()) {
-                    // We control ourselves here, locally
-
-                    var position = this.position.copy();
-                    var velocity = this.velocity.copy();
-
-                    var speed = this.movementSpeed*2;
-                    var editing = isPlayerEditing(this);
-
-                    if (editing) {
-                        position = this.lastPosition ? this.lastPosition : this.position;
-                        velocity.mul(0);
-                    }
-
-                    var targetVelocity = new Vector3(0,0,0);
-
-                    if (this.move) {
-                        targetVelocity.add(new Vector3().fromYawPitch(this.yaw, !editing ? 0 : this.pitch).mul(speed*this.move));
-                    }
-                    if (this.strafe) {
-                        targetVelocity.add(new Vector3().fromYawPitch(this.yaw-90, 0).mul(speed*this.strafe));
-                    }
-                    if (this.move || this.strafe) {
-                        if (editing) {
-                            position.add(targetVelocity.mulNew(seconds));
-                        }
-                    }
-
-                    if (!editing && Health.isActiveEntity(this)) {
-                        var flatVelocity = velocity.copy();
-                        flatVelocity.z = 0;
-                        var cap = speed;
-                        targetVelocity.sub(flatVelocity).cap(cap).mul(seconds*3*this.mass);
-                        CAPI.physicsAddBodyImpulse(this.physicsHandle, targetVelocity.x, targetVelocity.y, targetVelocity.z);
-                    }
-
-                    this.lastPosition = this.position.copy();
-
-                    this.position = position;
-                    this.rotation = new Vector4().quatFromAxisAngle(new Vector3(0,0,1), this.yaw-90);
+                    this.simulateAction(seconds, true); // Disable this for 100% server movement (and set server to _global=true)
                 } else {
                     // Other clients, we read the C++ data and feed that into Bullet
                     Physics.Engine.setPosition(this, CAPI.getDynentO(this));
                     Physics.Engine.setVelocity(this, CAPI.getDynentVel(this));
                     Physics.Engine.setRotation(this, new Vector4().quatFromAxisAngle(new Vector3(0,0,1), this.yaw-90).asArray());
+                }
+            },
+
+            simulateAction: function(seconds, _global) {
+                // We control ourselves here, locally
+
+                var position = _global ? this.position.copy() : this.lastPosition;
+                var velocity = this.velocity.copy();
+                var speed = this.movementSpeed*2;
+                var editing = isPlayerEditing(this);
+
+                if (editing) {
+                    position = this.lastPosition ? this.lastPosition : this.position;
+                    velocity.mul(0);
+                }
+
+                var targetVelocity = new Vector3(0,0,0);
+
+                if (this.move) {
+                    targetVelocity.add(new Vector3().fromYawPitch(this.yaw, !editing ? 0 : this.pitch).mul(speed*this.move));
+                }
+                if (this.strafe) {
+                    targetVelocity.add(new Vector3().fromYawPitch(this.yaw-90, 0).mul(speed*this.strafe));
+                }
+                if (this.move || this.strafe) {
+                    if (editing) {
+                        position.add(targetVelocity.mulNew(seconds));
+                    }
+                }
+
+                if (!editing && Health.isActiveEntity(this)) {
+                    var flatVelocity = velocity.copy();
+                    flatVelocity.z = 0;
+                    var cap = speed;
+                    targetVelocity.sub(flatVelocity).cap(cap).mul(seconds*3*this.mass);
+                    CAPI.physicsAddBodyImpulse(this.physicsHandle, targetVelocity.x, targetVelocity.y, targetVelocity.z);
+                }
+
+                this.lastPosition = position.copy();
+
+                if (_global) {
+                    this.position = position;
+                    Physics.Engine.setRotation(this, new Vector4().quatFromAxisAngle(new Vector3(0,0,1), this.yaw-90).asArray());
+                } else {
+                    Physics.Engine.setPosition(this, position.asArray());
                 }
             },
 
@@ -381,7 +391,7 @@ Physics.Engine.ServerEntity = registerEntityClass(bakePlugins(Physics.Engine.Ent
     positionUpdate: new StateArrayFloat({ reliable: false, hasHistory: false }),
     positionUpdateRate: {
         active: 1/20,
-        asleep: 1/1,
+        asleep: 1/5,
     },
     positionUpdatePower: 10000,
 
