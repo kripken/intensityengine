@@ -108,3 +108,12 @@ function replaceNaN(value, fallback) {
     return !isNaN(value) ? value : fallback;
 }
 
+//! Returns the sum of absolute differences, elementwise
+function arrayL1Diff(a, b) {
+    var ret = 0;
+    for (var i = 0; i < a.length; i++) {
+        ret += Math.abs(a[i]-b[i]);
+    }
+    return ret;
+}
+

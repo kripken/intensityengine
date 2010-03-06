@@ -379,37 +379,60 @@ Physics.Engine.ServerEntity = registerEntityClass(bakePlugins(Physics.Engine.Ent
     _class: 'PhysicsEngineServerEntity',
 
     positionUpdate: new StateArrayFloat({ reliable: false, hasHistory: false }),
-    positionUpdateRate: 1/10,
-    positionUpdatePower: 1000,
+    positionUpdateRate: {
+        active: 1/20,
+        asleep: 1/1,
+    },
+    positionUpdatePower: 10000,
+
+    makePositionUpdate: function() {
+        // TODO: Normalize sizes, optimize message, and make parsePositionUpdate
+        return this.position.asArray().
+            concat(this.velocity.asArray()).
+            concat(this.angularVelocity.asArray()).
+            concat(this.rotation.asArray());
+    },
 
     activate: function() {
-        GameManager.getSingleton().eventManager.add({
-            secondsBefore: 0,
-            secondsBetween: this.positionUpdateRate,
-            func: bind(function() {
-                // TODO: Either do not send if not needed, or do not apply if not
-                // needed; as is, we are keeping all objects always awake, using CPU
-                this.positionUpdate = this.position.asArray().
-                    concat(this.velocity.asArray()).
-                    concat(this.angularVelocity.asArray()).
-                    concat(this.rotation.asArray());
-            }, this),
-            entity: this,
-        });
+        this.positionUpdateCache = {
+            time: Global.time,
+            data: this.makePositionUpdate(),
+        };
+    },
+
+    act: function() {
+        var data = this.makePositionUpdate();
+        var active = arrayL1Diff(data, this.positionUpdateCache.data) > 0.5;
+        var currRate = active ? this.positionUpdateRate.active : this.positionUpdateRate.asleep;
+        if (Global.time - this.positionUpdateCache.time >= currRate) {
+            this.positionUpdate = data;
+            this.positionUpdateCache.time = Global.time;
+            this.positionUpdateCache.data = data;
+        }
     },
 
     clientActivate: function() {
+        this.positionUpdateCache = {
+            time: Global.time,
+            data: this.makePositionUpdate(),
+        };
+
         this.connect('client_onModify_positionUpdate', function(data) {
+            var changed = arrayL1Diff(data, this.makePositionUpdate()) > 0.25;
+            if (!changed) return;
             var position = data.slice(0, 3);
             var velocity = data.slice(3, 6);
             var angularVelocity = data.slice(6, 9);
             var rotation = data.slice(9, 13);
-            var alpha = this.positionUpdatePower*Global.currTimeDelta*this.positionUpdateRate;
+            var alpha = this.positionUpdatePower*Global.currTimeDelta*(Global.time - this.positionUpdateCache.time);
             Physics.Engine.setPosition(this, new Vector3(position).lerp(this.position, alpha).asArray());
-//            Physics.Engine.setPosition(this, position);
             Physics.Engine.setVelocity(this, velocity);
             Physics.Engine.setAngularVelocity(this, angularVelocity);
-//            Physics.Engine.setRotation(this, new Vector4(rotation).lerp(this.rotation, alpha).asArray());
+            Physics.Engine.setRotation(this, new Vector4(rotation).lerp(this.rotation, alpha).normalize().asArray());
+
+            this.positionUpdateCache.time = Global.time;
+            this.positionUpdateCache.data = data;
+
 /*
             var dir = new Vector3(position).subNew(this.position);
             var mag = dir.magnitude();
@@ -423,4 +446,6 @@ Physics.Engine.ServerEntity = registerEntityClass(bakePlugins(Physics.Engine.Ent
         });
     },
 }]));
+
+// Restart map fails XXX
 

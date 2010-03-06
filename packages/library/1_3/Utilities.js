@@ -118,9 +118,7 @@ Vector3 = Class.extend({
     normalize: function() {
         var mag = this.magnitude();
         if (mag !== 0.0) {
-            this.x /= mag;
-            this.y /= mag;
-            this.z /= mag;
+            this.mul(1/mag);
         } else {
             log(WARNING, "Trying to normalize a length 0 Vector3");
 //            eval(assert(' false ')); // Uncomment this to help debug these messages
@@ -302,8 +300,36 @@ Vector4 = Vector3.extend({
         return new Vector4(this.x * other, this.y * other, this.z * other, this.w * other);
     },
 
+    sub: function(other) {
+        this.x -= other.x;
+        this.y -= other.y;
+        this.z -= other.z;
+        this.w -= other.w;
+        return this;
+    },
+
+    add: function(other) {
+        this.x += other.x;
+        this.y += other.y;
+        this.z += other.z;
+        this.w += other.w;
+        return this;
+    },
+
+    mul: function(other) {
+        this.x *= other;
+        this.y *= other;
+        this.z *= other;
+        this.w *= other;
+        return this;
+    },
+
     copy: function() {
         return new Vector4(this.x, this.y, this.z, this.w);
+    },
+
+    magnitude: function() {
+        return Math.sqrt( this.x*this.x + this.y*this.y + this.z*this.z + this.w*this.w );
     },
 });
 
