@@ -844,7 +844,8 @@ MochiKit.Base.update(MochiKit.Base, {
 
     /** @id MochiKit.Base.evalJSON */
     evalJSON: function (jsonText) {
-        return eval("(" + MochiKit.Base._filterJSON(jsonText) + ")");
+        return JSON.parse("(" + MochiKit.Base._filterJSON(jsonText) + ")"); // INTENSITY: More robust, not sure why
+//        return eval("(" + MochiKit.Base._filterJSON(jsonText) + ")");
     },
 
     _filterJSON: function (s) {
