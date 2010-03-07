@@ -264,7 +264,8 @@ Physics = {
             lastPosition: new Vector3(0, 0, 0),
 
             act: function(seconds) {
-                this.simulateAction(seconds, true);
+                // Problem is, we move on the server, but the client updates wipe us out...
+//                this.simulateAction(seconds, false);
             },
 
             clientAct: function(seconds) {
@@ -283,7 +284,7 @@ Physics = {
             simulateAction: function(seconds, _global) {
                 // We control ourselves here, locally
 
-                var position = _global ? this.position.copy() : this.lastPosition;
+                var position = this.position.copy();
                 var velocity = this.velocity.copy();
                 var speed = this.movementSpeed*2;
                 var editing = isPlayerEditing(this);
@@ -322,6 +323,8 @@ Physics = {
                     Physics.Engine.setRotation(this, new Vector4().quatFromAxisAngle(new Vector3(0,0,1), this.yaw-90).asArray());
                 } else {
                     Physics.Engine.setPosition(this, position.asArray());
+                    CAPI.setDynentO(this, position);
+                    Physics.Engine.setRotation(this, new Vector4().quatFromAxisAngle(new Vector3(0,0,1), this.yaw-90).asArray());
                 }
             },
 
@@ -390,8 +393,8 @@ Physics.Engine.ServerEntity = registerEntityClass(bakePlugins(Physics.Engine.Ent
 
     positionUpdate: new StateArrayFloat({ reliable: false, hasHistory: false }),
     positionUpdateRate: {
-        active: 1/20,
-        asleep: 1/5,
+        active: 1/10,
+        asleep: 1/1,
     },
     positionUpdatePower: 10000,
 
