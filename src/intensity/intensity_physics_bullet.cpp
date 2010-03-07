@@ -266,8 +266,8 @@ physicsHandle BulletPhysicsEngine::addBody(btCollisionShape *shape, float mass)
     IntensityBulletBody* body = new IntensityBulletBody(mass, motionState, shape, localInertia);
     motionState->parent = body;
 
-// XXX   body->setCollisionFlags( body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT); 
-// XXX   body->setActivationState(DISABLE_DEACTIVATION);
+// body->setCollisionFlags( body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT); 
+// body->setActivationState(DISABLE_DEACTIVATION);
 
     m_dynamicsWorld->addRigidBody(body);
 
@@ -277,7 +277,7 @@ physicsHandle BulletPhysicsEngine::addBody(btCollisionShape *shape, float mass)
 
     Logging::log(Logging::DEBUG, "Physics: Created body: %d\r\n", handle);
 
-    return handle; // XXX garbage collect ***shape***. Also body also motionstate in previous func, etc.}
+    return handle; // garbage collect ***shape***. Also body also motionstate in previous func, etc.}
 
 void BulletPhysicsEngine::removeBody(physicsHandle handle)
 {

@@ -40,7 +40,7 @@ class BulletPhysicsEngine : public RealisticPhysicsEngine
         btIDebugDraw* m_debugDrawer;
     #endif
 
-    std::vector<btVector3> m_staticTriangles;
+    btAlignedObjectArray<btVector3> m_staticTriangles;
     btVector3* m_staticTriangleVertices;
     int* m_staticTriangleIndexes;
     btStridingMeshInterface* m_indexVertexArrays;

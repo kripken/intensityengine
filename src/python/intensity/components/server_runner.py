@@ -27,7 +27,7 @@ Works both when logged into the master, or when not.
 '''
 
 import subprocess, time
-import os, signal # Python 2.5 killing method, see below
+import os, signal, sys
 
 from intensity.base import *
 from intensity.logging import *
@@ -63,7 +63,7 @@ def run_server(location=None, use_master=True):
         map_asset = '-config:Activity:force_location:%s' % location
 
     Module.server_proc = subprocess.Popen(
-        "%s %s %s -component:intensity.components.shutdown_if_idle -config:Startup:no_console:1" % (
+        "%s %s %s -component:intensity.components.shutdown_if_idle -components:intensity.components.shutdown_if_empty -config:Startup:no_console:1" % (
             'exec ./intensity_server.sh' if UNIX else 'intensity_server.bat',
             activity,
             map_asset,
@@ -111,7 +111,10 @@ def stop_server(sender=None, **kwargs):
     if Module.server_proc is not None:
         log(logging.WARNING, "Stopping server process: %d" % Module.server_proc.pid)
         try:
-            os.kill(Module.server_proc.pid, signal.SIGKILL)
+            if sys.version >= '2.6':
+                Module.server_proc.terminate()
+            else:
+                os.kill(Module.server_proc.pid, signal.SIGKILL) # Will fail on Windows, so must have 2.6 there!
             Module.server_proc.wait()
         except OSError:
             log(logging.ERROR, "Stopping server process failed.");

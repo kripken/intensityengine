@@ -7,9 +7,9 @@ SET PYTHONHOME=Python26\lib;Python26\DLLs;C:\Python26\lib;C:\Python26\DLLs;%PYTH
 SET OLD_PYTHONPATH=%PYTHONPATH%
 SET PYTHONPATH=Python26\lib;Python26\DLLs;C:\Python26\lib;C:\Python26\DLLs;%PYTHONPATH%
 
-cbuild\src\server\Release\Intensity_CServer %* > out_server 2>&1
+cbuild\src\server\Release\Intensity_CServer %*
 
-pause
+echo "To save the output, add     > out_server 2>&1"
 
 SET PATH=%OLD_PATH%
 SET PYTHONHOME=%OLD_PYTHONHOME%

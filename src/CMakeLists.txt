@@ -60,6 +60,7 @@ if(${INTENSITY_BULLET})
         ${CMAKE_SOURCE_DIR}/src/thirdparty/bullet/src/BulletCollision
         ${CMAKE_SOURCE_DIR}/src/thirdparty/bullet/src/BulletDynamics
         ${CMAKE_SOURCE_DIR}/src/thirdparty/bullet/src/LinearMath
+        ${CMAKE_SOURCE_DIR}/src/thirdparty/bullet/lib/Release
     )
     set(BULLET_SOURCES ../intensity/intensity_physics_bullet.cpp)
     set(BULLET_LIBRARIES BulletDynamics BulletCollision LinearMath)
