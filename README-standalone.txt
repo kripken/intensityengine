@@ -236,7 +236,10 @@ a file called master_django/intensity/components/instance_validator__models.py
     validate_instance.connect(do_validate)
 
 (This is a simple plugin that hooks into validate_instance.)
-Note that __models.py is important in the filename.
+Note that __models.py is important in the filename. Note also
+that the indentation appearing in this README file will cause
+errors in an actual Python file (i.e., 'def' should not
+be indented at all, etc.).
 
 
 Running without a master
