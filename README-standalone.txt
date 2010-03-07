@@ -200,6 +200,45 @@ Production
    latter runs Django using CherryPy for production purposes.
 
 
+Requisitioning servers
+======================
+
+You can requisition servers if there is a pool of available
+servers. Those should be servers running against your
+master server, that are identified as being in the pool -
+otherwise, they are 'independent', and not available for
+requisitioning.
+
+To be identified as being in the pool, they must authorize
+themselves with the master (this prevents just anybody
+from adding a server to the pool, since those servers
+might not behave like a pooled server should). For that,
+set
+
+    [Network]
+    instance_validation = CODE
+
+in the server's settings.cfg, where CODE is something
+that will be sent to the master. On the master, you must
+connect to the validate_instance signal, with something
+that returns True if the instance_validation code is
+valid. For example, this would work, if put into
+a file called master_django/intensity/components/instance_validator__models.py
+
+    __COMPONENT_PRECEDENCE__ = 100
+    from intensity.tracker.signals import validate_instance
+
+    def do_validate(sender, **kwargs):
+        instance = kwargs['instance']
+        validation = kwargs['validation']
+        if validation is None: return False
+        return validation == 'CODE'
+    validate_instance.connect(do_validate)
+
+(This is a simple plugin that hooks into validate_instance.)
+Note that __models.py is important in the filename.
+
+
 Running without a master
 ========================
 
