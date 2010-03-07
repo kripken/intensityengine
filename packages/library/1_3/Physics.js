@@ -205,7 +205,7 @@ Physics = {
                 return CAPI.physicsAddBox(this.mass, 20, 20, 20);
             },
             init: function() {
-                this.mass = 40;
+                this.mass = 400;
             },
             activate: function() { Physics.Engine.setupPhysicalEntity(this); },
             deactivate: function() { Physics.Engine.teardownPhysicalEntity(this); },
