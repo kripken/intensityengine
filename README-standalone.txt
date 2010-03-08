@@ -241,6 +241,12 @@ that the indentation appearing in this README file will cause
 errors in an actual Python file (i.e., 'def' should not
 be indented at all, etc.).
 
+Note that for server requisitioning to work, the master
+must *not* have [Instances] force_asset_location set (if
+it does, then all servers will be told to run that
+asset, instead of requisitioning being able to control
+them).
+
 
 Running without a master
 ========================
