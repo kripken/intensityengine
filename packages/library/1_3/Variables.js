@@ -253,6 +253,7 @@ StateInteger = StateVariable.extend({
 
 // Utility to parse floats into 2 decimal places
 decimal2 = function(x) {
+    if (Math.abs(x) < 0.01) return '0'; // Makes no sense to use 1.234e-5 etc. notation
     var ret = string(x);
     var i = ret.indexOf('.');
     if (i != -1) {
