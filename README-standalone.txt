@@ -285,6 +285,20 @@ a server - the plugin will do it for you.
         start it up with a different map).
 
 
+    Master vs. Masterless
+    ---------------------
+
+    If you *do* log in to the master, you can tell the plugin to run
+    any map and it will fetch it from the master if it isn't present,
+    and if it is, then update it to the latest version (if necessary).
+
+    Whereas if you do *not* log in to the master, whatever map you ask
+    to run will be run directly from the disk - whatever files are
+    in that map directory will be run, and likewise all map content
+    (models, textures, etc.) will simply be loaded and run, without
+    using the asset system to check for dependencies, updates, etc.
+
+
     Working on maps
     ---------------
 
