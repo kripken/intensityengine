@@ -397,6 +397,7 @@ Physics.Engine.ServerEntity = registerEntityClass(bakePlugins(Physics.Engine.Ent
         asleep: 1/1,
     },
     positionUpdatePower: 10000,
+    smoothMove: 0.075,
 
     makePositionUpdate: function() {
         // TODO: Normalize sizes, optimize message, and make parsePositionUpdate
@@ -425,37 +426,38 @@ Physics.Engine.ServerEntity = registerEntityClass(bakePlugins(Physics.Engine.Ent
     },
 
     clientActivate: function() {
-        this.positionUpdateCache = {
-            time: Global.time,
-            data: this.makePositionUpdate(),
-        };
-
         this.connect('client_onModify_positionUpdate', function(data) {
             var changed = arrayL1Diff(data, this.makePositionUpdate()) > 0.25;
             if (!changed) return;
-            var position = data.slice(0, 3);
+            var position = new Vector3(data.slice(0, 3));
             var velocity = data.slice(3, 6);
             var angularVelocity = data.slice(6, 9);
-            var rotation = data.slice(9, 13);
-            var alpha = this.positionUpdatePower*Global.currTimeDelta*(Global.time - this.positionUpdateCache.time);
-            Physics.Engine.setPosition(this, new Vector3(position).lerp(this.position, alpha).asArray());
-            Physics.Engine.setVelocity(this, velocity);
-            Physics.Engine.setAngularVelocity(this, angularVelocity);
-            Physics.Engine.setRotation(this, new Vector4(rotation).lerp(this.rotation, alpha).normalize().asArray());
+            var rotation = new Vector4(data.slice(9, 13));
 
-            this.positionUpdateCache.time = Global.time;
-            this.positionUpdateCache.data = data;
+            var oldPosition = this.position.copy();
+            var oldRotation = this.rotation.copy();
+            var startTime = Global.time;
 
-/*
-            var dir = new Vector3(position).subNew(this.position);
-            var mag = dir.magnitude();
-            var impulse = dir.normalize().mul(
-                Math.pow(mag, 2) * this.positionUpdatePower * this.mass * Global.currTimeDelta/this.positionUpdateRate
-            );
-            if (!impulse.isZero()) {
-                Physics.Engine.addImpulse(this, impulse.asArray());
-            }
-*/
+            this.positionUpdateInterpolateEvent = GameManager.getSingleton().eventManager.add({
+                secondsBefore: 0,
+                secondsBetween: 0,
+                func: bind(function() {
+                    var alpha = clamp( (Global.time - startTime)/this.smoothMove, 0, 1);
+                    if (alpha < 1) {
+                        // In progress. Interpolate and zero out velocities
+                        Physics.Engine.setPosition(this, position.lerp(oldPosition, alpha).asArray());
+                        Physics.Engine.setRotation(this, rotation.lerp(oldRotation, alpha).normalize().asArray());
+                        Physics.Engine.setVelocity(this, [0,0,0]);
+                        Physics.Engine.setAngularVelocity(this, [0,0,0]);
+                    } else {
+                        // Finished - set velocities for the physics simulation to proceed from here
+                        Physics.Engine.setVelocity(this, velocity);
+                        Physics.Engine.setAngularVelocity(this, angularVelocity);
+                        return false;
+                    }
+                }, this),
+                entity: this,
+            }, this.positionUpdateInterpolateEvent);
         });
     },
 }]));
