@@ -309,3 +309,18 @@ going to src/thirdparty/bullet and running
     cmake . -DBUILD_DEMOS=OFF -DBUILD_EXTRAS=OFF -DUSE_GLUT=OFF
     make
 
+
+    Quick test
+    ----------
+
+    1. Install the server_runner plugin (see README-standalone.txt)
+    2. Login to the master
+    3. Tell the server_runner plugin to run the map
+
+            kripken/bullettest
+
+    That is a simple test map for physics, that currently exists
+    on the Syntensity master server. Following the steps above
+    will run it on your machine.
+
+
