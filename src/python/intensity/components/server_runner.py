@@ -138,6 +138,9 @@ def show_gui(sender, **kwargs):
                     guibutton "  stop" [ (run_python "intensity.components.server_runner.stop_server()") ]
                 ]
                 guibutton "  show output" [ showgui local_server_output ]
+                guistayopen [
+                    guibutton "  save map" [ do_upload ]
+                ]
             ''')
         elif check_server_terminated():
             Module.server_proc = None

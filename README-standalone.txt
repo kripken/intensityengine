@@ -284,3 +284,22 @@ a server - the plugin will do it for you.
         can also shut it down in the GUI if you want (which is necessary to
         start it up with a different map).
 
+
+    Working on maps
+    ---------------
+
+    There is no convenient GUI way to create a new map at the moment, when
+    working locally. Instead, just create a folder in
+
+         ~/.intensityengine_client/packages/base
+
+    for your map, and copy-paste files from another map into there. For
+    example, files for an empty map are in the archive at 
+
+        ./master_django/intensity/tracker/fixtures/emptymap.tar.gz
+
+    Once that is set up, run the map normally, giving the name of the folder
+    you just created.
+
+    To save the map, do 'save map' in the server runner plugin GUI.
+
