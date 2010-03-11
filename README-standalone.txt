@@ -49,7 +49,16 @@ a server - the plugin will do it all for you. If you just finished
 compiling the engine and want to try stuff out, this is a good
 way to do that.
 
-    * Activate the plugin: Add intensity.components.server_runner to
+    * Activate the plugin: The simplest thing is to run the client as
+        follows:
+
+            ./intensity_client.sh -config:Components:list:intensity.components.server_runner
+
+        or on Windows,
+
+            intensity_client.bat -config:Components:list:intensity.components.server_runner
+
+        Alternatively, you can add intensity.components.server_runner to
         "[Components] list" in your settings.cfg, which is in your
         home directory, which is intensityengine_client or .intensityengine_client
         under your operating system user's home directory - Users on Vista,
