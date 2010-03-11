@@ -280,6 +280,24 @@ main_actionqueue.add_action(doit_%s)
 
         return client
 
+    def start_client_serverrunner(self, mapname):
+        client = self.add_proc( pexpect.spawn('sh intensity_client.sh %s -config:Components:list:intensity.components.server_runner' % self.client_dir) )# Use for debugging: , logfile=sys.stdout) )
+        self.assertExpect(client, 'Starting threaded interactive console in parallel')
+
+        time.sleep(0.5) # Might need to increase this
+
+        self.inject_mouse_click(client, 0.485, 0.510, 1) # Select plugins
+        time.sleep(MENU_DELAY) # Let menu appear
+
+        self.inject_mouse_click(client, 0.621, 0.508, 1) # Focus on map name
+        self.inject_key_press(client, mapname) # test
+
+        self.inject_mouse_click(client, 0.113,0.550, 1) # Start
+        self.assertExpect(client, 'MAP LOADING]] - Success', 10)
+        self.ignore_output(client, '("start_red")', 3)
+
+        return client
+
     def start_components(self):
         return self.start_master(), self.start_server(), self.start_client()
 
@@ -288,6 +306,8 @@ main_actionqueue.add_action(doit_%s)
         new_value = str(int(new_value)) # remove 0's from the beginning
         self.assertNotEquals(new_value, value)
         return new_value
+
+    # Tests    '''
 
     def testClient2Server(self):
         master, server, client = self.start_components()
@@ -450,4 +470,8 @@ main_actionqueue.add_action(doit_%s)
         self.run_command(client, '\n') # Clean the output (comments on missing player start marker)
         self.assertEquals(self.eval_script([client, server], 'getEntity(%s).health' % player_id), ['100', '100'])
         self.assertEquals(self.eval_script(client, 'getEntity(%s).animation' % player_id), '130')
+
+    def testClientServerRunner(self):
+        # Run storming_test
+        client = self.start_client_serverrunner([115, 116, 111, 114, 109, 105, 110, 103, 95, 116, 101, 115, 116, 13])
 
