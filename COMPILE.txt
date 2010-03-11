@@ -69,7 +69,6 @@ The following are the shared aspects.
    in the directory src/thirdparty/v8.
 
 
-
 Specific Platforms
 ==================
 
@@ -323,4 +322,11 @@ going to src/thirdparty/bullet and running
     on the Syntensity master server. Following the steps above
     will run it on your machine.
 
+
+What to do when you're done
+===========================
+
+See README.txt for how to connect to syntensity.com, and
+README-standalone.txt for how to run locally/standalone
+(which is a quick way to see some stuff running in the engine).
 
