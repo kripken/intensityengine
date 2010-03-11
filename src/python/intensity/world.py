@@ -125,7 +125,7 @@ def set_map(activity_id, map_asset_id):
         parts = map_asset_id.split('/')
         if parts[0] == 'base':
             need_lookup = False
-        set_config('Activity', 'force_location', map_asset_id)
+            set_config('Activity', 'force_location', map_asset_id)
 
     # If given a URL of an activity, or don't have the map asset id, autodiscover the activity and map asset ids
     if need_lookup and '/' in activity_id or map_asset_id == '':
