@@ -201,6 +201,10 @@ def restart_map():
 ## Returns the path to a file in the map script directory, i.e., a file is given in
 ## relative position to the current map, and we return the full path
 def get_mapfile_path(relative_path):
+    # Check first in the installation packages
+    install_path = os.path.sep.join( os.path.join('packages', World.asset_info.get_zip_location(), relative_path).split('/') )
+    if os.path.exists(install_path):
+        return install_path
     return os.path.join(World.asset_info.get_zip_location(AssetManager.get_full_location(World.asset_info)), relative_path)
 
 

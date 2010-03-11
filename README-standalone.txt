@@ -1,8 +1,141 @@
 Running the Intensity Engine in Standalone mode
 ===============================================
 
-Brief Overview:
-===============
+
+The simplest way to use the Intensity Engine is to run
+the client and connect to remote servers, like syntensity.com.
+That process is explained in README.txt. However, the Intensity
+Engine is very flexible, and you can also use the engine in
+other ways. One is to run a local server (see README-server.txt),
+and another is to run 'standalone', which this document explains.
+
+'Standalone' means to run *without* depending on other servers -
+you will be in charge of everything yourself. There are several
+options here: You can either run your own servers locally,
+or you can run the client without any servers at all. Some
+reasons you might want to do these sort of things include:
+
+  * You just finished compiling the engine, and you just
+      want to quickly see something neat.
+
+      See 'Running games using only the client', below.
+
+  * You are creating a singleplayer game, and don't need
+      remote servers, user accounts, asset systems, etc.
+
+      Ditto: See 'Running games using only the client', below.
+
+  * You want to run a demo on your laptop, and you might
+      not have network connectivity.
+
+      Ditto: See 'Running games using only the client', below.
+
+  * You want to set up your own syntensity.com-like system,
+      with your own user accounts, assets, etc.
+
+      In this case you can set up your own master server
+      and game servers, as explained in 'Running your own servers',
+      below.
+
+
+Running games using only the client
+===================================
+a.k.a
+Running a local server using the server_runner plugin
+=====================================================
+
+This is an easy way to run a map, without manually setting up
+a server - the plugin will do it all for you. If you just finished
+compiling the engine and want to try stuff out, this is a good
+way to do that.
+
+    * Activate the plugin: Add intensity.components.server_runner to
+        "[Components] list" in your settings.cfg, which is in your
+        home directory, which is intensityengine_client or .intensityengine_client
+        under your operating system user's home directory - Users on Vista,
+        or under Documents and Settings on XP, or ~ on Linux, etc.
+
+        Note that the directory and file will be created the first time
+        you run the client. So, run it once and close it, then edit the file
+        as explained here.
+
+        The relevant lines in your settings.cfg should look like this:
+
+            [Components]
+            list = intensity.components.server_runner
+
+        (without the indentation).
+
+    * (OPTIONALLY, log in to the master. If you don't have a reason
+        to, don't do this - explanations are below if you're curious.)
+
+    * Click on 'plugins...' in the main menu. You will then see the
+        status of the local server in the plugin GUI.
+
+    * Tell the plugin which map to run (simply by writing the location
+        of the map, e.g. "storming_test" for the test map). Then click start,
+        and wait a bit while the server is started up for you. As soon as
+        it is ready you will automatically connect to it.
+
+        The storming_test map is included with the source code, so it is
+        ready for you to run it, and a good first map to try out. Note
+        the "_" (underscore) in storming_test when you type it in the GUI.
+
+        Aside from that map, you can also try the maps on syntensity.com.
+        For them you will need to log in to the master. After doing that,
+        the following maps can be run:
+
+            sketchworld
+            racetrack
+            welcome
+            gk/ctf
+            etc.
+
+
+    Master vs. Masterless
+    ---------------------
+
+    If you *do* log in to the master, you can tell the plugin to run
+    any map and it will fetch it from the master if it isn't present,
+    and if it is, then update it to the latest version (if necessary).
+
+    Whereas if you do *not* log in to the master, whatever map you ask
+    to run will be run directly from the disk - whatever files are
+    in that map directory will be run, and likewise all map content
+    (models, textures, etc.) will simply be loaded and run, without
+    using the asset system to check for dependencies, updates, etc.
+
+
+    Working on maps
+    ---------------
+
+    There is no convenient GUI way to create a new map at the moment, when
+    working locally. Instead, just create a folder in
+
+         ~/.intensityengine_client/packages/base
+
+    for your map, and copy-paste files from another map into there. For
+    example, files for an empty map are in the archive at 
+
+        ./master_django/intensity/tracker/fixtures/emptymap.tar.gz
+
+    Once that is set up, run the map normally, giving the name of the folder
+    you just created.
+
+    To save the map, do 'save map' in the server runner plugin GUI.
+
+
+    Notes
+    -----
+
+    The server will be shut down automatically when you close the client,
+    or connect to another server, so no need to worry about that. You
+    can also shut it down in the GUI if you want (which is necessary to
+    start it up with a different map).
+
+
+Running your own servers
+========================
 
 To run locally, for example right after compiling,
 run the master server and a server instance,
@@ -261,59 +394,4 @@ For example,
 
 [Activity]
 force_location=base/mymap.tar.gz
-
-
-Running a local server using the server_runner plugin
-=====================================================
-
-This is an easy way to run a map, without manually setting up
-a server - the plugin will do it for you.
-
-    * Activate the plugin: Add intensity.components.server_runner to
-        "[Components] list" in your settings.cfg
-    * *Optionally*, log in to the master. (If you don't, you will
-        be running entirelly locally.)
-    * Click on 'plugins...' in the main menu. You will then see the
-        status of the local server.
-    * Tell the plugin which map to run (simply by writing the location
-        of the map, e.g. "racetrack" for the racing map). Then click start,
-        and wait a bit while the server is started up for you. As soon as
-        it is ready you will automatically connect to it.
-    * The server will be shut down automatically when you close the client,
-        or connect to another server, so no need to worry about that. You
-        can also shut it down in the GUI if you want (which is necessary to
-        start it up with a different map).
-
-
-    Master vs. Masterless
-    ---------------------
-
-    If you *do* log in to the master, you can tell the plugin to run
-    any map and it will fetch it from the master if it isn't present,
-    and if it is, then update it to the latest version (if necessary).
-
-    Whereas if you do *not* log in to the master, whatever map you ask
-    to run will be run directly from the disk - whatever files are
-    in that map directory will be run, and likewise all map content
-    (models, textures, etc.) will simply be loaded and run, without
-    using the asset system to check for dependencies, updates, etc.
-
-
-    Working on maps
-    ---------------
-
-    There is no convenient GUI way to create a new map at the moment, when
-    working locally. Instead, just create a folder in
-
-         ~/.intensityengine_client/packages/base
-
-    for your map, and copy-paste files from another map into there. For
-    example, files for an empty map are in the archive at 
-
-        ./master_django/intensity/tracker/fixtures/emptymap.tar.gz
-
-    Once that is set up, run the map normally, giving the name of the folder
-    you just created.
-
-    To save the map, do 'save map' in the server runner plugin GUI.
 

@@ -44,7 +44,9 @@ isn't a binary distribution.
 Running - Locally (i.e., without Syntensity)
 --------------------------------------------
 
-See README-standalone.txt.
+See README-standalone.txt. It explains how to quickly run a map
+using the client, and also more complex things like running your
+own servers.
 
 
 Settings
