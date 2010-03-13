@@ -98,6 +98,7 @@ way to do that.
             racetrack
             welcome
             gk/ctf
+            kripken/editdemo
             etc.
 
 

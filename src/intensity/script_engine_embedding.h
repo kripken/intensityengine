@@ -1430,3 +1430,24 @@ V8_FUNC_i(__script__physicsRemoveConstraint, {
     PhysicsManager::getEngine()->removeConstraint(arg1);
 });
 
+// Editing
+
+#include "editing_system.h"
+
+V8_FUNC_NOPARAM(__script__editing_getWorldSize, { V8_RETURN_INT(EditingSystem::getWorldSize()); });
+V8_FUNC_NOPARAM(__script__editing_eraseGeometry, { EditingSystem::eraseGeometry(); });
+V8_FUNC_iiii(__script__editing_createCube, { EditingSystem::createCube(arg1, arg2, arg3, arg4); });
+V8_FUNC_iiii(__script__editing_deleteCube, { EditingSystem::deleteCube(arg1, arg2, arg3, arg4); });
+V8_FUNC_iiiiii(__script__editing_setCubeTexture, { EditingSystem::setCubeTexture(arg1, arg2, arg3, arg4, arg5, arg6); });
+V8_FUNC_iiiii(__script__editing_setCubeMaterial, { EditingSystem::setCubeMaterial(arg1, arg2, arg3, arg4, arg5); });
+V8_FUNC_iiiiiii(__script__editing_pushCubeCorner, { EditingSystem::pushCubeCorner(arg1, arg2, arg3, arg4, arg5, arg6, arg7); });
+V8_FUNC_NOPARAM(__script__editing_getSelectedEntity, {
+    LogicEntityPtr ret = EditingSystem::getSelectedEntity();
+    if (ret.get())
+    {
+        V8_RETURN_VALUE(ret->scriptEntity);
+    } else {
+        V8_RETURN_NULL;
+    }
+});
+

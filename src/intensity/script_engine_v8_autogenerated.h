@@ -212,6 +212,16 @@
         , wrapped_code);
 
 
+// iiii
+#define V8_FUNC_iiii(new_func, wrapped_code) \
+    V8_FUNC_GEN(new_func, \
+        int arg1 = args[0]->IntegerValue(); \
+        int arg2 = args[1]->IntegerValue(); \
+        int arg3 = args[2]->IntegerValue(); \
+        int arg4 = args[3]->IntegerValue(); \
+        , wrapped_code);
+
+
 // sdddi
 #define V8_FUNC_sdddi(new_func, wrapped_code) \
     V8_FUNC_GEN(new_func, \
@@ -411,6 +421,18 @@
         , wrapped_code);
 
 
+// iiiiii
+#define V8_FUNC_iiiiii(new_func, wrapped_code) \
+    V8_FUNC_GEN(new_func, \
+        int arg1 = args[0]->IntegerValue(); \
+        int arg2 = args[1]->IntegerValue(); \
+        int arg3 = args[2]->IntegerValue(); \
+        int arg4 = args[3]->IntegerValue(); \
+        int arg5 = args[4]->IntegerValue(); \
+        int arg6 = args[5]->IntegerValue(); \
+        , wrapped_code);
+
+
 // ddddddii
 #define V8_FUNC_ddddddii(new_func, wrapped_code) \
     V8_FUNC_GEN(new_func, \
@@ -463,6 +485,19 @@
         double arg6 = args[5]->NumberValue(); if (ISNAN(arg6)) RAISE_SCRIPT_ERROR(isNAN failed on argument 5 in #new_func); \
         double arg7 = args[6]->NumberValue(); if (ISNAN(arg7)) RAISE_SCRIPT_ERROR(isNAN failed on argument 6 in #new_func); \
         double arg8 = args[7]->NumberValue(); if (ISNAN(arg8)) RAISE_SCRIPT_ERROR(isNAN failed on argument 7 in #new_func); \
+        , wrapped_code);
+
+
+// iiiiiii
+#define V8_FUNC_iiiiiii(new_func, wrapped_code) \
+    V8_FUNC_GEN(new_func, \
+        int arg1 = args[0]->IntegerValue(); \
+        int arg2 = args[1]->IntegerValue(); \
+        int arg3 = args[2]->IntegerValue(); \
+        int arg4 = args[3]->IntegerValue(); \
+        int arg5 = args[4]->IntegerValue(); \
+        int arg6 = args[5]->IntegerValue(); \
+        int arg7 = args[6]->IntegerValue(); \
         , wrapped_code);
 
 

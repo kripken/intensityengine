@@ -328,3 +328,14 @@ EMBED_CAPI_FUNC_STD(physicsSetAngularFactor, 4);
 EMBED_CAPI_FUNC_STD(physicsAddConstraintP2P, 8);
 EMBED_CAPI_FUNC_STD(physicsRemoveConstraint, 1);
 
+// Editing
+
+EMBED_CAPI_FUNC_STD(editing_getWorldSize, 0);
+EMBED_CAPI_FUNC_STD(editing_eraseGeometry, 0);
+EMBED_CAPI_FUNC_STD(editing_createCube, 4);
+EMBED_CAPI_FUNC_STD(editing_deleteCube, 4);
+EMBED_CAPI_FUNC_STD(editing_setCubeTexture, 6);
+EMBED_CAPI_FUNC_STD(editing_setCubeMaterial, 5);
+EMBED_CAPI_FUNC_STD(editing_pushCubeCorner, 7);
+EMBED_CAPI_FUNC_STD(editing_getSelectedEntity, 0);
+
