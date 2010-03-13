@@ -23,8 +23,72 @@
 #=============================================================================
 
 
-# Using Python Imaging Library, or PythonMagick (Python ImageMagick; in ubuntu repos; http://www.graphicsmagick.org/Magick++/Image.html)
-# or OpenJPEG codec (assumed binary is copied to here)
+'''
+This script can automate a lot of the texture preparation steps that can
+take a lot of time, if you have a great many images.
+
+It has been tested on Linux, but should work anywhere, perhaps with
+minor modifications to the external/commandline tasks that are run.
+
+The script doesn't accept parameters - you need to edit the settings
+inside the file. See comments below, and the example settings. The
+only commandline parameter is the directory in which to work, i.e. that
+contains the input files (and will contain the output files).
+
+The script has the following tools it can apply:
+
+    PIL: Convert file formats, using the Python Imaging Library (PIL). Can
+        scale images and convert to grayscale. Keeps suffixes, so if
+        _cc.X means a primary diffuse texture, can convert *_cc.png to
+        *_cc.jpg, etc. Can also combine images into single images with
+        multiple layers, e.g., normal map + heightmap into an image with
+        the heightmap in the alpha channel.
+
+    NV: NVidia texture tools. Can convert PNG to DDS.
+
+    OJ: OpenJpeg. Can convert TIFF to JP2 or vice versa.
+
+    PM: PythonMagick (ImageMagick). Can convert file formats as well.
+        http://www.graphicsmagick.org/Magick++/Image.html
+
+    PACK: Packaging into assets. Gets a glob (wildcard) of which files
+        go into which asset. Subparameters:
+            COPY: Copy files into a directory structure suitable for
+                    the asset
+            CFG: Run tools/create_tex_config.py to create .js config
+                    files for the asset. Note that that tool assumes
+                    standard suffixes etc. for autodetection.
+            BUNDLE: Create an archive asset suitable for the Intensity
+                    engine asset system.
+
+    VIEW: Shows the files, for debugging purposes
+
+The appropriate tools used (NVidia texture tools, PIL, etc.) must be
+installed.
+
+After the line
+
+    tasks = []
+
+below, you can add as many tasks as you want. They will be done in
+order. This lets you prepare a lot of things to do in batch. To add
+tasks, use lines like
+
+    tasks += ...
+
+for the details, see the example parameters below.
+
+The example parameters below are the ones that were actually used to
+generate the syntensity assets, so they should be useful. The procedure
+was basically to pop them into and out of comments, to decide what
+to run at any particular time. So, to get started, first comment out
+whatever tasks additions are currently not in comments.
+
+Note that there are two sets of example tasks: The first ones, and
+then some more after 'Phase 1_TAKE_B'. The former are the various
+phases for an earlier packaging method, the latter is the current
+approach, which is recommended.
+'''
 
 import os, sys
 import fnmatch
