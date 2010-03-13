@@ -81,6 +81,7 @@ Editing = {
 
             },
             draw: function(stack) {
+                var stairs = true;
                 var gridSize = Editing.getGridSize();
                 var top = stack[0];
                 var bottom = stack[1];
@@ -89,11 +90,19 @@ Editing = {
                 for (var x = top.x; x !== bottom.x; x += delta.x) {
                     for (var y = top.y; y !== bottom.y; y += delta.y) {
                         for (var z = top.z; z !== bottom.z; z += delta.z) {
-                            var height = bottom.z + (top.z-bottom.z)*(x-bottom.x)/(top.x-bottom.x);
-                            if (height >= z) {
-                                Editing.createCube(x + Math.min(delta.x, 0), y + Math.min(delta.y, 0), z, gridSize);
+                            var highHeight = bottom.z + (top.z-bottom.z)*(x-bottom.x)/(top.x-bottom.x);
+                            var lowHeight = bottom.z + (top.z-bottom.z)*(x+delta.x-bottom.x)/(top.x-bottom.x);
+
+                            var cx = x + Math.min(delta.x, 0);
+                            var cy = y + Math.min(delta.y, 0);
+                            var cz = z + Math.min(delta.z, 0); // z is high, cz is low
+
+                            if (lowHeight >= z) {
+                                Editing.createCube(cx, cy, cz, gridSize);
+                            } else if (highHeight <= cz || stairs) {
+                                Editing.deleteCube(cx, cy, cz, gridSize);
                             } else {
-                                Editing.deleteCube(x + Math.min(delta.x, 0), y + Math.min(delta.y, 0), z, gridSize);
+                                // Slopey
                             }
                         }
                     }
