@@ -1435,6 +1435,7 @@ V8_FUNC_i(__script__physicsRemoveConstraint, {
 #include "editing_system.h"
 
 V8_FUNC_NOPARAM(__script__editing_getWorldSize, { V8_RETURN_INT(EditingSystem::getWorldSize()); });
+V8_FUNC_NOPARAM(__script__editing_getGridSize, { V8_RETURN_INT(1<<getvar("gridpower")); });
 V8_FUNC_NOPARAM(__script__editing_eraseGeometry, { EditingSystem::eraseGeometry(); });
 V8_FUNC_iiii(__script__editing_createCube, { EditingSystem::createCube(arg1, arg2, arg3, arg4); });
 V8_FUNC_iiii(__script__editing_deleteCube, { EditingSystem::deleteCube(arg1, arg2, arg3, arg4); });

@@ -331,6 +331,7 @@ EMBED_CAPI_FUNC_STD(physicsRemoveConstraint, 1);
 // Editing
 
 EMBED_CAPI_FUNC_STD(editing_getWorldSize, 0);
+EMBED_CAPI_FUNC_STD(editing_getGridSize, 0);
 EMBED_CAPI_FUNC_STD(editing_eraseGeometry, 0);
 EMBED_CAPI_FUNC_STD(editing_createCube, 4);
 EMBED_CAPI_FUNC_STD(editing_deleteCube, 4);

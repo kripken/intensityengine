@@ -77,9 +77,9 @@ ApplicationManager.setApplicationClass(Application.extend({
         entity.position = [600,600,600];
     },
 
-    clientClick: function(button, down) {
-        if (down) {
-            Editing.createCube(640, 640, 640, 128);
+    actionKey: function(index, down) {
+        if (down && isPlayerEditing()) {
+            Editing.Tools.Slope.clientClick(CAPI.getTargetPosition());
         }
     },
 }));
