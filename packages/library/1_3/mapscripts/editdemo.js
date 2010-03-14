@@ -80,6 +80,20 @@ ApplicationManager.setApplicationClass(Application.extend({
     actionKey: function(index, down) {
         if (down && isPlayerEditing()) {
             Editing.Tools.Slope.clientClick(CAPI.getTargetPosition());
+
+/* // Simple test: push down on this point, in all adjacent cubes
+            var gridSize = Editing.getGridSize();
+            var c = Editing.snapToGrid(CAPI.getTargetPosition());
+            Effect.splash(PARTICLE.SPARK, 55, 2.0, c, 0xFFE090, 1.0, 70, 1);
+            for (var x = 0; x <= 1; x++) {
+                for (var y = 0; y <= 1; y++) {
+                    var d = new Vector3(c.x-x*gridSize, c.y-y*gridSize, c.z-gridSize);
+                    Editing.pushCubeCorner(d.x, d.y, d.z, gridSize, Editing.FACE.TOP,
+                        Editing.getFaceCorner(d, Editing.FACE.TOP, c),
+                    1);
+                }
+            }
+*/
         }
     },
 }));

@@ -49,19 +49,43 @@ Editing = {
         HIGH_Z: 5,
     },
 
-    Tools: {
-        snapToGrid: function(position) {
-            var gridSize = Editing.getGridSize();
-            function snap(t) { return Math.round(t/gridSize)*gridSize; };
-            return new Vector3(snap(position.x), snap(position.y), snap(position.z));
-        },
+    //! For each face, a list of corners, x+y*2 indexes
+    CORNER: [
+        {}, // TODO
+        {},
+        {},
+        {},
+        {},
+        [ 0, 1, 2, 3 ],
+    ],
 
+    snapToGrid: function(position) {
+        var gridSize = Editing.getGridSize();
+        function snap(t) { return Math.round(t/gridSize)*gridSize; };
+        return new Vector3(snap(position.x), snap(position.y), snap(position.z));
+    },
+
+    //! Gets a cube basis position, a face, and a position,
+    //! and returns the corner index for that position on that face
+    //! on that cube
+    getFaceCorner: function(cubePosition, face, position) {
+        if (face === Editing.FACE.TOP) {
+            return Editing.CORNER[face][
+                (position.x === cubePosition.x ? 0 : 1) +
+                (position.y === cubePosition.y ? 0 : 1)*2
+            ];
+        } else {
+            return null;
+        }
+    },
+
+    Tools: {
         // Click once for top of slope, click again for bottom (opposite edge -
         // must differ in x, y and z).
         Slope: {
             stack: [],
             clientClick: function(position) {
-                this.stack.push(Editing.Tools.snapToGrid(position));
+                this.stack.push(Editing.snapToGrid(position));
                 if (this.stack.length === 2) {
                     this.draw(this.stack);
                     this.stack = [];
@@ -81,7 +105,7 @@ Editing = {
 
             },
             draw: function(stack) {
-                var stairs = true;
+                var smooth = true;
                 var gridSize = Editing.getGridSize();
                 var top = stack[0];
                 var bottom = stack[1];
@@ -93,16 +117,38 @@ Editing = {
                             var highHeight = bottom.z + (top.z-bottom.z)*(x-bottom.x)/(top.x-bottom.x);
                             var lowHeight = bottom.z + (top.z-bottom.z)*(x+delta.x-bottom.x)/(top.x-bottom.x);
 
+                            // low-x,y,z coordinates, for the base of the cube in the octree
                             var cx = x + Math.min(delta.x, 0);
                             var cy = y + Math.min(delta.y, 0);
                             var cz = z + Math.min(delta.z, 0); // z is high, cz is low
+                            var c = new Vector3(cx, cy, cz);
 
                             if (lowHeight >= z) {
                                 Editing.createCube(cx, cy, cz, gridSize);
-                            } else if (highHeight <= cz || stairs) {
+                            } else if (highHeight <= cz || !smooth) {
                                 Editing.deleteCube(cx, cy, cz, gridSize);
                             } else {
                                 // Slopey
+                                Editing.createCube(cx, cy, cz, gridSize);
+                                var highSteps = Math.floor(8*(highHeight - cz)/gridSize);
+                                var lowSteps = Math.floor(8*(lowHeight - cz)/gridSize);
+                                var d;
+                                for (d = 0; d < highSteps; d++) {
+                                    Editing.pushCubeCorner(cx, cy, cz, gridSize, Editing.FACE.TOP,
+                                        Editing.getFaceCorner(c, Editing.FACE.TOP, new Vector3(x, y, z)),
+                                    1);
+                                    Editing.pushCubeCorner(cx, cy, cz, gridSize, Editing.FACE.TOP,
+                                        Editing.getFaceCorner(c, Editing.FACE.TOP, new Vector3(x, y+delta.y, z)),
+                                    1);
+                                }
+                                for (d = 0; d < lowSteps; d++) {
+                                    Editing.pushCubeCorner(cx, cy, cz, gridSize, Editing.FACE.TOP,
+                                        Editing.getFaceCorner(c, Editing.FACE.TOP, new Vector3(x+delta.x, y, z)),
+                                    1);
+                                    Editing.pushCubeCorner(cx, cy, cz, gridSize, Editing.FACE.TOP,
+                                        Editing.getFaceCorner(c, Editing.FACE.TOP, new Vector3(x+delta.x, y+delta.y, z)),
+                                    1);
+                                }
                             }
                         }
                     }
