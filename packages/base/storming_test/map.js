@@ -18,6 +18,8 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Shotgun');
 Library.include('library/' + Global.LIBRARY_VERSION + '/guns/Chaingun');
 Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/Teleporters');
 Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/Cannons');
+Library.include('library/' + Global.LIBRARY_VERSION + '/Editing');
+Library.include('library/' + Global.LIBRARY_VERSION + '/CustomEffect');
 
 //// Materials
 
@@ -458,4 +460,9 @@ if (Global.SERVER) { // Run this only on the server - not the clients
 
 Map.preloadModel('stromar');
 
-    
+if (Global.CLIENT) {
+    Global.queuedActions.push(function() {
+        CustomEffect.Rain.start(0.04, 20, 600, 1000, 20);
+    });
+}
+

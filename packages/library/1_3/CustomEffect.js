@@ -91,5 +91,48 @@ CustomEffect = {
             ));
         }
     },
+
+    Rain: {
+        start: function(frequency, atOnce, maxAmount, speed, size) {
+            this.drops = [];
+            var worldSize = Editing.getWorldSize();
+            this.addDropEvent = GameManager.getSingleton().eventManager.add({
+                secondsBefore: 0,
+                secondsBetween: frequency,
+                func: bind(function() {
+                    for (var i = 0; i < atOnce; i++) {
+                        if (this.drops.length === maxAmount) return;
+                        var origin = new Vector3(Math.random()*worldSize, Math.random()*worldSize, worldSize);
+                        var floorDist = floorDistance(origin, worldSize*2);
+                        if (floorDist < 0) floorDist = worldSize;
+                        this.drops.push({
+                            position: origin,
+                            finalZ: origin.z - floorDist,
+                        });
+                    }
+                }, this),
+            }, this.addDropEvent);
+            this.visualEffectEvent = GameManager.getSingleton().eventManager.add({
+                secondsBefore: 0,
+                secondsBetween: 0,
+                func: bind(function() {
+                    var delta = Global.currTimeDelta;
+                    this.drops = filter(function(drop) {
+                        var bottom = drop.position.copy();
+                        bottom.z -= size;
+                        Effect.flare(PARTICLE.STREAK, drop.position, bottom, 0.333, 0x1233A0, 0.3);
+                        drop.position.z -= speed*delta;
+                        if (drop.position.z > drop.finalZ) {
+                            return true;
+                        } else {
+                            drop.position.z = drop.finalZ - 5;
+                            Effect.splash(PARTICLE.SPARK, 15, 0.1, drop.position, 0xCCDDFF, 1.0, 70, -1);
+                            return false;
+                        }
+                    }, this.drops);
+                }, this),
+            }, this.visualEffectEvent);
+        },
+    },
 };
 
