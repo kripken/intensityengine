@@ -235,6 +235,30 @@ static void updateval(char *var, int val, char *onchange)
     if(onchange[0]) executelater.add(newstring(onchange)); 
 }
 
+static void updatefval(char *var, float val, char *onchange)
+{
+    ident *id = getident(var);
+    string assign;
+    if(!id) return;
+    switch(id->type)
+    {
+        case ID_FVAR:
+            formatstring(assign)("%s %f", var, val);
+            break;
+        case ID_VAR:
+        case ID_SVAR:
+            formatstring(assign)("%s %d", var, int(val));
+            break;
+        case ID_ALIAS:
+            formatstring(assign)("%s = %d", var, int(val));
+            break;
+        default:
+            return;
+    }
+    executelater.add(newstring(assign));
+    if(onchange[0]) executelater.add(newstring(onchange));
+}
+
 static int getval(char *var)
 {
     ident *id = getident(var);
@@ -245,6 +269,20 @@ static int getval(char *var)
         case ID_FVAR: return int(*id->storage.f);
         case ID_SVAR: return atoi(*id->storage.s);
         case ID_ALIAS: return atoi(id->action);
+        default: return 0;
+    }
+}
+
+static float getfval(char *var)
+{
+    ident *id = getident(var);
+    if(!id) return 0;
+    switch(id->type)
+    {
+        case ID_VAR: return *id->storage.i;
+        case ID_FVAR: return *id->storage.f;
+        case ID_SVAR: return atof(*id->storage.s);
+        case ID_ALIAS: return atof(id->action);
         default: return 0;
     }
 }
@@ -276,21 +314,21 @@ void guilistslider(char *var, char *list, char *onchange)
     if(offset != oldoffset) updateval(var, vals[offset], onchange);
 }
 
-void guicheckbox(char *name, char *var, int *on, int *off, char *onchange)
+void guicheckbox(char *name, char *var, float *on, float *off, char *onchange)
 {
-    bool enabled = getval(var)!=*off;
+    bool enabled = getfval(var)!=*off;
     if(cgui && cgui->button(name, GUI_BUTTON_COLOR, enabled ? "checkbox_on" : "checkbox_off")&G3D_UP)
     {
-        updateval(var, enabled ? *off : (*on || *off ? *on : 1), onchange);
+        updatefval(var, enabled ? *off : (*on || *off ? *on : 1), onchange);
     }
 }
 
-void guiradio(char *name, char *var, int *n, char *onchange)
+void guiradio(char *name, char *var, float *n, char *onchange)
 {
-    bool enabled = getval(var)==*n;
+    bool enabled = getfval(var)==*n;
     if(cgui && cgui->button(name, GUI_BUTTON_COLOR, enabled ? "radio_on" : "radio_off")&G3D_UP)
     {
-        if(!enabled) updateval(var, *n, onchange);
+        if(!enabled) updatefval(var, *n, onchange);
     }
 }
 
@@ -401,9 +439,9 @@ COMMAND(guibar,"");
 COMMAND(guiimage,"ssfis");
 COMMAND(guislider,"siis");
 COMMAND(guilistslider, "sss");
-COMMAND(guiradio,"ssis");
+COMMAND(guiradio,"ssfs");
 COMMAND(guibitfield, "ssis");
-COMMAND(guicheckbox, "ssiis");
+COMMAND(guicheckbox, "ssffs");
 COMMAND(guitab, "s");
 COMMAND(guifield, "sisi"); // INTENSITY: Added final parameter, for password fields
 COMMAND(guikeyfield, "sis");

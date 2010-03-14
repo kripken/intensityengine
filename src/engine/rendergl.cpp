@@ -652,6 +652,9 @@ void cleanupgl()
 
     extern int nomasks, nolights, nowater;
     nomasks = nolights = nowater = 0;
+
+    extern void cleanupmotionblur();
+    cleanupmotionblur();
 }
 
 VAR(wireframe, 0, 0, 1);
@@ -1445,6 +1448,77 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch, const cubemapsi
     envmapping = false;
 }
 
+GLuint motiontex = 0;
+int motionw = 0, motionh = 0, lastmotion = 0;
+
+void cleanupmotionblur()
+{
+    if(motiontex) { glDeleteTextures(1, &motiontex); motiontex = 0; }
+    motionw = motionh = 0;
+}
+
+VARFP(motionblur, 0, 0, 1, { if(!motionblur) cleanupmotionblur(); });
+VARP(motionblurmillis, 1, 5, 1000);
+FVARP(motionblurscale, 0, 0.5f, 1);
+
+void addmotionblur()
+{
+    if(!motionblur || !hasTR || max(screen->w, screen->h) > hwtexsize) return;
+
+    if(!motiontex || motionw != screen->w || motionh != screen->h)
+    {
+        if(!motiontex) glGenTextures(1, &motiontex);
+        motionw = screen->w;
+        motionh = screen->h;
+        createtexture(motiontex, motionw, motionh, NULL, 3, 0, GL_RGB, GL_TEXTURE_RECTANGLE_ARB);
+    }
+
+    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, motiontex);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glDisable(GL_TEXTURE_2D);
+    glEnable(GL_TEXTURE_RECTANGLE_ARB);
+
+    rectshader->set();
+
+    glColor4f(1, 1, 1, pow(motionblurscale, max(float(lastmillis - lastmotion)/motionblurmillis, 1.0f)));
+    glBegin(GL_QUADS);
+    glTexCoord2f(      0,       0); glVertex2f(-1, -1);
+    glTexCoord2f(motionw,       0); glVertex2f( 1, -1);
+    glTexCoord2f(motionw, motionh); glVertex2f( 1,  1);
+    glTexCoord2f(      0, motionh); glVertex2f(-1,  1);
+    glEnd();
+
+    glDisable(GL_TEXTURE_RECTANGLE_ARB);
+    glEnable(GL_TEXTURE_2D);
+
+    glDisable(GL_BLEND);
+
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+ 
+    if(lastmillis - lastmotion >= motionblurmillis)
+    {
+        lastmotion = lastmillis - lastmillis%motionblurmillis;
+
+        glCopyTexSubImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, 0, 0, screen->w, screen->h);
+        glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
+    }
+}
+
 bool dopostfx = false;
 
 void invalidatepostfx()
@@ -1576,6 +1650,7 @@ void gl_drawframe(int w, int h)
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
 
+    addmotionblur();
     addglare();
     if(fogmat==MAT_WATER || fogmat==MAT_LAVA) drawfogoverlay(fogmat, fogblend, abovemat);
     renderpostfx();
