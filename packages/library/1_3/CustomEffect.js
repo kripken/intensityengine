@@ -93,16 +93,27 @@ CustomEffect = {
     },
 
     Rain: {
-        start: function(frequency, atOnce, maxAmount, speed, size) {
+        start: function(frequency, atOnce, maxAmount, speed, size, radius) {
             this.drops = [];
             var worldSize = Editing.getWorldSize();
             this.addDropEvent = GameManager.getSingleton().eventManager.add({
                 secondsBefore: 0,
                 secondsBetween: frequency,
                 func: bind(function() {
-                    for (var i = 0; i < atOnce; i++) {
-                        if (this.drops.length === maxAmount) return;
-                        var origin = new Vector3(Math.random()*worldSize, Math.random()*worldSize, worldSize);
+                    var camera = getPlayerEntity().position.copy();
+                    var lx = Math.max(0, camera.x - radius);
+                    var ly = Math.max(0, camera.y - radius);
+                    var hx = Math.min(camera.x + radius, worldSize);
+                    var hy = Math.min(camera.y + radius, worldSize);
+                    var dx = hx-lx;
+                    var dy = hy-ly;
+                    var chance = dx*dy/Math.pow(worldSize, 2);
+                    var amount = atOnce*chance;
+                    if (this.drops.length + amount > maxAmount) {
+                        amount = maxAmount - this.drops.length;
+                    }
+                    for (var i = 0; i < amount; i++) {
+                        var origin = new Vector3(lx + Math.random()*dx, ly + Math.random()*dy, worldSize);
                         var floorDist = floorDistance(origin, worldSize*2);
                         if (floorDist < 0) floorDist = worldSize;
                         this.drops.push({
@@ -120,7 +131,7 @@ CustomEffect = {
                     this.drops = filter(function(drop) {
                         var bottom = drop.position.copy();
                         bottom.z -= size;
-                        Effect.flare(PARTICLE.STREAK, drop.position, bottom, 0.333, 0x1233A0, 0.3);
+                        Effect.flare(PARTICLE.STREAK, drop.position, bottom, 0, 0x1233A0, 0.3);
                         drop.position.z -= speed*delta;
                         if (drop.position.z > drop.finalZ) {
                             return true;

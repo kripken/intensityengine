@@ -462,7 +462,7 @@ Map.preloadModel('stromar');
 
 if (Global.CLIENT) {
     Global.queuedActions.push(function() {
-        CustomEffect.Rain.start(0.04, 20, 600, 1000, 20);
+        CustomEffect.Rain.start(0.04, 150, 1000, 1000, 30, 200);
     });
 }
 
