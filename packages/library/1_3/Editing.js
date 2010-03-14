@@ -111,9 +111,15 @@ Editing = {
                 var bottom = stack[1];
                 var dir = bottom.subNew(top);
                 var delta = new Vector3(sign(dir.x), sign(dir.y), sign(dir.z)).mul(gridSize);
+                var total = ((bottom.x-top.x)/delta.x)*((bottom.y-top.y)/delta.y)*((bottom.z-top.z)/delta.z);
+                var finished = 0;
                 for (var x = top.x; x !== bottom.x; x += delta.x) {
                     for (var y = top.y; y !== bottom.y; y += delta.y) {
+                        CAPI.renderProgress(finished/total, 'Drawing sloped surface...');
+
                         for (var z = top.z; z !== bottom.z; z += delta.z) {
+                            finished += 1;
+
                             var highHeight = bottom.z + (top.z-bottom.z)*(x-bottom.x)/(top.x-bottom.x);
                             var lowHeight = bottom.z + (top.z-bottom.z)*(x+delta.x-bottom.x)/(top.x-bottom.x);
 

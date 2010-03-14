@@ -107,6 +107,14 @@
         , wrapped_code);
 
 
+// ds
+#define V8_FUNC_ds(new_func, wrapped_code) \
+    V8_FUNC_GEN(new_func, \
+        double arg1 = args[0]->NumberValue(); if (ISNAN(arg1)) RAISE_SCRIPT_ERROR(isNAN failed on argument 0 in #new_func); \
+        std::string _arg2 = *(v8::String::Utf8Value(args[1])); const char* arg2 = _arg2.c_str(); \
+        , wrapped_code);
+
+
 // iis
 #define V8_FUNC_iis(new_func, wrapped_code) \
     V8_FUNC_GEN(new_func, \

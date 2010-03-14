@@ -340,3 +340,5 @@ EMBED_CAPI_FUNC_STD(editing_setCubeMaterial, 5);
 EMBED_CAPI_FUNC_STD(editing_pushCubeCorner, 7);
 EMBED_CAPI_FUNC_STD(editing_getSelectedEntity, 0);
 
+EMBED_CAPI_FUNC_STD(renderProgress, 2);
+

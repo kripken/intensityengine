@@ -1452,3 +1452,7 @@ V8_FUNC_NOPARAM(__script__editing_getSelectedEntity, {
     }
 });
 
+V8_FUNC_ds(__script__renderProgress, {
+    renderprogress(arg1, arg2);
+});
+
