@@ -120,7 +120,6 @@ namespace game
 //        if(player1->state==CS_DEAD) deathstate(player1, true); Kripken
 //        else if(player1->state==CS_EDITING && player1->editstate==CS_DEAD) sb.showscores(false); Kripken
         setvar("zoom", -1, true);
-        setvar("thirdperson", 1, true); // Kripken: Added this, it's easier to edit this way, for now at least
 
         #ifdef CLIENT
             enthover = -1; // Would be nice if sauer did this, but it doesn't... so without it you still hover on a nonseen edit ent
