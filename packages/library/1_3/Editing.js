@@ -130,8 +130,8 @@ Editing = {
                             } else {
                                 // Slopey
                                 Editing.createCube(cx, cy, cz, gridSize);
-                                var highSteps = Math.floor(8*(highHeight - cz)/gridSize);
-                                var lowSteps = Math.floor(8*(lowHeight - cz)/gridSize);
+                                var highSteps = 8-Math.floor(8*(highHeight - cz)/gridSize);
+                                var lowSteps = 8-Math.floor(8*(lowHeight - cz)/gridSize);
                                 var d;
                                 for (d = 0; d < highSteps; d++) {
                                     Editing.pushCubeCorner(cx, cy, cz, gridSize, Editing.FACE.TOP,
