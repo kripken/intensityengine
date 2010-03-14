@@ -141,6 +141,8 @@ def show_gui(sender, **kwargs):
                 guistayopen [
                     guibutton "  save map" [ do_upload ]
                 ]
+                guibutton "  restart map" "showgui restart_map"
+                guibutton "  editing commands" "showgui editing"
             ''')
         elif check_server_terminated():
             Module.server_proc = None
