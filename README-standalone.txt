@@ -391,6 +391,27 @@ asset, instead of requisitioning being able to control
 them).
 
 
+Running lobby servers for your master
+=====================================
+
+Lobby servers are servers that will be connected to when
+people log in to your master, and then do 'connect to lobby...'
+in the client.
+
+To have the master send them to a particular server, add
+this to your master's settings.cfg:
+
+    [Lobby]
+    possibles=www.syntensity.com:10000
+
+without the indentation, and replacing that server address/
+port with your lobby server.
+
+You can also have multiple servers separated by commas (',').
+In that case the lobby plugin (master_django/intensity/components/lobby__views.py)
+will do simple load-balancing, see the code for exactly what.
+
+
 Running without a master
 ========================
 
@@ -405,3 +426,5 @@ For example,
 [Activity]
 force_location=base/mymap.tar.gz
 
+(This is used by the server_runner plugin mentioned before,
+actually.)
