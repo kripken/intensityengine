@@ -81,7 +81,9 @@ Physics = {
             CAPI.physicsCreateEngine(type);
 
             // Patch projectiles to run on physics engine
-            if (Projectiles) {
+            if (false) {//Projectiles) { // XXX Since isColliding now works in Bullet, no need for this code,
+                                         //     which runs projectiles as actual bullet objects. Instead,
+                                         //     the old projectile code will work, and is faster anyhow.
                 var old = Projectiles.Projectile.prototype.create;
                 Projectiles.Projectile.prototype.create = function() {
                     old.apply(this, arguments);
@@ -393,8 +395,8 @@ Physics.Engine.ServerEntity = registerEntityClass(bakePlugins(Physics.Engine.Ent
 
     positionUpdate: new StateArrayFloat({ reliable: false, hasHistory: false }),
     positionUpdateRate: {
-        active: 1/10,
-        asleep: 1/1,
+        active: 0.1,
+        asleep: 2,
     },
     positionUpdatePower: 10000,
     smoothMove: 0.075,

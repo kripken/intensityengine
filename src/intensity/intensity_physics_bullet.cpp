@@ -553,17 +553,36 @@ This will happen in predictplayer: So need to counter it?
 // XXX TODO:    game::predictplayer(*, false); - interpolate remote players
 }
 
+
+class IgnoringContactResultCallback : public btCollisionWorld::ContactResultCallback
+{
+    void* _ignore;
+public:
+    IgnoringContactResultCallback(void* ignore) : _ignore(ignore), hit(false) { };
+
+    bool hit;
+    bool hasHit() { return hit; };
+
+    virtual btScalar addSingleResult(btManifoldPoint& cp, const btCollisionObject* colObj0, int partId0, int index0, const btCollisionObject* colObj1, int partId1, int index1)
+        {
+            if (dynamic_cast<const IntensityBulletBody*>(colObj0) && colObj0->getUserPointer() == _ignore) return 0;
+            if (dynamic_cast<const IntensityBulletBody*>(colObj1) && colObj1->getUserPointer() == _ignore) return 0;
+            hit = true;
+            return 0;
+        }
+};
+
 bool BulletPhysicsEngine::isColliding(vec& position, float radius, CLogicEntity *ignore)
 {
-printf("WARNING - faulty code. Collide? %f,%f,%f   %f\r\n", position.x, position.y, position.z, radius);
     btSphereShape sphere(FROM_SAUER_SCALAR(radius));
-    btTransform from;
-    from.setIdentity();
-    from.setOrigin(FROM_SAUER_VEC(position));
-    btCollisionWorld::ClosestConvexResultCallback cb(from.getOrigin(), from.getOrigin() );
-//	cb.m_closestHitFraction = 0.5;
-    m_dynamicsWorld->convexSweepTest(&sphere, from, from, cb);
-//printf("hit? %d\r\n", cb.hasHit());
+    btTransform transform;
+    transform.setIdentity();
+    transform.setOrigin( FROM_SAUER_VEC(position) );
+    btCollisionObject collider;
+    collider.setCollisionShape(&sphere);
+    collider.setWorldTransform(transform);
+    IgnoringContactResultCallback cb(ignore);
+    m_dynamicsWorld->contactTest(&collider, cb);
     return cb.hasHit();
 }
 
