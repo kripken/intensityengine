@@ -132,7 +132,7 @@ void BulletPhysicsEngine::init()
 
     m_dynamicsWorld = new btDiscreteDynamicsWorld(m_dispatcher, m_broadPhase, m_constraintSolver, m_collisionConfiguration);
 
-    m_dynamicsWorld->setGravity(btVector3(0,-10,0));
+//    m_dynamicsWorld->setGravity(btVector3(0,-10,0));
 
     // Debug
     #ifdef CLIENT
@@ -169,6 +169,11 @@ void BulletPhysicsEngine::destroy()
     #ifdef CLIENT
         delete m_debugDrawer;
     #endif
+}
+
+void BulletPhysicsEngine::setGravity(float g)
+{
+    m_dynamicsWorld->setGravity(btVector3(0,-FROM_SAUER_SCALAR(g),0));
 }
 
 void BulletPhysicsEngine::clearStaticGeometry()

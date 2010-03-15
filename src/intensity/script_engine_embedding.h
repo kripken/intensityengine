@@ -907,8 +907,14 @@ V8_FUNC_ddddi(__script__isColliding, {
 });
 
 V8_FUNC_d(__script__setGravity, {
-    extern float GRAVITY;
-    GRAVITY = arg1;
+    if (PhysicsManager::hasEngine())
+    {
+        PhysicsManager::getEngine()->setGravity(arg1);
+    } else {
+        Logging::log(Logging::DEBUG, "Setting gravity using sauer system, as no physics engine\r\n");
+        extern float GRAVITY;
+        GRAVITY = arg1;
+    }
 });
 
 V8_FUNC_ddd(__script__getMaterial, {

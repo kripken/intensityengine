@@ -22,7 +22,7 @@
 
 
 //! Add additional stuff to the CAPIExtras.js World object
-World = merge(World, {
+World2 = {
     //! Finds the normal of a surface with respect to an outside (reference)
     //! point. This is useful, for example, to calculate how objects bounce off of walls.
     //! @param reference A point outside of the surface, our reference point
@@ -247,7 +247,12 @@ World = merge(World, {
             return true;
         }
     },
-});
+};
+
+//! Keep World getters/setters (MochiKit merge fails on that)
+for (item in World2) {
+    World[item] = World2[item];
+}
 
 var oldIsColliding = World.isColliding;
 World.isColliding = function(position, radius, ignore) {

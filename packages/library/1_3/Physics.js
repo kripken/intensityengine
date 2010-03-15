@@ -78,7 +78,9 @@ Physics = {
 
     Engine: {
         create: function(type) {
+            var gravity = World.gravity;
             CAPI.physicsCreateEngine(type);
+            World.gravity = gravity;
 
             // Patch projectiles to run on physics engine
             if (false) {//Projectiles) { // XXX Since isColliding now works in Bullet, no need for this code,

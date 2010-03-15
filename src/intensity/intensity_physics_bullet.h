@@ -56,6 +56,8 @@ public:
 
     virtual void destroy();
 
+    virtual void setGravity(float g);
+
     virtual void clearStaticGeometry();
 #ifdef BULLET_STATIC_POLYGONS
     virtual bool requiresStaticPolygons() { return true; };

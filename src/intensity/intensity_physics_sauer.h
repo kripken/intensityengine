@@ -30,6 +30,8 @@ public:
 
     virtual void destroy();
 
+    virtual void setGravity(float g);
+
     virtual physicsHandle addSphere(float mass, float radius) { assert(0); return 0; };
     virtual physicsHandle addBox(float mass, float rx, float ry, float rz) { assert(0); return 0; };
     virtual physicsHandle addCapsule(float mass, float radius, float height) { assert(0); return 0; };

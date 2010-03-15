@@ -40,6 +40,11 @@ void SauerPhysicsEngine::destroy()
 {
 }
 
+void SauerPhysicsEngine::setGravity(float g)
+{
+    extern float GRAVITY;
+    GRAVITY = g;
+}
 
 namespace game
 {
