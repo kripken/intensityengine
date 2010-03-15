@@ -148,20 +148,28 @@ Physics = {
         },
 
         getPosition: function(entity) {
-            return (entity.physicsHandle !== undefined) ? CAPI.physicsGetBodyPosition(entity.physicsHandle) : Vector3.zero;
+            var ret = (entity.physicsHandle !== undefined) ? CAPI.physicsGetBodyPosition(entity.physicsHandle) : [0,0,0];
+            if (entity.eyeHeight) {
+                ret[2] -= (entity.eyeHeight + entity.aboveEye)/2;
+            }
+            return ret;
         },
         getRotation: function(entity) {
-            return (entity.physicsHandle !== undefined) ? CAPI.physicsGetBodyRotation(entity.physicsHandle) : Vector4.zero;
+            return (entity.physicsHandle !== undefined) ? CAPI.physicsGetBodyRotation(entity.physicsHandle) : [0,0,0,0];
         },
         getVelocity: function(entity) {
-            return (entity.physicsHandle !== undefined) ? CAPI.physicsGetBodyVelocity(entity.physicsHandle) : Vector3.zero;
+            return (entity.physicsHandle !== undefined) ? CAPI.physicsGetBodyVelocity(entity.physicsHandle) : [0,0,0];
         },
         getAngularVelocity: function(entity) {
-            return (entity.physicsHandle !== undefined) ? CAPI.physicsGetBodyAngularVelocity(entity.physicsHandle) : Vector3.zero;
+            return (entity.physicsHandle !== undefined) ? CAPI.physicsGetBodyAngularVelocity(entity.physicsHandle) : [0,0,0];
         },
 
         setPosition: function(entity, v) {
             if (entity.physicsHandle !== undefined) {
+                if (entity.eyeHeight) {
+                    v = v.slice();
+                    v[2] += (entity.eyeHeight + entity.aboveEye)/2;
+                }
                 CAPI.physicsSetBodyPosition(entity.physicsHandle, v[0], v[1], v[2]);
             } else {
                 Global.queuedActions.push(partial(arguments.callee, entity, v));
@@ -348,7 +356,7 @@ Physics = {
                     r = [0,0,0,1];
                     mdlname = '';
                 }
-                return [this, mdlname, anim, o.x, o.y, o.z - (this.aboveEye+this.eyeHeight)/2, 0, 0, 0, flags, basetime, r[0], r[1], r[2], r[3]];
+                return [this, mdlname, anim, o.x, o.y, o.z, 0, 0, 0, flags, basetime, r[0], r[1], r[2], r[3]];
             },
 
             getRenderModelFunc: function() {
