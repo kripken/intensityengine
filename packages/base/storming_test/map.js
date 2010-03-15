@@ -23,7 +23,7 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/CustomEffect');
 
 //// Setup physics
 
-var BULLET = false;
+var BULLET = 0;
 
 if (BULLET) {
     Library.include('library/' + Global.LIBRARY_VERSION + '/Physics');
@@ -165,7 +165,7 @@ registerEntityClass(
 
                 activate: function() {
                     this.movementSpeed = 80;
-                }
+                },
             }
         ].concat(physicsPlugins)
     )
@@ -478,7 +478,16 @@ Map.preloadModel('stromar');
 
 if (Global.CLIENT) {
     Global.queuedActions.push(function() {
-        CustomEffect.Rain.start(0.05, 190, 1000, 1000, 30, 200);
+        CustomEffect.Rain.start({
+            frequency: 0.05,
+            spawnAtOnce: 190,
+            maxAmount: 1000,
+            speed: 1000,
+            size: 30,
+            radius: 200,
+            dropColor: 0x1233A0,
+            splashColor: 0xCCDDFF,
+        });
     });
 }
 

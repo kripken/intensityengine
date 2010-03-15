@@ -93,7 +93,7 @@ CustomEffect = {
     },
 
     Rain: {
-        start: function(frequency, atOnce, maxAmount, speed, size, radius) {
+        start: function(params) { with(params) {
             this.drops = [];
             var worldSize = Editing.getWorldSize();
             this.addDropEvent = GameManager.getSingleton().eventManager.add({
@@ -108,7 +108,7 @@ CustomEffect = {
                     var dx = hx-lx;
                     var dy = hy-ly;
                     var chance = dx*dy/Math.pow(worldSize, 2);
-                    var amount = atOnce*chance;
+                    var amount = spawnAtOnce*chance;
                     if (this.drops.length + amount > maxAmount) {
                         amount = maxAmount - this.drops.length;
                     }
@@ -131,19 +131,26 @@ CustomEffect = {
                     this.drops = filter(function(drop) {
                         var bottom = drop.position.copy();
                         bottom.z -= size;
-                        Effect.flare(PARTICLE.STREAK, drop.position, bottom, 0, 0x1233A0, 0.3);
+                        Effect.flare(PARTICLE.STREAK, drop.position, bottom, 0, dropColor, 0.3);
                         drop.position.z -= speed*delta;
                         if (drop.position.z > drop.finalZ) {
+                            /* // Experimental water splash code
+                            if (World.getMaterial(drop.position) === MATERIAL.WATER) {
+								drop.position.z = drop.position.z + 5;
+                                Effect.addDecal(DECAL.BLOOD, drop.position, new Vector3(0,0,1), 7, 0x0000ff);
+                                return false;
+                            }
+                            */
                             return true;
                         } else {
                             drop.position.z = drop.finalZ - 5;
-                            Effect.splash(PARTICLE.SPARK, 15, 0.1, drop.position, 0xCCDDFF, 1.0, 70, -1);
+                            Effect.splash(PARTICLE.SPARK, 15, 0.1, drop.position, splashColor, 1.0, 70, -1);
                             return false;
                         }
                     }, this.drops);
                 }, this),
             }, this.visualEffectEvent);
-        },
+        } },
     },
 };
 
