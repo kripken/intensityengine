@@ -55,6 +55,23 @@ Server output will be logged to HOME_DIR/out.log, and will
 be saved in HOME_DIR/out.log.old when the server restarts.
 
 
+Defining what activity/map to run
+=================================
+
+In the server's settings file - by default
+
+    ~/.intensityengine_client/settings_server.cfg -
+
+(it is in the client home dir, because that way they can share
+asset files), you can set things like
+
+    [Activity]
+    force_activity_id = http://www.syntensity.com:8888/tracker/activity/view/2f36c62d_cc3c_4d01_b1e2_e4e68ebe7a49/
+
+(without the indentation) where the URL is the actual URL on the master,
+for the activity.
+
+
 Running a local server
 ======================
 
@@ -64,6 +81,10 @@ If a server instance is started without an instance_id, it places itself
 in 'local mode'. In this mode it will only accept a login from the
 same machine. That single client can then edit the map using commands
 not possible in multiplayer, like heightmap editing.
+
+
+Manual setting
+==============
 
 To start the map on the server, in the server console do
 
@@ -76,6 +97,10 @@ master server for the asset - select 'Edit' on that asset, and it
 will show the asset details, including the asset ID. It will also
 appear in the config.cfg file of the client, if you last uploaded to that asset,
 by name 'last_uploaded_map_asset').
+
+
+Connecting with a client
+========================
 
 To connect using the client, first login to the master. Then select
 'local connection...' from the menu,
