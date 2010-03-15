@@ -21,6 +21,22 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/mapelements/Cannons');
 Library.include('library/' + Global.LIBRARY_VERSION + '/Editing');
 Library.include('library/' + Global.LIBRARY_VERSION + '/CustomEffect');
 
+//// Setup physics
+
+var BULLET = false;
+
+if (BULLET) {
+    Library.include('library/' + Global.LIBRARY_VERSION + '/Physics');
+    Projectiles.serverside = false;
+    Physics.Engine.create('bullet');
+    physicsPlugins = [
+        Physics.Engine.objectPlugin,
+        Physics.Engine.playerPlugin,
+    ];
+} else {
+    physicsPlugins = [];
+}
+
 //// Materials
 
 Map.materialReset();
@@ -151,7 +167,7 @@ registerEntityClass(
                     this.movementSpeed = 80;
                 }
             }
-        ]
+        ].concat(physicsPlugins)
     )
 );
 
@@ -462,7 +478,7 @@ Map.preloadModel('stromar');
 
 if (Global.CLIENT) {
     Global.queuedActions.push(function() {
-        CustomEffect.Rain.start(0.04, 150, 1000, 1000, 30, 200);
+        CustomEffect.Rain.start(0.05, 190, 1000, 1000, 30, 200);
     });
 }
 
