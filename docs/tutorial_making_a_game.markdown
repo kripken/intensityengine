@@ -51,6 +51,12 @@ Saving Your Work
 After doing some changes, you can save them using the server_runner plugin. In the GUI, go to 'plugins...' and click on 'save map'. This saves your work (where you would expect, in mygame/packages/base/mymap/).
 
 
+Workflow
+--------
+
+When you change the map scripts, you normally need to restart the map for that to take effect. To do so, the simplest way is to use the server_runner plugin GUI, which has a menu item for restarting the server.
+
+
 Advanced Topics
 ---------------
 
