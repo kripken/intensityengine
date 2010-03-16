@@ -694,7 +694,11 @@ namespace server
 
         fpsent* fpsEntity = dynamic_cast<fpsent*>(FPSClientInterface::getPlayerByNumber(cn));
         if (fpsEntity)
-            fpsEntity->uniqueId = -678; // If restarting a map, we are reusing existing fpsents, so reset their uniqueId
+        {
+            // Already created an entity
+            Logging::log(Logging::WARNING, "createScriptingEntity(%d): already have fpsEntity, and hence scripting entity\r\n", cn);
+            return ScriptEngineManager::getNull();
+        }
 
         // Use the PC class, unless told otherwise
         if (_class == "")
