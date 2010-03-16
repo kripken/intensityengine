@@ -303,20 +303,21 @@ Physics = {
 
                 if (editing) {
                     position = this.lastPosition ? this.lastPosition : this.position;
-                    velocity.mul(0);
+                    this.velocity.mul(0);
                 }
 
                 var targetVelocity = new Vector3(0,0,0);
 
                 if (this.move) {
-                    targetVelocity.add(new Vector3().fromYawPitch(this.yaw, !editing ? 0 : this.pitch).mul(speed*this.move));
+                    targetVelocity.add(new Vector3().fromYawPitch(this.yaw, !editing ? 0 : this.pitch).mul(this.move));
                 }
                 if (this.strafe) {
-                    targetVelocity.add(new Vector3().fromYawPitch(this.yaw-90, 0).mul(speed*this.strafe));
+                    targetVelocity.add(new Vector3().fromYawPitch(this.yaw-90, 0).mul(this.strafe*0.75));
                 }
+                if (!targetVelocity.isZero()) targetVelocity.normalize().mul(speed);
                 if (this.move || this.strafe) {
                     if (editing) {
-                        position.add(targetVelocity.mulNew(seconds));
+                        position.add(targetVelocity.mulNew(seconds*speed));
                     }
                 }
 
