@@ -54,7 +54,7 @@ After doing some changes, you can save them using the server_runner plugin. In t
 Advanced Topics
 ---------------
 
-    * You can use a server plugin that calls set_map to switch to another map, when the player completes the current one. For something similar see the map_control plugin in src/python/intensity/components, and see packages/library/1_3/mapscripts/swarm.js for a map that uses it (search for signalComponent).
+* You can use a server plugin that calls set_map to switch to another map, when the player completes the current one. For something similar see the map_control plugin in src/python/intensity/components, and see packages/library/1_3/mapscripts/swarm.js for a map that uses it (search for signalComponent).
 
 TODO: Expand on these
 
