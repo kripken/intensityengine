@@ -1,7 +1,9 @@
-Tutorial: Making a Game, Quickly
-================================
+Tutorial: Making a Game, Quickly (Locally/Standalone)
+=====================================================
 
 The Intensity Engine lets you play multiplayer games, and even **create** them in a multiplayer, networked way. However, if your goal is to make a singleplayer game, or you don't want to run with a master server, or you just want to create your game locally, then this tutorial will show you how to get up and running fast.
+
+(The other way to do this is to use a master server, which lets multiple people work together on creating content easily, has a user account system, assets, etc. For that, see README-standalone.txt)
 
 Preparations:
 
