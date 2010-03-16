@@ -169,7 +169,7 @@ def process_script(script):
             if line[0:len(prefix)] == prefix:
                 if line[-2:] == ');':
                     if not logging.should_show(i):
-                        line = '//' + line
+                        line = ''
                 else:
                     log(logging.WARNING, 'script optimization not sure about:' + line)
                 break
