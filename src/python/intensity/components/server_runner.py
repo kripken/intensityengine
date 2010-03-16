@@ -63,8 +63,9 @@ def run_server(location=None, use_master=True):
         map_asset = '-config:Activity:force_location:%s' % location
 
     Module.server_proc = subprocess.Popen(
-        "%s %s %s -component:intensity.components.shutdown_if_idle -components:intensity.components.shutdown_if_empty -config:Startup:no_console:1" % (
+        "%s %s %s %s -component:intensity.components.shutdown_if_idle -components:intensity.components.shutdown_if_empty -config:Startup:no_console:1" % (
             'exec ./intensity_server.sh' if UNIX else 'intensity_server.bat',
+            os.path.join(sys.argv[1], 'settings_server.cfg') if sys.argv[1][0] != '-' else '', # Home dir, if given for client - use also in server
             activity,
             map_asset,
         ),

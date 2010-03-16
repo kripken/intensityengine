@@ -7,7 +7,7 @@ SET PYTHONHOME=Python26\lib;Python26\DLLs;C:\Python26\lib;C:\Python26\DLLs;%PYTH
 SET OLD_PYTHONPATH=%PYTHONPATH%
 SET PYTHONPATH=Python26\lib;Python26\DLLs;C:\Python26\lib;C:\Python26\DLLs;%PYTHONPATH%
 
-cbuild\src\client\Release\Intensity_CClient -r %* > out_client 2>&1
+cbuild\src\client\Release\Intensity_CClient %* -r > out_client 2>&1
 
 echo "(If a problem occurred, look in out_client)"
 

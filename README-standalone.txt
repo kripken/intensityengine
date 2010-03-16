@@ -115,6 +115,39 @@ way to do that.
     (models, textures, etc.) will simply be loaded and run, without
     using the asset system to check for dependencies, updates, etc.
 
+    Note that in the latter case, since you are not using the asset
+    system, you may have issues with the packages/library code. The
+    reason is that the library code in your home directory takes
+    precedence over the install directory, so you must update the
+    home directory. And, since when running masterless the asset
+    system is not used, you will not automatically get the latest
+    library code downloaded to your home directory.
+
+    IMPORTANT NOTE
+    --------------
+
+    For the reasons just explained in the 'Master vs. Masterless'
+    section, it is recommended that, when running without
+    connecting to the master, to *NOT* use the regular home directory,
+    unless you actually need it. That is, if you want to run
+    content that is only in your home directory, you need it,
+    and should connect to the master. But if not - like when running
+    the storming_test map, or running a singleplayer game you
+    created - then do not connect to the master, and do not use
+    the usual home directory. In that case, instead, run the client like this:
+
+            ./intensity_client.sh temp -config:Components:list:intensity.components.server_runner
+
+        or on Windows,
+
+            intensity_client.bat temp -config:Components:list:intensity.components.server_runner
+
+    This will create a local directory 'temp' (or specify another
+    directory location, if you can't do so in the install directory),
+    and use that as the home directory. In that case you will only be
+    using the files in the install directory, and not anything
+    downloaded to your usual home directory.
+
 
     Working on maps
     ---------------
