@@ -317,7 +317,7 @@ Physics = {
                 if (!targetVelocity.isZero()) targetVelocity.normalize().mul(speed);
                 if (this.move || this.strafe) {
                     if (editing) {
-                        position.add(targetVelocity.mulNew(seconds*speed));
+                        position.add(targetVelocity.mulNew(seconds));
                     }
                 }
 
