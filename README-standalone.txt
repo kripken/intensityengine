@@ -144,8 +144,8 @@ way to do that.
     start it up with a different map).
 
 
-Running your own servers
-========================
+Running your own server infrastructure
+======================================
 
 To run locally, for example right after compiling,
 run the master server and a server instance,
@@ -185,7 +185,7 @@ to "\", and replace .py and .sh with .bat, that is,
 
 
 Full Overview
-=============
+-------------
 
 This document details how to run a map locally, without an external
 master server like Syntensity. If you just downloaded (and possibly
@@ -198,7 +198,7 @@ commands from the directory in which you installed the code.
 
 
 Steps:
-======
+------
 
 1. Start the master development server, using
 
@@ -263,7 +263,7 @@ You should now have entered the map running on the server. Have fun!
 
 
 Other Clients
-=============
+-------------
 
 Other people can also connect to the infrastructure you set up. To
 do so, they need to
@@ -289,7 +289,7 @@ do so, they need to
  
 
 Editing
-=======
+-------
 
 You can edit the map, even in collaboration with others. Note
 the following matters:
@@ -305,7 +305,7 @@ the following matters:
 
 
 Production
-==========
+----------
 
    The example above runs the master on the Django development
    server. This is *NOT* suitable for production, for
@@ -344,7 +344,7 @@ Production
 
 
 Requisitioning servers
-======================
+----------------------
 
 You can requisition servers if there is a pool of available
 servers. Those should be servers running against your
@@ -392,7 +392,7 @@ them).
 
 
 Running lobby servers for your master
-=====================================
+-------------------------------------
 
 Lobby servers are servers that will be connected to when
 people log in to your master, and then do 'connect to lobby...'
@@ -411,20 +411,3 @@ You can also have multiple servers separated by commas (',').
 In that case the lobby plugin (master_django/intensity/components/lobby__views.py)
 will do simple load-balancing, see the code for exactly what.
 
-
-Running without a master
-========================
-
-It is also possible to run without a master at all. To do so,
-in settings.cfg fill in [Activity] force_location to be equal to
-the location of the map to load. The map will be loaded from
-/packages directly, and the server will tell the client to do
-the same.
-
-For example,
-
-[Activity]
-force_location=base/mymap.tar.gz
-
-(This is used by the server_runner plugin mentioned before,
-actually.)
