@@ -167,6 +167,9 @@ way to do that.
 
     To save the map, do 'save map' in the server runner plugin GUI.
 
+    For more on the topic of creating maps locally/standalone, see
+    docs/tutorial_making_a_game.markdown
+
 
     Notes
     -----
@@ -217,21 +220,8 @@ to "\", and replace .py and .sh with .bat, that is,
        intensity_client.bat local\client\
 
 
-Full Overview
--------------
-
-This document details how to run a map locally, without an external
-master server like Syntensity. If you just downloaded (and possibly
-compiled) the Intensity Engine, this might be the first thing you
-want to do, to test it (or, you can sign into Syntensity).
-
-The following commands should work out-of-the-box given the
-files in the Intensity Engine code repository. Perform all these
-commands from the directory in which you installed the code.
-
-
-Steps:
-------
+In more detail
+--------------
 
 1. Start the master development server, using
 
