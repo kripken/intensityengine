@@ -38,9 +38,9 @@ Inside mygame/, which has been created, you can now begin to set up your game co
 
 Into mygame/packages/base/mymap/, place the contents of master_django/intensity/tracker/fixtures/emptymap.tar.gz. That archive contains files for an empty map. So, your mymap/ folder should now contain the following:
 
-    * entities.json
-    * map.js
-    * map.ogz
+* entities.json
+* map.js
+* map.ogz
 
 Let's run the map. Run the client again if you closed it, with the same command as before, and tell the server_runner plugin to run **mymap**. You should now be inside the map, which doesn't contain anything interesting yet. You can enter edit mode and start building the map.
 
