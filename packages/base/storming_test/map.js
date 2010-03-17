@@ -23,7 +23,7 @@ Library.include('library/' + Global.LIBRARY_VERSION + '/CustomEffect');
 
 //// Setup physics
 
-var BULLET = 1;
+var BULLET = 0;
 
 if (BULLET) {
     Library.include('library/' + Global.LIBRARY_VERSION + '/Physics');
