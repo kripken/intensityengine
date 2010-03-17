@@ -5,7 +5,7 @@ Importing an MD5 mesh file
 --------------------------
 
 * Place the files in a folder. You should have an .md5mesh file, some .md5anim files (if you have animations), and some texture files (png, jpg or dds).
-* Name the texture files using the standard conventions also used in the texture config tool: \_cc.* for primary (diffuse/colors), \_nm.* for normal map, \_sc.* for masks (see sauer docs (models.html); basically, spec/glow/chrome in RGB channels).
+* Name the texture files using the standard conventions also used in the texture config tool: \_cc.\* for primary (diffuse/colors), \_nm.\* for normal map, \_sc.\* for masks (see sauer docs (models.html); basically, spec/glow/chrome in RGB channels).
 * Run
 
     python tools/package\_model.py SOURCE\_DIR OUTPUT\_DIR
