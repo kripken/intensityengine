@@ -56,8 +56,3 @@ Differences with Cube 2/Sauerbraten
           o To define a custom animation in the model script, use e.g. "50" to define animation 50 (use that where you would have used a Cube 2 animation identifier like "jump", "forward", etc.).
           o To run a custom animation on a model, use the integer value, like 50, where you would have used a Cube 2 constant like ANIM\_JUMP or ANIM\_FORWARD (of course, you can define constants for your own use, so you don't type 50 everywhere).
 
-
-Tips on Importing and Setting Up
-
-    * /clearmodel will remove a loaded model, which will then be reloaded, so that is a way to refresh it as you are testing changes to your md5.js. It might be convenient to do something like /bind F5 [clearmodel MYMODEL] so that you can quickly iterate and test.
-
