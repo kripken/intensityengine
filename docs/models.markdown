@@ -5,16 +5,16 @@ Importing an MD5 mesh file
 --------------------------
 
 * Place the files in a folder. You should have an .md5mesh file, some .md5anim files (if you have animations), and some texture files (png, jpg or dds).
-* Name the texture files using the standard conventions also used in the texture config tool: _cc.* for primary (diffuse/colors), _nm.* for normal map, _sc.* for masks (see sauer docs (models.html); basically, spec/glow/chrome in RGB channels).
+* Name the texture files using the standard conventions also used in the texture config tool: \_cc.* for primary (diffuse/colors), \_nm.* for normal map, \_sc.* for masks (see sauer docs (models.html); basically, spec/glow/chrome in RGB channels).
 * Run
 
-    python tools/package_model.py SOURCE_DIR OUTPUT_DIR
+    python tools/package\_model.py SOURCE\_DIR OUTPUT\_DIR
 
-  where SOURCE_DIR is where you put those files, and OUTPUT_DIR is where the packaged model will be placed. Note that OUTPUT_DIR must be a directory inside a packages/ hierarchy, something like some_dir/packages/models/modelpack1/mynewmodel. This is necessary because the config files need to know the absolute location (under packages/models) of the model itself.
+  where SOURCE\_DIR is where you put those files, and OUTPUT\_DIR is where the packaged model will be placed. Note that OUTPUT\_DIR must be a directory inside a packages/ hierarchy, something like some\_dir/packages/models/modelpack1/mynewmodel. This is necessary because the config files need to know the absolute location (under packages/models) of the model itself.
 
   The mesh, animation and texture files will be copied over after appropriate processing and renaming, and a config file will be created for all of that.
 
-You should now be able to load the mesh in the client. To test it, first put the model in your packages/ folder (if you didn't already create it in there with the package_model.py tool). Then create a mapmodel in some map (F8 in edit mode, then Mapmodel), rightclick on the mapmodel, and change modelName to the name of your model. So if the model is in home_dir/packages/models/modelpack1/mynewmodel, the name you need to write in modelName is modelpack1/mynewmodel.
+You should now be able to load the mesh in the client. To test it, first put the model in your packages/ folder (if you didn't already create it in there with the package\_model.py tool). Then create a mapmodel in some map (F8 in edit mode, then Mapmodel), rightclick on the mapmodel, and change modelName to the name of your model. So if the model is in home\_dir/packages/models/modelpack1/mynewmodel, the name you need to write in modelName is modelpack1/mynewmodel.
 
 You can now adjust model parameters, like scaling, etc., by editing the model's config file (md5.js). For example, changing the value sent to Model.scale will scale the model. To see the change, do /reloadmodel MODELNAME (where MODELNAME is the modelName), that will reload the model so you can see the changes take effect. (Note: sauer's /clearmodel will not work, see the reloadmodel comments in the code for more info.)
 
@@ -54,7 +54,7 @@ Differences with Cube 2/Sauerbraten
 
     * You can have up to 128 animations per model. 0-39 are defined by Cube 2, which leaves 40-127 free to be used as custom animations by you.
           o To define a custom animation in the model script, use e.g. "50" to define animation 50 (use that where you would have used a Cube 2 animation identifier like "jump", "forward", etc.).
-          o To run a custom animation on a model, use the integer value, like 50, where you would have used a Cube 2 constant like ANIM_JUMP or ANIM_FORWARD (of course, you can define constants for your own use, so you don't type 50 everywhere).
+          o To run a custom animation on a model, use the integer value, like 50, where you would have used a Cube 2 constant like ANIM\_JUMP or ANIM\_FORWARD (of course, you can define constants for your own use, so you don't type 50 everywhere).
 
 
 Tips on Importing and Setting Up
