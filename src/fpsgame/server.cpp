@@ -696,7 +696,8 @@ namespace server
         if (fpsEntity)
         {
             // Already created an entity
-            Logging::log(Logging::WARNING, "createScriptingEntity(%d): already have fpsEntity, and hence scripting entity\r\n", cn);
+            Logging::log(Logging::WARNING, "createScriptingEntity(%d): already have fpsEntity, and hence scripting entity. Kicking.\r\n", cn);
+            disconnect_client(cn, DISC_KICK);
             return ScriptEngineManager::getNull();
         }
 
@@ -750,6 +751,16 @@ namespace server
     {
         Logging::log(Logging::DEBUG, "server::clientconnect: %d\r\n", n);
 
+/*
+// XXX This is a useful thing to test crashes on logins at odd times. See 'already have fpsEntity, and hence scripting entity'
+// XXX in createScriptingEntity (which gets called twice, if we run this code right here)
+static int i = 0;
+if (i == 0) {
+        REFLECT_PYTHON( restart_map );
+        restart_map();
+    i++;
+}
+*/
         clientinfo *ci = (clientinfo *)getinfo(n);
         ci->clientnum = n;
         clients.add(ci);
