@@ -11,3 +11,7 @@ Additional Cubescript Commands
     - Centers the selected entity on the hovered cube face. A convenient way
       to quickly get an entity into a power of 2 (canonical) position
 
+/reloadmodel
+    /clearmodel will crash because of how we cache theModel values. Instead,
+    /reloadmodel will reload a model properly.
+
