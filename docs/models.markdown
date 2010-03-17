@@ -19,6 +19,14 @@ You should now be able to load the mesh in the client. To test it, first put the
 You can now adjust model parameters, like scaling, etc., by editing the model's config file (md5.js). For example, changing the value sent to Model.scale will scale the model. To see the change, do /reloadmodel MODELNAME (where MODELNAME is the modelName), that will reload the model so you can see the changes take effect. (Note: sauer's /clearmodel will not work, see the reloadmodel comments in the code for more info.)
 
 
+Exporter scripts
+----------------
+
+A Blender script appears in tools/
+
+For 3DS Max, see http://www.katsbits.com/htm/tools_utilities.htm#md5
+
+
 Older docs
 ----------
 
