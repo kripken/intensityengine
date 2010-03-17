@@ -57,6 +57,12 @@ Workflow
 When you change the map scripts, you normally need to restart the map for that to take effect. To do so, the simplest way is to use the server_runner plugin GUI, which has a menu item for restarting the server.
 
 
+Getting Started
+---------------
+
+See mapping.markdown for mapping, and scripting.markdown for scripting.
+
+
 Advanced Topics
 ---------------
 

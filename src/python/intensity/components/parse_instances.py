@@ -48,7 +48,7 @@ def parse_servers(html):
 
 ## Selects and sorts the servers
 def select_relevant_servers(servers):
-    servers = filter(lambda server: server.activity != 'Lobby', servers)
+    servers = filter(lambda server: int(server.port) > 10006, servers) # XXX XXX XXX horrible hard-coding! FIXME
 #    servers = filter(lambda server: server.players > 0, servers)
     servers.sort(lambda x, y: x.players - y.players)
     return servers
