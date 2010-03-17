@@ -600,7 +600,7 @@ def activity_new(request):
     try:
         activity = Activity.objects.create(
             asset = asset,
-            name = 'Activity for "%s"' % asset.comment,
+            name = ('Activity for "%s"' % asset.comment)[0:25], # Really can go up to 30 in the database, but keep it safe
             comment = '',
             owner=request.account,
         )
