@@ -306,6 +306,9 @@ EMBED_CAPI_FUNC_STD(rdLimitRot, 7);
 
 EMBED_CAPI_FUNC_STD(mdlEnvmap, 2);
 
+EMBED_CAPI_FUNC_STD(modelBoundingBox, 1);
+EMBED_CAPI_FUNC_STD(modelCollisionBox, 1);
+
 // Physics
 
 EMBED_CAPI_FUNC_STD(physicsCreateEngine, 1);

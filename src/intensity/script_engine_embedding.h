@@ -1320,6 +1320,42 @@ CUBESCRIPT_iiddddd(rdLimitRot, rdlimitrot);
 
 CUBESCRIPT_dd(mdlEnvmap, mdlenvmap);
 
+#define RETURN_CENTER_RADIUS \
+    ScriptValuePtr ret = ScriptEngineManager::createScriptObject(); \
+    ret->setProperty("center", ScriptEngineManager::getGlobal()->call("__new__", \
+        ScriptValueArgs().append(ScriptEngineManager::getGlobal()->getProperty("Vector3")) \
+            .append(center.x) \
+            .append(center.y) \
+            .append(center.z) \
+    )); \
+    ret->setProperty("radius", ScriptEngineManager::getGlobal()->call("__new__", \
+        ScriptValueArgs().append(ScriptEngineManager::getGlobal()->getProperty("Vector3")) \
+            .append(radius.x) \
+            .append(radius.y) \
+            .append(radius.z) \
+    )); \
+    V8_RETURN_VALUE(ret);
+
+V8_FUNC_s(__script__modelBoundingBox, {
+    model* theModel = loadmodel(arg1);
+    if (!theModel) V8_RETURN_NULL;
+    vec center;
+    vec radius;
+    theModel->boundbox(0, center, radius);
+
+    RETURN_CENTER_RADIUS;
+});
+
+V8_FUNC_s(__script__modelCollisionBox, {
+    model* theModel = loadmodel(arg1);
+    if (!theModel) V8_RETURN_NULL;
+    vec center;
+    vec radius;
+    theModel->collisionbox(0, center, radius);
+
+    RETURN_CENTER_RADIUS;
+});
+
 // Physics
 
 V8_FUNC_s(__script__physicsCreateEngine, {
