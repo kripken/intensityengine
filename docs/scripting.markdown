@@ -70,6 +70,7 @@ From here on, the examples all build upon __1_recommended_template__.
   * We bake two plugins for guns: Firing.plugins.protocol (used by all firing entities) and Firing.plugins.player, used by players.
   * In the player's init, we add code to define the possible guns (the two we created before) and set the Insta gun as default.
   * In the application, we set clientClick to Firing.clientClick, which lets the Firing module handle clicks, so clicking can fire the guns.
+  * Note: Some guns require additional plugins. For example, rockets require the Projectiles module and plugins. See library/1_3/mapscripts for some map scripts using such weapons.
 
 * __5_eventlist__ - A simple example of a repeating event. You can use act() to run scripts each frame, but sometimes you want events to run at a lower frequency. The GameManager eventList plugin provides an easy and efficient way to do that. In this example script, we add 10 health each second.
   * We add the event in clientActivate - it will run on the client. (Note that, as written here, it will run on **all** the connected clients - each adding health to every player. Normally you would want each client to add health to just that player's entity.)
