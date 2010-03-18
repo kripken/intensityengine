@@ -82,5 +82,15 @@ From here on, the examples all build upon __1_recommended_template__.
     * entity: The entity to which this event 'belongs'. If that entity vanishes from the game, the event is stopped automatically. If you forget this, you may get crashes when players leave the game and their entities are destroyed, but the events keep trying to access them.
   * The eventList plugin allows other things, like changing the delay between repeating events, etc.; see the source code or other code examples for more info.
 
-* TODO: client-server synching example with SV
+* __6_synching__ - Example of using a State Variable to synch data between client and server. We show a tree in the map, and a particle effect in it, and the effect color depends on the distance of the player from the tree. The server calculates the distance and color, and sends that to the client, which just renders the color it is told.
+  * We define a MyTree entity class. It is based on Mapmodel, a class for mesh models that we can place in the world. We create it using bakePlugins, just like with the player class.
+    * effectColor is defined as a StateInteger - a StateVariable holding an integer value.
+    * In 'init', we initialize the effectColor, and also set the mesh model name to 'tree', so the mapmodel looks like a tree.
+    * In activate, which happens on the server, we set up a recurring event. Every 0.5 seconds, we will calculate the distances of all players from the tree, and calculate a color for the effect based on that.
+      * getEntitiesByClass is a convenient way to get all entities of a particular class. Here we use it to get all the players.
+      * We find the closest player, and decide on a color, in between red and blue.
+      * Finally, if the color is different than the existing color, we assign it into this.effectColor. This triggers a network message to the players, to synchronize the State Variable. Note though that in the code, it looks like a normal JavaScript variable: this.effectColor = newColor. But behind the scenes the API will do all the work to synchronize it.
+        * If we just assigned the value even if it didn't change, we would be sending unnecessary network messages. This wastes bandwidth, so we just send it if there is a change. Although at 0.5 messages/second, it is close to negligible anyhow.
+    * In clientActiviate, which happens on the client, we set up a recurring event to render the effect. We do so 10 times/second. The actual rendering just calls Effect.splash with the appropriate parameters, including the effect color. Note how again effectColor looks like a normal JavaScript variable.
+    * On the server, after loading the permanent entities, we also create a tree of class MyTree, using newEntity. After creating it, we set its position, by simply assigning into position (position is also a State Variable, by the way).
 
