@@ -101,9 +101,11 @@ Documentation
 -------------
 
 See the included README-* files, the contents of docs/,  and the
-Syntensity wiki:
+Syntensity wiki (http://wiki.syntensity.com). Good places to start:
 
-    http://wiki.syntensity.com
+* README-standalone.txt: Mentioned above.
+* docs/tutorial_making_a_game.markdown: How to work on games in an easy way in standalone mode.
+* docs/scripting.markdown: Teaches in a step-by-step manner the scripting API.
 
 
 Reporting Bugs
