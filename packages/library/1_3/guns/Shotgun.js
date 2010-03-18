@@ -26,6 +26,7 @@
 Library.include('library/' + Global.LIBRARY_VERSION + '/__CorePatches'); // For rayCollisionDistance
 Library.include('library/' + Global.LIBRARY_VERSION + '/Firing');
 Library.include('library/' + Global.LIBRARY_VERSION + '/EntityQueries');
+Library.include('library/' + Global.LIBRARY_VERSION + '/Events');
 
 
 Shotgun = Gun.extend({

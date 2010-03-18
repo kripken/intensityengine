@@ -25,14 +25,14 @@ Examples
 
 The docs/script_examples/ directory contains some examples of working scripts. You can look at each of them and then read the comments below, which explain what the code does.
 
-* *0_hello_world* - A very short 'hello world' example, just enough to get running. It does the following:
+* __0_hello_world__ - A very short 'hello world' example, just enough to get running. It does the following:
   * Set up default materials and so forth.
   * Set up some textures for world geometry.
   * Define a player class, a subclass of 'Player'. No new functionality is added, just a new class name ('GamePlayer').
   * Define the application - the object that defines various 'entry points' into the map code. Here we just fill in the getPcClass, which is what is called to get the name of the player entity class.
   * Load permanent map entities (could be lights, mapmodels, particle effects, etc.). We simply read a JSON file with that data, and call loadEntities.
 
-* *1_recommended_template* - Contains some additional things that are optional (our approach is 'everything is a plugin'), but highly-recommended for basically every map.
+* __1_recommended_template__ - Contains some additional things that are optional (our approach is 'everything is a plugin'), but highly-recommended for basically every map.
   * Uses the standard library, version 1.3, and imports some modules from there:
     * Plugins: Makes it easy to extend entity classes
     * Health: Defines spawning, dying, etc.
@@ -45,4 +45,33 @@ The docs/script_examples/ directory contains some examples of working scripts. Y
     * messages: Lets you send messages over the network for display on the clients
     * eventList: Manages a list of events/handlers, for scripts that run at certain times or intervals. Many library modules require this, and it is recommended to use it. Later example scripts will show how.
     * On the server, the game manager registers the teams. In this case we have just one team, 'players', and everyone will belong to it. The default model for those players (i.e., everyone) is 'stromar'.
+
+From here on, the examples all build upon __1_recommended_template__.
+
+* __2_change_speed__ - Changes the speed of the players.
+  * We add an 'init' function to our player class. 'init' is called once, when the entity is created (on the server). Here, we set the movement speed to 100 (which is btw the speed in sauerbraten).
+  * There are 5 other important functions we can add in our plugins, that get called at special times:
+    * activate: When the entity is 'brought into action'. init is called once on creation, activate is called whenever we call up the entity, for example after saving and loading it (init is not called in such cases).
+    * clientActivate: Called on the **client** when activated. Note how you write code for both the client and server, in the same map script. In many cases the same code runs on both (all the other code does that), but sometimes like with clientActivate we need to specify things otherwise.
+    * act: Called every frame.
+    * clientAct: Called every frame on the client.
+    * renderDynamic: Called to render the object (usually called several times per frame, for shadow mapping passes, etc.).
+
+* __3_plugin_example__ - A simple 'run out of breath' plugin: If you run for too long without stopping, you lose health.
+  * RunOutOfBreathPlugin is simply a JavaScript object that contains some attributes and functions. When the plugin is 'baked in', those are added to the class we are creating.
+    * maxBreath is a constant attribute, the total time before we run out of breath.
+    * In clientActivate, which is called once on startup, we set the current 'breath' to the maximum value.
+    * in clientAct, which is called each frame, we check if we are moving or strafing (this.move || this.strafe), and if so we deduct the time spent in this frame - seconds - from our breath. If we run out of breath, we deduct health.
+  * We add RunOutOfBreathPlugin to the plugins used in our player class, alongside Health.plugin.
+
+* __4_guns__ - Adds two guns to the __1_recommended_template__ map script.
+  * We include the Firing module and two gun modules, Insta and Shotgun.
+  * We create the guns, playerInstaGun and playerShotgun. In doing so we also give a name and a HUD icon for them.
+  * We bake two plugins for guns: Firing.plugins.protocol (used by all firing entities) and Firing.plugins.player, used by players.
+  * In the player's init, we add code to define the possible guns (the two we created before) and set the Insta gun as default.
+  * In the application, we set clientClick to Firing.clientClick, which lets the Firing module handle clicks, so clicking can fire the guns.
+
+* TODO: eventList example
+
+* TODO: client-server synching example with SV
 
