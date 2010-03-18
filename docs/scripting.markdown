@@ -71,7 +71,15 @@ From here on, the examples all build upon __1_recommended_template__.
   * In the player's init, we add code to define the possible guns (the two we created before) and set the Insta gun as default.
   * In the application, we set clientClick to Firing.clientClick, which lets the Firing module handle clicks, so clicking can fire the guns.
 
-* TODO: eventList example
+* __5_eventlist__ - A simple example of a repeating event. You can use act() to run scripts each frame, but sometimes you want events to run at a lower frequency. The GameManager eventList plugin provides an easy and efficient way to do that. In this example script, we add 10 health each second.
+  * We add the event in clientActivate - it will run on the client. (Note that, as written here, it will run on **all** the connected clients - each adding health to every player. Normally you would want each client to add health to just that player's entity.)
+  * eventManager.add() receives a JavaScript object. This makes it easy to define the parameters using JSON syntax.
+    * secondsBefore is how long before running the event. In this case, 0 - start immediately.
+    * secondsBetween, if defined, is how long to wait between calling the event. If not specified, the event is one-time. If specified, it will run repeatedly until the event handler returns false.
+    * func: The function, or 'handler', that is called. Note how we use bind() to keep 'this' pointing to the current object (this is required by JavaScript, which otherwise changes 'this' in function definitions, unlike normally with closures).
+      * We simply check if health is low, and if so, add 10.
+    * entity: The entity to which this event 'belongs'. If that entity vanishes from the game, the event is stopped automatically. If you forget this, you may get crashes when players leave the game and their entities are destroyed, but the events keep trying to access them.
+  * The eventList plugin allows other things, like changing the delay between repeating events, etc.; see the source code or other code examples for more info.
 
 * TODO: client-server synching example with SV
 
