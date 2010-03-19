@@ -259,6 +259,94 @@ Health = {
             }
         },
     },
+
+    //! Additional plugins provided by community members (a la django contrib.*)
+    Contrib: {
+        //! make water deadly, by quaker66
+        //! run it under ClientActivate in your GamePlayer part
+        //! needs to be initialized just once
+        //! parameters:
+        //! countnum - number of seconds to wait before killing begins
+        //! healthrestore - amount of health to restore every sec if you get out on time
+        //! healthlose - amount of health to lose every sec if you dont get out in limit
+        //! btext - text shown before number when in limit
+        //! gtext - text shown when after limit
+        //! bcolor - color of in-limit text
+        //! gcolor - color of not-in-limit text
+        //! pos1, pos2, pos3 - coordinations of HUD text
+        //! hidehud - set to 1 if you dont want the counting text
+        WaterBreathingPlugin: {
+            start: function(params) { with(params) {
+                var underwatercounter = 0;
+                var damaged = 0;
+                var count = 0;
+
+                var countnum = defaultValue(countnum, 50);
+                var healthrestore = defaultValue(healthrestore, 10);
+                var healthlose = defaultValue(healthlose, 10);
+                var btext = defaultValue(btext, "Water breathing:");
+                var gtext = defaultValue(gtext, "Get out!");
+                var bcolor = defaultValue(bcolor, 0xFFFFFF);
+                var gcolor = defaultValue(gcolor, 0xFF0000);
+                var pos1 = defaultValue(pos1, 0.5);
+                var pos2 = defaultValue(pos2, 0.6);
+                var pos3 = defaultValue(pos3, 0.5);
+                var pos3 = defaultValue(pos3, 0.5);
+                var hidehud = defaultValue(hidehud, 0);
+
+                GameManager.getSingleton().eventManager.add({
+                    secondsBefore: 0,
+                    secondsBetween: 1,
+                    func: bind(function() {
+                        if (CAPI.getMaterial(entity.position.x, entity.position.y, entity.position.z + 15) === MATERIAL.WATER && !isPlayerEditing(this)) {
+                            underwatercounter += 1;
+                            if (underwatercounter >= countnum) {
+                                if (entity.health < healthlose) {
+                                    entity.health = 0;
+                                    damaged = 0;
+                                } else {
+                                    entity.health -= healthlose;
+                                    damaged += healthlose;
+                                }
+                            }
+                        }
+                        else {
+                            underwatercounter = 0;
+                            if (damaged > 0) {
+                                if (damaged > healthrestore) {
+                                    entity.health += healthrestore;
+                                    damaged -= healthrestore;
+                                }
+                                else {
+                                    entity.health += damaged;
+                                    damaged = 0;
+                                }
+                            }
+                        }
+                    }, entity),
+                    entity: entity,
+                });
+                if (!hidehud) {
+                    GameManager.getSingleton().eventManager.add({
+                        secondsBefore: 0,
+                        secondsBetween: 0,
+                        func: bind(function() {
+                            if (CAPI.showHUDRect) {
+                                if (CAPI.getMaterial(entity.position.x, entity.position.y, entity.position.z + 15) === MATERIAL.WATER) {
+                                    count = countnum - underwatercounter
+                                    if (count > 0)
+                                        CAPI.showHUDText(btext+" "+count, pos1, pos2, pos3, bcolor);
+                                    else
+                                        CAPI.showHUDText(gtext, pos1, pos2, pos3, gcolor);
+                                    }
+                                }
+                            }, entity),
+                        entity: entity,
+                    });
+                }
+            } },
+        },
+    },
 };
 
 DeadlyArea = registerEntityClass(bakePlugins(AreaTrigger, [Health.deadlyAreaTriggerPlugin, {
