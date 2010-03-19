@@ -2053,7 +2053,7 @@ namespace MessageSystem
         Logging::log(Logging::DEBUG, "MessageSystem: Receiving a message of type NotifyPrivateEditMode (1035)\r\n");
 
 
-        IntensityGUI::showMessage("Server", "You are now in private edit mode");
+        IntensityGUI::showMessage("", "Server: You are now in private edit mode");
         ClientSystem::editingAlone = true;
     }
 #endif

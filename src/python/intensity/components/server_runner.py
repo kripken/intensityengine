@@ -33,6 +33,8 @@ from intensity.base import *
 from intensity.logging import *
 from intensity.signals import shutdown, show_components
 from intensity.asset import AssetMetadata
+from intensity.world import map_load_finish
+from intensity.message_system import *
 
 
 class Module:
@@ -181,6 +183,12 @@ def show_gui(sender, **kwargs):
     CModule.run_cubescript('guibar')
 
 show_components.connect(show_gui, weak=False)
+
+# Always enter private edit mode if masterless
+def request_private_edit(sender, **kwargs):
+    if not CModule.run_cubescript("$logged_into_master"):
+        MessageSystem.send(CModule.RequestPrivateEditMode)
+map_load_finish.connect(request_private_edit, weak=False)
 
 CModule.run_cubescript('''
     newgui local_server_output [

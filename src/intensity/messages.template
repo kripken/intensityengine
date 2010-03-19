@@ -849,7 +849,7 @@ end
 NotifyPrivateEditMode(server->client)
     implicit clientNumber
     receive:
-        IntensityGUI::showMessage("Server", "You are now in private edit mode");
+        IntensityGUI::showMessage("", "Server: You are now in private edit mode");
         ClientSystem::editingAlone = true;
 end
 
