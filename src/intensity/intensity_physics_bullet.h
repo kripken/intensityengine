@@ -47,7 +47,7 @@ class BulletPhysicsEngine : public RealisticPhysicsEngine
     btCollisionShape* m_globalStaticGeometry;
 
     //! Adds a bullet body. Takes ownership of 'shape'.
-    physicsHandle addBody(btCollisionShape *shape, float mass);
+    physicsHandle addBody(btCollisionShape *shape, float mass, bool isWorldGeometry=false);
 
     physicsHandle addConstraint(btTypedConstraint *constraint);
 

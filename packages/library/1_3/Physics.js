@@ -76,11 +76,44 @@ Physics = {
         },
     },
 
+    //! Used for Bullet physics
+    //!
+    //! You can make bullet optional in a map as follows:
+    //!            //// Setup physics
+    //!
+    //!            var BULLET = 0; // Toggle this to 1 for bullet
+    //!
+    //!            if (BULLET) {
+    //!                Library.include('library/' + Global.LIBRARY_VERSION + '/Physics');
+    //!                Projectiles.serverside = false;
+    //!                Physics.Engine.create('bullet');
+    //!                physicsPlugins = [
+    //!                    Physics.Engine.objectPlugin,
+    //!                    Physics.Engine.playerPlugin,
+    //!                ];
+    //!            } else {
+    //!                physicsPlugins = [];
+    //!            }
+    //!
+    //! and in your player class creation, add physicsPlugins to the list of
+    //! plugins, e.g. using       .concat(physicsPlugins)
+    //!
     Engine: {
-        create: function(type) {
+        create: function(type, replaceMapmodels) {
             var gravity = World.gravity;
             CAPI.physicsCreateEngine(type);
             World.gravity = gravity;
+
+            // It is best to use PhysicalMapmodel and not Mapmodel. But, if you want to load
+            // older maps, maybe for testing purposes, you can use this option to convert
+            // them at load time
+            if (Global.SERVER && replaceMapmodels) {
+                var addEntityOld = addEntity;
+                addEntity = function() {
+                    if (arguments[0] === 'Mapmodel') arguments[0] = 'PhysicalMapmodel';
+                    return addEntityOld.apply(null, arguments)
+                }
+            }
 
             // Patch projectiles to run on physics engine
             if (false) {//Projectiles) { // XXX Since isColliding now works in Bullet, no need for this code,
@@ -475,5 +508,20 @@ Physics.Engine.ServerEntity = registerEntityClass(bakePlugins(Physics.Engine.Ent
     },
 }]));
 
-// Restart map fails XXX
+PhysicalMapmodel = registerEntityClass(bakePlugins(Mapmodel, [
+    Physics.Engine.objectPlugin,
+    {
+        _class: 'PhysicalMapmodel',
+
+        init: function() {
+            this.mass = 0;
+        },
+
+        createPhysicalObject: function() {
+            var bb = CAPI.modelCollisionBox(this.modelName).radius;
+            this.eyeHeight = this.aboveEye = bb.z;
+            return CAPI.physicsAddBox(0, bb.x*2, bb.y*2, bb.z*2);
+        },
+    },
+]), "mapmodel");
 

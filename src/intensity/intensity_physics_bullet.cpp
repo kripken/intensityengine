@@ -48,11 +48,11 @@ class IntensityBulletBody : public btRigidBody
 public:
     btVector3 interpolatedPosition, interpolatedVelocity, interpolatedAngularVelocity;
     btQuaternion interpolatedRotation;
-    bool isStatic;
+    bool isWorldGeometry;
 
-    IntensityBulletBody(btScalar mass, btMotionState *motionState, btCollisionShape *collisionShape, const btVector3 &localInertia) : btRigidBody(mass, motionState, collisionShape, localInertia)
+    IntensityBulletBody(btScalar mass, btMotionState *motionState, btCollisionShape *collisionShape, const btVector3 &localInertia, bool _isWorldGeometry) : btRigidBody(mass, motionState, collisionShape, localInertia)
     {
-        isStatic = (mass == 0);
+        isWorldGeometry = _isWorldGeometry;
         interpolatedRotation.setEuler(0,0,0);
     };
 };
@@ -182,7 +182,7 @@ void BulletPhysicsEngine::clearStaticGeometry()
     for(handleBodyMap_t::iterator iter = handleBodyMap.begin(); iter != handleBodyMap.end(); iter++)
     {
         IntensityBulletBody* body = iter->second;
-        if (body->isStatic)
+        if (body->isWorldGeometry)
             toErase.push_back(iter->first);
     }
 
@@ -259,16 +259,16 @@ void BulletPhysicsEngine::finalizeStaticGeometry()
 
     DELETEP(m_globalStaticGeometry);
     m_globalStaticGeometry = new btBvhTriangleMeshShape(m_indexVertexArrays, true);
-    addBody(m_globalStaticGeometry, 0); // We rely on removal of static bodies elsewhere in the code
+    addBody(m_globalStaticGeometry, 0, true); // We rely on removal of static bodies elsewhere in the code
 }
 
-physicsHandle BulletPhysicsEngine::addBody(btCollisionShape *shape, float mass)
+physicsHandle BulletPhysicsEngine::addBody(btCollisionShape *shape, float mass, bool isWorldGeometry)
 {
     btVector3 localInertia(0, 0, 0);
     if (mass > 0)
         shape->calculateLocalInertia(mass, localInertia);
     IntensityBulletMotionState* motionState = new IntensityBulletMotionState();
-    IntensityBulletBody* body = new IntensityBulletBody(mass, motionState, shape, localInertia);
+    IntensityBulletBody* body = new IntensityBulletBody(mass, motionState, shape, localInertia, isWorldGeometry);
     motionState->parent = body;
 
 // body->setCollisionFlags( body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT); 
@@ -311,7 +311,7 @@ void BulletPhysicsEngine::removeConstraint(physicsHandle handle)
 void BulletPhysicsEngine::addStaticCube(vec o, vec r)
 {
     btVector3 halfExtents = FROM_SAUER_VEC(r);
-    physicsHandle handle = addBody(new btBoxShape(halfExtents), 0);
+    physicsHandle handle = addBody(new btBoxShape(halfExtents), 0, true);
     setBodyPosition(handle, o);
 }
 
@@ -331,7 +331,7 @@ void BulletPhysicsEngine::addStaticConvex(std::vector<vec>& vecs)
         btVector3 btRel = FROM_SAUER_VEC(rel);
         convex->addPoint(btRel);
     }
-    physicsHandle handle = addBody(convex, 0);
+    physicsHandle handle = addBody(convex, 0, true);
     setBodyPosition(handle, center);
 }
 

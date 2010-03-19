@@ -28,7 +28,7 @@ var BULLET = 0;
 if (BULLET) {
     Library.include('library/' + Global.LIBRARY_VERSION + '/Physics');
     Projectiles.serverside = false;
-    Physics.Engine.create('bullet');
+    Physics.Engine.create('bullet', true);
     physicsPlugins = [
         Physics.Engine.objectPlugin,
         Physics.Engine.playerPlugin,
