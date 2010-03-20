@@ -159,8 +159,7 @@ Physics = {
 
         setupPhysicalEntity: function(entity) {
             Global.queuedActions.push(bind(function() {
-                entity.physicsHandle = entity.createPhysicalObject();
-                CAPI.physicsSetBodyEntity(entity.physicsHandle, entity.uniqueId);
+                entity.refreshModel();
 
                 if (entity instanceof Character) {
                     entity.connect((Global.CLIENT ? 'client_' : '') + 'onModify_position', function(position) {
@@ -172,7 +171,13 @@ Physics = {
                         velocity = new Vector3(velocity);
                         CAPI.setDynentVel(this, velocity);
                     });
+                } else if (entity instanceof Mapmodel) {
+                    entity.connect((Global.CLIENT ? 'client_' : '') + 'onModify_position', function(position) {
+                        position = new Vector3(position);
+                        CAPI.setExtentO(this, position);
+                    });
                 }
+
             }, this));
         },
 
@@ -257,6 +262,27 @@ Physics = {
             clientActivate: function() { Physics.Engine.setupPhysicalEntity(this); },
             clientDeactivate: function() { Physics.Engine.teardownPhysicalEntity(this); },
 
+            //! Call this when the model changes, e.g., connect to onModify_modelName
+            refreshModel: function(modelName) {
+                Global.queuedActions.push(bind(function() {
+                    var position, rotation;
+                    if (this.physicsHandle !== undefined) {
+                        position = this.position;
+                        rotation = this.rotation;
+                    }
+                    Physics.Engine.teardownPhysicalEntity(this);
+                    this.physicsHandle = this.createPhysicalObject(modelName);
+                    if (this.physicsHandle !== undefined) {
+                        CAPI.physicsSetBodyEntity(this.physicsHandle, this.uniqueId);
+
+                        if (position && rotation) {
+                            Physics.Engine.setPosition(this, position.asArray());
+                            Physics.Engine.setRotation(this, rotation.asArray());
+                        }
+                    }
+                }, this));
+            },
+
             renderPhysical: function(modelName, offset, animation) {
                 if (this.physicsHandle === undefined) return;
 
@@ -279,6 +305,14 @@ Physics = {
         playerPlugin: {
             init: function() {
                 this.mass = 10;
+            },
+
+            activate: function() {
+                this.connect('onModify_modelName', this.refreshModel);
+            },
+
+            clientActivate: function() {
+                this.connect('client_onModify_modelName', this.refreshModel);
             },
 
             createPhysicalObject: function() {
@@ -517,8 +551,19 @@ PhysicalMapmodel = registerEntityClass(bakePlugins(Mapmodel, [
             this.mass = 0;
         },
 
-        createPhysicalObject: function() {
-            var bb = CAPI.modelCollisionBox(this.modelName).radius;
+        activate: function() {
+            this.connect('onModify_modelName', this.refreshModel);
+        },
+
+        clientActivate: function() {
+            this.connect('client_onModify_modelName', this.refreshModel);
+        },
+
+        createPhysicalObject: function(modelName) {
+            modelName = defaultValue(modelName, this.modelName);
+            var data = CAPI.modelCollisionBox(modelName);
+            if (!data) return undefined; // CAPI.physicsAddBox(0, 1, 1, 1);
+            var bb = data.radius;
             this.eyeHeight = this.aboveEye = bb.z;
             return CAPI.physicsAddBox(0, bb.x*2, bb.y*2, bb.z*2);
         },
