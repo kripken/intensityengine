@@ -276,8 +276,11 @@ Global.queuedActions = []; //!< Add actions here, that will be run the first tim
                            //!< GameManager)
 
 manageActions = function(seconds, lastmillis) {
-    forEach(Global.queuedActions, function(action) { action(); });
+    log(INFO, "manageActions: queued");
+
+    var currentActions = Global.queuedActions.slice(); // Work on copy as these may add more!
     Global.queuedActions = [];
+    forEach(currentActions, function(action) { action(); });
 
     Global.time += seconds;
     Global.currTimeDelta = seconds;
