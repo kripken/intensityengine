@@ -142,6 +142,12 @@ only thing you should do in such a case is change directory to
 where it is installed and run it from there.
 
 
+Contributing
+------------
+
+See docs/code.markdown.
+
+
 Notes
 =====
 
