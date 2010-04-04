@@ -22,6 +22,7 @@ Code Contributions
 Code contributions are very welcome.
 
 At the practical level, you can contribute a patch by opening an issue on the [Intensity Engine github page](http://github.com/kripken/intensityengine), and linking to either
+
 * a github gist with your patch, http://gist.github.com/
 * or to the commit of the patch in a fork of the Intensity Engine that you maintain, on github.
 
