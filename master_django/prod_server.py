@@ -114,7 +114,7 @@ if __name__ == '__main__':
     server = wsgiserver.CherryPyWSGIServer(
         ('0.0.0.0', int(intensity_conf.get('Network', 'port'))),
         dispatcher,
-        server_name='www.syntensity.com',
+        server_name = intensity_conf.get('Network', 'address', 'localhost'),
         numthreads = int(intensity_conf.get('Network', 'num_threads')),
         request_queue_size = int(intensity_conf.get('Network', 'request_queue_size')),
         timeout = int(intensity_conf.get('Network', 'timeout', 10)),
