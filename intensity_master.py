@@ -59,7 +59,7 @@ else:
     command_args = sys.argv[2:]
     # If no command given, default is to run the server
     if len(command_args) == 0:
-        command_args = ['runserver', intensity_conf.get('Network', 'port')]
+        command_args = ['runserver', '%s:%s' % (intensity_conf.get('Network', 'address'), intensity_conf.get('Network', 'port'))]
 
     from django.core import management
 
