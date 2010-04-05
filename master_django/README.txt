@@ -14,6 +14,8 @@ by default. See the Django docs for how to do that.
 Notes
 -----
 
+Python 2.6.x is required (for getcode() and possibly other stuff).
+
 Django 1.0 is required; Django 1.1 currently does *not* work,
 but hopefully soon will.
 
