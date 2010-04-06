@@ -24,6 +24,7 @@
  */
 
 
+//! A simple way to show text when a player stands in a particular place
 WorldNotice = registerEntityClass(bakePlugins(AreaTrigger, [{
     _class: 'WorldNotice',
     shouldAct: true,
