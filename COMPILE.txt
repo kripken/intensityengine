@@ -271,6 +271,28 @@ Compiling on FreeBSD should work by following the instructions for Linux
 as written above.
 
 
+Packaging Releases
+==================
+
+In general each platform should have a proper installer made, using
+platform-specific methods (Linux packages on Linux, Windows installers
+on Windows, etc.). But there is also tools/package_for_release.py,
+which if run where the engine is successfully compiled, will create
+a new directory with the files needed for packaging.
+
+After running it, you can simply compress that folder and distribute
+that to people. Of course it makes sense to test it beforehand, just
+do not test in that same folder, or else it will create temporary
+files there that are unnecessary in releases.
+
+On Windows package_for_release assumes it should copy over a
+./Python25 directory, containing the necessary parts of Python. You
+can change it to Python 2.6 etc. if you want. Note that the current
+packaged zips for Windows contain a ./Python25 that just has the
+necessary parts, saving download time, so you might want to copy
+that instead of using full Python 2.5.
+
+
 Advanced Usage
 ==============
 
