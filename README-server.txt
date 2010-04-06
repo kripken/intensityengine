@@ -124,10 +124,17 @@ Running a server for many people to connect to
 
 The following config settings are important:
 
-    # [Network] / address: The IP address or hostname (for example, www.yoursite.com). If you do not specify this, only people on the same physical machine will be able to connect to you. So you must set the right value here for the server to let other people play on it.
-    # [Clients] / limit: The maximum number of clients you want to allow to play at one time.
-    # [Components] / list: A optional list of components (plugins) to run. See src/python/intensity/components for those available; you can also write your own. For example, if you add intensity.components.bandwidth_watcher to the list, the server will monitor itself for excessive bandwidth use. See src/python/intensity/components/ for some available components, which are often documented in the source code. You can also easily write your own.
-    # [Network] / instance_validation: A code sent to the master, that 'proves' it is an official server, and can be added to the list of 'Pooled' servers. If invalid, or not provided, the server will be listed as 'Independent'.
+*  [Network] / address: The IP address or hostname (for example, www.yoursite.com). If you do not specify this, only people on the same physical machine will be able to connect to you. So you must set the right value here for the server to let other people play on it.
+* [Clients] / limit: The maximum number of clients you want to allow to play at one time.
+* [Components] / list: A optional list of components (plugins) to run. See src/python/intensity/components for those available; you can also write your own. For example, if you add intensity.components.bandwidth_watcher to the list, the server will monitor itself for excessive bandwidth use. See src/python/intensity/components/ for some available components, which are often documented in the source code. You can also easily write your own. Some existing useful components (in src/python/intensity/components) are:
+  * shutdown_if_empty: Shuts down the server if, after it has been entered, it ends up empty. In combination with run_server_forever, will let the server restart, ready for new requisitionings.
+  * shutdown_logger: With run_server_forever, will mark when it is shut down gracefully, and if not, when next started it will upload a crash log to the master.
+  * cpulimiter/cpu_watcher/memory_watcher/bandwidth_watcher: Can limit resource usage. Useful if you let people run their own activities. Some of these are Linux-only, sorry.
+  * irc: Sends and receives data from IRC into the game.
+  * local_storage: Save data in a persistent local database.
+  * map_control: Lets maps restart themselves from scripts.
+  * client_validator: Only let certain people login to the server.
+* [Network] / instance_validation: A code sent to the master, that 'proves' it is an official server, and can be added to the list of 'Pooled' servers. If invalid, or not provided, the server will be listed as 'Independent'.
 
 
 run_server_forever.sh
