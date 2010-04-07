@@ -40,7 +40,7 @@ WorldNotice = registerEntityClass(bakePlugins(AreaTrigger, [{
     },
 
     clientActivate: function() {
-        this.colliding = false;
+        this.collidingTime = -1;
     },
 
     clientAct: function(seconds) {
@@ -54,7 +54,7 @@ WorldNotice = registerEntityClass(bakePlugins(AreaTrigger, [{
             this.queueAction(this.noticeAction);
         }
 
-        this.colliding = true;
+        this.collidingTime = Global.time;
     },
 }]));
 
@@ -106,9 +106,7 @@ WorldNoticeAction = NoticeAction.extend({
     },
 
     shouldContinue: function() {
-        var ret = this.actor.colliding;
-        this.actor.colliding = false; // Reset to false, unless a collision occurs and sets to true
-        return ret;
+        return Global.time - this.actor.collidingTime <= 0.5;
     },
 
     doFinish: function() {
