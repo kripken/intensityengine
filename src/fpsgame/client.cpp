@@ -568,35 +568,7 @@ namespace game
 
             case SV_EDITVAR:
             {
-                if(!d) return;
-                int type = getint(p);
-                getstring(text, p);
-                string name;
-                filtertext(name, text, false, MAXSTRLEN-1);
-                ident *id = getident(name);
-                switch(type)
-                {
-                    case ID_VAR:
-                    {
-                        int val = getint(p);
-                        if(id && !(id->flags&IDF_READONLY)) setvar(name, val);
-                        break;
-                    }
-                    case ID_FVAR:
-                    {
-                        float val = getfloat(p);
-                        if(id && !(id->flags&IDF_READONLY)) setfvar(name, val);
-                        break;
-                    }
-                    case ID_SVAR:
-                    {
-                        getstring(text, p);
-                        if(id && !(id->flags&IDF_READONLY)) setsvar(name, text);
-                        break;
-                    }
-                }
-              if (id) // INTENSITY: Added this, because on server may not have all the vars
-                printvar(d, id);
+                assert(0);
                 break;
             }
 
@@ -752,34 +724,8 @@ assert(0); // Kripken: Do not let clients know other clients' pings
 
     void vartrigger(ident *id)
     {
-        if (!editmode) return; // Not in edit mode, this may be a client-side change only (e.g., personal fog setting)
-                               // So don't print anything, and don't send any messages
-                               // XXX But this might lead to slightly unexpected behaviour...
-
-#ifdef CLIENT
-        if(!ClientSystem::isAdmin())
-        {
-            Logging::log(Logging::WARNING, "vartrigger invalid\r\n");
-            return;
-        }
-#endif
-
-        switch(id->type)
-        {
-            case ID_VAR:
-                addmsg(SV_EDITVAR, "risi", ID_VAR, id->name, *id->storage.i);
-                break;
-
-            case ID_FVAR:
-                addmsg(SV_EDITVAR, "risf", ID_FVAR, id->name, *id->storage.f);
-                break;
-
-            case ID_SVAR:
-                addmsg(SV_EDITVAR, "riss", ID_SVAR, id->name, *id->storage.s);
-                break;
-            default: return;
-        }
-        printvar(player1, id);
+        // We do not use sauer protocol to update mapvars. Use our method to run a script
+        // to make each client update its map vars, or upload/restart the map.
     }
 
     ICOMMAND(getmode, "", (), intret(0)); // Prevent warnings

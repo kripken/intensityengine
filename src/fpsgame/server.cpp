@@ -547,20 +547,6 @@ namespace server
                 break;
             }
 
-            case SV_EDITVAR:
-            {
-                int type = getint(p);
-                getstring(text, p);
-                switch(type)
-                {
-                    case ID_VAR: getint(p); break;
-                    case ID_FVAR: getfloat(p); break;
-                    case ID_SVAR: getstring(text, p);
-                }
-                if(ci && ci->state.state!=CS_SPECTATOR) QUEUE_MSG;
-                break;
-            }
-
             case SV_PING:
                 sendf(sender, 1, "i2", SV_PONG, getint(p));
                 break;
