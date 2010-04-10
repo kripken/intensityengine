@@ -45,7 +45,7 @@ assert(WINDOWS or UNIX)
 # Version
 #
 
-INTENSITY_VERSION_STRING = '1.1.6'
+INTENSITY_VERSION_STRING = '1.1.7'
 
 def comparable_version(version_string):
     return tuple(map(int, version_string.split('.')))
