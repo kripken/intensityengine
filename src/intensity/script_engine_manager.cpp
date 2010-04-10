@@ -334,10 +334,21 @@ void ScriptEngineManager::runScriptNoReturn(std::string script, std::string iden
 //! cubescript command to execute a ScriptEngine script
 void run_script(char* script)
 {
-    if (ScriptEngineManager::hasEngine())
-        ScriptEngineManager::runScriptNoReturn(script, "run_script");
-    else
+    if (!ScriptEngineManager::hasEngine())
+    {
         Logging::log(Logging::WARNING, "Trying to run script '%s' without an engine\r\n", script);
+        return;
+    }
+
+#ifdef CLIENT
+    if (!ClientSystem::isAdmin())
+    {
+        Logging::log(Logging::WARNING, "Cannot run scripts when not in admin mode\r\n");
+        return;
+    }
+#endif
+
+    ScriptEngineManager::runScriptNoReturn(script, "run_script");
 }
 COMMAND(run_script, "s");
 

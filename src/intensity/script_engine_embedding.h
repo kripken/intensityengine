@@ -51,6 +51,18 @@
     ); \
     V8_RETURN_VALUE(__ret_position);
 
+//! "CubeScript 'sudo'": lets you change map vars etc. from script API calls,
+//! as if you were running this script during the map script loading.
+//! Note that we save the old value - as we may actually be during map load
+//! now.
+#define CSSUDO(script) \
+    { \
+        bool old = overrideidents; \
+        overrideidents = true; \
+        execute(script); \
+        overrideidents = old; \
+    }
+
 
 // Worldsystem
 extern void removeentity(extentity* entity);
@@ -129,7 +141,7 @@ V8_FUNC_s(__script__music, {
     std::string command = "music \"";
     command += arg1;
     command += "\" [ run_script \"Sound.musicCallback()\" ]";
-    execute(command.c_str());
+    CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_s(__script__music, {
@@ -571,7 +583,7 @@ V8_FUNC_s(__script__setShader, {
     std::string command = "setshader ";
     command += arg1;
     assert( Utility::validateAlphaNumeric(arg1) );
-    execute(command.c_str());
+    CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_s(__script__setShader, {
@@ -588,7 +600,7 @@ V8_FUNC_sdddd(__script__setShaderParam, {
     command += " " + Utility::toString((float)arg3);
     command += " " + Utility::toString((float)arg4);
     command += " " + Utility::toString((float)arg5);
-    execute(command.c_str());
+    CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_sdddd(__script__setShaderParam, {
@@ -610,7 +622,7 @@ V8_FUNC_s(__script__loadSky, {
     std::string command = "loadsky ";
     command += arg1;
     assert( Utility::validateAlphaNumeric(arg1, "/_<>:.,") );
-    execute(command.c_str());
+    CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_s(__script__loadSky, {
@@ -623,7 +635,7 @@ V8_FUNC_s(__script__fogColor, {
     std::string command = "fogcolour ";
     command += arg1;
     assert( Utility::validateAlphaNumeric(arg1) );
-    execute(command.c_str());
+    CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_s(__script__fogColor, {
@@ -635,7 +647,7 @@ V8_FUNC_s(__script__fogColor, {
 V8_FUNC_i(__script__fog, {
     std::string command = "fog ";
     command += Utility::toString(arg1);
-    execute(command.c_str());
+    CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_i(__script__fog, {
@@ -647,7 +659,7 @@ V8_FUNC_i(__script__fog, {
 V8_FUNC_i(__script__waterFog, {
     std::string command = "waterfog ";
     command += Utility::toString(arg1);
-    execute(command.c_str());
+    CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_i(__script__waterFog, {
@@ -661,7 +673,7 @@ V8_FUNC_iii(__script__waterColor, {
     command += Utility::toString(arg1) + " ";
     command += Utility::toString(arg2) + " ";
     command += Utility::toString(arg3) + " ";
-    execute(command.c_str());
+    CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_iii(__script__waterColor, {
@@ -673,7 +685,7 @@ V8_FUNC_iii(__script__waterColor, {
 V8_FUNC_d(__script__spinSky, {
     std::string command = "spinsky ";
     command += Utility::toString(arg1);
-    execute(command.c_str());
+    CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_d(__script__spinSky, {
@@ -686,7 +698,7 @@ V8_FUNC_s(__script__cloudLayer, {
     std::string command = "cloudlayer ";
     assert(Utility::validateRelativePath(arg1));
     command += Utility::toString(arg1);
-    execute(command.c_str());
+    CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_s(__script__cloudLayer, {
@@ -699,7 +711,7 @@ V8_FUNC_s(__script__cloudLayer, {
 V8_FUNC_d(__script__cloudScrollX, {
     std::string command = "cloudscrollx ";
     command += Utility::toString(arg1);
-    execute(command.c_str());
+    CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_d(__script__cloudScrollX, {
@@ -711,7 +723,7 @@ V8_FUNC_d(__script__cloudScrollX, {
 V8_FUNC_d(__script__cloudScrollY, {
     std::string command = "cloudscrolly ";
     command += Utility::toString(arg1);
-    execute(command.c_str());
+    CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_d(__script__cloudScrollY, {
@@ -723,7 +735,7 @@ V8_FUNC_d(__script__cloudScrollY, {
 V8_FUNC_d(__script__cloudScale, {
     std::string command = "cloudscale ";
     command += Utility::toString(arg1);
-    execute(command.c_str());
+    CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_d(__script__cloudScale, {
@@ -735,7 +747,7 @@ V8_FUNC_d(__script__cloudScale, {
 V8_FUNC_i(__script__skyTexture, {
     std::string command = "skytexture ";
     command += Utility::toString(arg1);
-    execute(command.c_str());
+    CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_i(__script__skyTexture, {
@@ -748,7 +760,7 @@ V8_FUNC_dd(__script__texScroll, {
     std::string command = "texscroll ";
     command += Utility::toString(arg1) + " ";
     command += Utility::toString(arg2);
-    execute(command.c_str());
+    CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_dd(__script__texScroll, {
@@ -760,7 +772,7 @@ V8_FUNC_dd(__script__texScroll, {
 V8_FUNC_i(__script__shadowmapAngle, {
     std::string command = "shadowmapangle ";
     command += Utility::toString(arg1);
-    execute(command.c_str());
+    CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_i(__script__shadowmapAngle, {
@@ -773,7 +785,7 @@ V8_FUNC_s(__script__shadowmapAmbient, {
     assert( Utility::validateAlphaNumeric(arg1, "x") ); // Allow e.g. 0xFFA033
     std::string command = "shadowmapambient ";
     command += arg1;
-    execute(command.c_str());
+    CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_s(__script__shadowmapAmbient, {
@@ -785,7 +797,7 @@ V8_FUNC_s(__script__shadowmapAmbient, {
 V8_FUNC_iii(__script__skylight, {
     std::string command = "skylight ";
     command += Utility::toString(arg1) + " " + Utility::toString(arg2) + " " + Utility::toString(arg3);
-    execute(command.c_str());
+    CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_iii(__script__skylight, {
@@ -799,7 +811,7 @@ V8_FUNC_iii(__script__skylight, {
 V8_FUNC_i(__script__blurSkylight, {
     std::string command = "blurskylight ";
     command += Utility::toString(arg1);
-    execute(command.c_str());
+    CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_i(__script__blurSkylight, {
@@ -811,7 +823,7 @@ V8_FUNC_i(__script__blurSkylight, {
 V8_FUNC_i(__script__ambient, {
     std::string command = "ambient ";
     command += Utility::toString(arg1);
-    execute(command.c_str());
+    CSSUDO(command.c_str());
 });
 #else
 V8_FUNC_i(__script__ambient, {
@@ -1121,7 +1133,7 @@ V8_FUNC_i(__script__##name, { \
     std::string command = #cmd; \
     command += " "; \
     ADD_CS_d(arg1); \
-    execute(command.c_str()); \
+    CSSUDO(command.c_str()); \
 });
 
 #define CUBESCRIPT_ii(name, cmd) \
@@ -1130,7 +1142,7 @@ V8_FUNC_ii(__script__##name, { \
     command += " "; \
     ADD_CS_d(arg1); \
     ADD_CS_d(arg2); \
-    execute(command.c_str()); \
+    CSSUDO(command.c_str()); \
 });
 
 #define CUBESCRIPT_iii(name, cmd) \
@@ -1140,7 +1152,7 @@ V8_FUNC_iii(__script__##name, { \
     ADD_CS_d(arg1); \
     ADD_CS_d(arg2); \
     ADD_CS_d(arg3); \
-    execute(command.c_str()); \
+    CSSUDO(command.c_str()); \
 });
 
 #define CUBESCRIPT_iiiii(name, cmd) \
@@ -1152,7 +1164,7 @@ V8_FUNC_iiiii(__script__##name, { \
     ADD_CS_d(arg3); \
     ADD_CS_d(arg4); \
     ADD_CS_d(arg5); \
-    execute(command.c_str()); \
+    CSSUDO(command.c_str()); \
 });
 
 #define CUBESCRIPT_d(name, cmd) \
@@ -1160,7 +1172,7 @@ V8_FUNC_d(__script__##name, { \
     std::string command = #cmd; \
     command += " "; \
     ADD_CS_d(arg1); \
-    execute(command.c_str()); \
+    CSSUDO(command.c_str()); \
 });
 
 #define CUBESCRIPT_dd(name, cmd) \
@@ -1169,7 +1181,7 @@ V8_FUNC_dd(__script__##name, { \
     command += " "; \
     ADD_CS_d(arg1); \
     ADD_CS_d(arg2); \
-    execute(command.c_str()); \
+    CSSUDO(command.c_str()); \
 });
 
 #define CUBESCRIPT_iid(name, cmd) \
@@ -1179,7 +1191,7 @@ V8_FUNC_iid(__script__##name, { \
     ADD_CS_d(arg1); \
     ADD_CS_d(arg2); \
     ADD_CS_d(arg3); \
-    execute(command.c_str()); \
+    CSSUDO(command.c_str()); \
 });
 
 #define CUBESCRIPT_ddd(name, cmd) \
@@ -1189,7 +1201,7 @@ V8_FUNC_ddd(__script__##name, { \
     ADD_CS_d(arg1); \
     ADD_CS_d(arg2); \
     ADD_CS_d(arg3); \
-    execute(command.c_str()); \
+    CSSUDO(command.c_str()); \
 });
 
 #define CUBESCRIPT_s(name, cmd) \
@@ -1197,7 +1209,7 @@ V8_FUNC_s(__script__##name, { \
     std::string command = #cmd; \
     command += " "; \
     ADD_CS_s(arg1); \
-    execute(command.c_str()); \
+    CSSUDO(command.c_str()); \
 });
 
 #define CUBESCRIPT_sd(name, cmd) \
@@ -1206,7 +1218,7 @@ V8_FUNC_sd(__script__##name, { \
     command += " "; \
     ADD_CS_s(arg1); \
     ADD_CS_d(arg2); \
-    execute(command.c_str()); \
+    CSSUDO(command.c_str()); \
 });
 
 #define CUBESCRIPT_ss(name, cmd) \
@@ -1215,7 +1227,7 @@ V8_FUNC_ss(__script__##name, { \
     command += " "; \
     ADD_CS_s(arg1); \
     ADD_CS_s(arg2); \
-    execute(command.c_str()); \
+    CSSUDO(command.c_str()); \
 });
 
 #define CUBESCRIPT_ssdd(name, cmd) \
@@ -1226,7 +1238,7 @@ V8_FUNC_ssdd(__script__##name, { \
     ADD_CS_s(arg2); \
     ADD_CS_d(arg3); \
     ADD_CS_d(arg4); \
-    execute(command.c_str()); \
+    CSSUDO(command.c_str()); \
 });
 
 #define CUBESCRIPT_sssdd(name, cmd) \
@@ -1238,7 +1250,7 @@ V8_FUNC_sssdd(__script__##name, { \
     ADD_CS_s(arg3); \
     ADD_CS_d(arg4); \
     ADD_CS_d(arg5); \
-    execute(command.c_str()); \
+    CSSUDO(command.c_str()); \
 });
 
 #define CUBESCRIPT_sdddd(name, cmd) \
@@ -1250,7 +1262,7 @@ V8_FUNC_sdddd(__script__##name, { \
     ADD_CS_d(arg3); \
     ADD_CS_d(arg4); \
     ADD_CS_d(arg5); \
-    execute(command.c_str()); \
+    CSSUDO(command.c_str()); \
 });
 
 #define CUBESCRIPT_iiddddd(name, cmd) \
@@ -1264,7 +1276,7 @@ V8_FUNC_iiddddd(__script__##name, { \
     ADD_CS_d(arg5); \
     ADD_CS_d(arg6); \
     ADD_CS_d(arg7); \
-    execute(command.c_str()); \
+    CSSUDO(command.c_str()); \
 });
 
 CUBESCRIPT_i(modelShadow, mdlshadow);
