@@ -81,6 +81,7 @@ public:
     virtual physicsHandle addSphere(float mass, float radius);
     virtual physicsHandle addBox(float mass, float rx, float ry, float rz);
     virtual physicsHandle addCapsule(float mass, float radius, float height);
+    virtual physicsHandle addMesh(float mass, std::vector<triangle> &tris);
 
     virtual void setBodyEntity(physicsHandle handle, CLogicEntity* entity);
 

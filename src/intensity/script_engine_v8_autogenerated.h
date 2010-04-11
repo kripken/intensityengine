@@ -115,6 +115,14 @@
         , wrapped_code);
 
 
+// do
+#define V8_FUNC_do(new_func, wrapped_code) \
+    V8_FUNC_GEN(new_func, \
+        double arg1 = args[0]->NumberValue(); if (ISNAN(arg1)) RAISE_SCRIPT_ERROR(isNAN failed on argument 0 in #new_func); \
+        Handle<Object> arg2 = args[1]->ToObject(); \
+        , wrapped_code);
+
+
 // iis
 #define V8_FUNC_iis(new_func, wrapped_code) \
     V8_FUNC_GEN(new_func, \

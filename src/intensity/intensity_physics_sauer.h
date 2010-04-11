@@ -35,6 +35,7 @@ public:
     virtual physicsHandle addSphere(float mass, float radius) { assert(0); return 0; };
     virtual physicsHandle addBox(float mass, float rx, float ry, float rz) { assert(0); return 0; };
     virtual physicsHandle addCapsule(float mass, float radius, float height) { assert(0); return 0; };
+    virtual physicsHandle addMesh(float mass, std::vector<triangle> &tris) { assert(0); return 0; };
 
     virtual void removeBody(physicsHandle handle) { assert(0); };
     virtual void removeConstraint(physicsHandle handle) { assert(0); };

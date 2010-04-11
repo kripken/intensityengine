@@ -225,40 +225,45 @@ void BulletPhysicsEngine::addStaticPolygon(std::vector<vec> vertexes)
     }
 }
 
+#define CREATE_MESH(staticTriangles, staticTriangleVertices, staticTriangleIndexes, indexVertexArrays, shape) \
+{ \
+    assert(staticTriangles.size() % 3 == 0); \
+    int num3 = staticTriangles.size(); \
+    int num = num3/3; \
+ \
+    staticTriangleVertices = new btVector3[num3]; \
+    staticTriangleIndexes = new int[num3]; \
+ \
+    for (int i = 0; i < num3; i++) \
+    { \
+        staticTriangleVertices[i] = staticTriangles[i]; \
+        staticTriangleIndexes[i] = i; \
+    } \
+ \
+    int vertStride = sizeof(btVector3); \
+    int indexStride = 3*sizeof(int); \
+    indexVertexArrays = new btTriangleIndexVertexArray( \
+        num, \
+        staticTriangleIndexes, \
+        indexStride, \
+        num3, \
+        (btScalar*) &staticTriangleVertices[0].x(), \
+        vertStride \
+    ); \
+ \
+    shape = new btBvhTriangleMeshShape(indexVertexArrays, true); \
+}
+
 void BulletPhysicsEngine::finalizeStaticGeometry()
 {
     if (!requiresStaticPolygons()) return;
 
-    assert(m_staticTriangles.size() % 3 == 0);
-    int num3 = m_staticTriangles.size();
-    int num = num3/3;
-
     DELETEP(m_staticTriangleVertices);
-    m_staticTriangleVertices = new btVector3[num3];
     DELETEP(m_staticTriangleIndexes);
-    m_staticTriangleIndexes = new int[num3];
-
-    // TODO: Merge shared verts?
-    for (int i = 0; i < num3; i++)
-    {
-        m_staticTriangleVertices[i] = m_staticTriangles[i];
-        m_staticTriangleIndexes[i] = i;
-    }
-
-    int vertStride = sizeof(btVector3);
-    int indexStride = 3*sizeof(int);
     DELETEP(m_indexVertexArrays);
-    m_indexVertexArrays = new btTriangleIndexVertexArray(
-        num,
-        m_staticTriangleIndexes,
-        indexStride,
-        num3,
-        (btScalar*) &m_staticTriangleVertices[0].x(),
-        vertStride
-    );
-
     DELETEP(m_globalStaticGeometry);
-    m_globalStaticGeometry = new btBvhTriangleMeshShape(m_indexVertexArrays, true);
+
+    CREATE_MESH(m_staticTriangles, m_staticTriangleVertices, m_staticTriangleIndexes, m_indexVertexArrays, m_globalStaticGeometry);
     addBody(m_globalStaticGeometry, 0, true); // We rely on removal of static bodies elsewhere in the code
 }
 
@@ -350,6 +355,32 @@ physicsHandle BulletPhysicsEngine::addBox(float mass, float rx, float ry, float 
 physicsHandle BulletPhysicsEngine::addCapsule(float mass, float radius, float height)
 {
     return addBody(new btCapsuleShape(FROM_SAUER_SCALAR(radius), FROM_SAUER_SCALAR(height)), mass);
+}
+
+physicsHandle BulletPhysicsEngine::addMesh(float mass, std::vector<triangle> &tris)
+{
+    btAlignedObjectArray<btVector3> staticTriangles;
+    btVector3* staticTriangleVertices;
+    int* staticTriangleIndexes;
+    btStridingMeshInterface* indexVertexArrays;
+    btCollisionShape* shape;
+
+    for (unsigned int i = 0; i < tris.size(); i++)
+    {
+        btVector3 currBtVec;
+        #define ADD_VEC(curr) \
+            currBtVec = FROM_SAUER_VEC(curr); \
+            staticTriangles.push_back(currBtVec);
+        ADD_VEC(tris[i].a);
+        ADD_VEC(tris[i].b);
+        ADD_VEC(tris[i].c);
+    }
+
+    CREATE_MESH(staticTriangles, staticTriangleVertices, staticTriangleIndexes, indexVertexArrays, shape);
+
+    return addBody(shape, mass);
+
+    // XXX: We need to dealloc all the structures just allocated
 }
 
 #define GET_BODY(handle, body) \

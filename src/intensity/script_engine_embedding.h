@@ -42,14 +42,18 @@
 
 #include "intensity_physics.h"
 
-#define RETURN_VECTOR3(sauervec) \
-    ScriptValuePtr __ret_position = ScriptEngineManager::getGlobal()->call("__new__", \
+#define MAKE_VECTOR3(scriptvec, sauervec) \
+    scriptvec = ScriptEngineManager::getGlobal()->call("__new__", \
         ScriptValueArgs().append(ScriptEngineManager::getGlobal()->getProperty("Vector3")) \
             .append(sauervec.x) \
             .append(sauervec.y) \
             .append(sauervec.z) \
     ); \
-    V8_RETURN_VALUE(__ret_position);
+
+#define RETURN_VECTOR3(sauervec) \
+    ScriptValuePtr __ret; \
+    MAKE_VECTOR3(__ret, sauervec) \
+    V8_RETURN_VALUE(__ret);
 
 //! "CubeScript 'sudo'": lets you change map vars etc. from script API calls,
 //! as if you were running this script during the map script loading.
@@ -1368,6 +1372,36 @@ V8_FUNC_s(__script__modelCollisionBox, {
     RETURN_CENTER_RADIUS;
 });
 
+V8_FUNC_s(__script__modelMesh, {
+    model* theModel = loadmodel(arg1);
+    if (!theModel) V8_RETURN_NULL;
+
+    vector<BIH::tri> tris2[2];
+    theModel->gentris(0, tris2);
+    vector<BIH::tri>& tris = tris2[0];
+
+    ScriptValuePtr ret = ScriptEngineManager::createScriptObject();
+    ret->setProperty("length", tris.length());
+
+    for (int i = 0; i < tris.length(); i++)
+    {
+        BIH::tri& bt = tris[i];
+        ScriptValuePtr t = ScriptEngineManager::createScriptObject();
+        ScriptValuePtr a;
+        ScriptValuePtr b;
+        ScriptValuePtr c;
+        MAKE_VECTOR3(a, bt.a);
+        MAKE_VECTOR3(b, bt.b);
+        MAKE_VECTOR3(c, bt.c);
+        t->setProperty("a", a);
+        t->setProperty("b", b);
+        t->setProperty("c", c);
+        ret->setProperty(Utility::toString(i), t);
+    }
+
+    V8_RETURN_VALUE(ret);
+});
+
 // Physics
 
 V8_FUNC_s(__script__physicsCreateEngine, {
@@ -1386,6 +1420,28 @@ V8_FUNC_dddd(__script__physicsAddBox, {
 
 V8_FUNC_ddd(__script__physicsAddCapsule, {
     physicsHandle ret = PhysicsManager::getEngine()->addCapsule(arg1, arg2, arg3);
+    V8_RETURN_INT(ret);
+});
+
+V8_FUNC_do(__script__physicsAddMesh, {
+    ScriptValuePtr scriptTris(new V8Value(ScriptEngineManager::getEngine(), arg2));
+    std::vector<triangle> tris;
+    int num = scriptTris->getPropertyInt("length");
+    for (int i = 0; i < num; i++)
+    {
+        ScriptValuePtr scriptVec;
+        #define GET_VEC(letter, v) \
+            scriptVec = scriptTris->getProperty(Utility::toString(i))->getProperty(letter); \
+            v = vec(scriptVec->getPropertyFloat("x"), scriptVec->getPropertyFloat("y"), scriptVec->getPropertyFloat("z"));
+        vec a; vec b; vec c;
+        GET_VEC("a", a);
+        GET_VEC("b", b);
+        GET_VEC("c", c);
+        triangle t(a, b, c);
+        tris.push_back(t);
+    }
+
+    physicsHandle ret = PhysicsManager::getEngine()->addMesh(arg1, tris);
     V8_RETURN_INT(ret);
 });
 

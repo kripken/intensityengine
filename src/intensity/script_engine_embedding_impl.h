@@ -308,6 +308,7 @@ EMBED_CAPI_FUNC_STD(mdlEnvmap, 2);
 
 EMBED_CAPI_FUNC_STD(modelBoundingBox, 1);
 EMBED_CAPI_FUNC_STD(modelCollisionBox, 1);
+EMBED_CAPI_FUNC_STD(modelMesh, 1);
 
 // Physics
 
@@ -315,6 +316,7 @@ EMBED_CAPI_FUNC_STD(physicsCreateEngine, 1);
 EMBED_CAPI_FUNC_STD(physicsAddSphere, 2);
 EMBED_CAPI_FUNC_STD(physicsAddBox, 4);
 EMBED_CAPI_FUNC_STD(physicsAddCapsule, 3);
+EMBED_CAPI_FUNC_STD(physicsAddMesh, 2);
 EMBED_CAPI_FUNC_STD(physicsRemoveBody, 1);
 EMBED_CAPI_FUNC_STD(physicsSetBodyEntity, 2);
 EMBED_CAPI_FUNC_STD(physicsSetBodyPosition, 4);

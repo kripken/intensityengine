@@ -561,11 +561,16 @@ PhysicalMapmodel = registerEntityClass(bakePlugins(Mapmodel, [
 
         createPhysicalObject: function(modelName) {
             modelName = defaultValue(modelName, this.modelName);
+/*
             var data = CAPI.modelCollisionBox(modelName);
             if (!data) return undefined; // CAPI.physicsAddBox(0, 1, 1, 1);
             var bb = data.radius;
             this.eyeHeight = this.aboveEye = bb.z;
             return CAPI.physicsAddBox(0, bb.x*2, bb.y*2, bb.z*2);
+*/
+            var data = CAPI.modelMesh(modelName);
+            if (!data) return undefined;
+            return CAPI.physicsAddMesh(0, data);
         },
     },
 ]), "mapmodel");

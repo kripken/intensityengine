@@ -27,7 +27,7 @@ os.chdir(os.path.dirname(__file__))
 
 strings = [
     'i', 's', 'd', 'o',
-    'ii', 'is', 'ss', 'sd', 'si', 'oi', 'ob', 'os', 'od', 'dd', 'ds',
+    'ii', 'is', 'ss', 'sd', 'si', 'oi', 'ob', 'os', 'od', 'dd', 'ds', 'do',
     'iis', 'iii', 'iid', 'ddd', 'sss',
     'oddd', 'dddd', 'iddd', 'iiss', 'iiis', 'ssdd', 'iiii',
     'sdddi', 'sssdd', 'ddddi', 'sdddd', 'iiiss', 'iiisi', 'iiiii', 'idddd',

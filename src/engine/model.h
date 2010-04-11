@@ -28,6 +28,7 @@ struct model
     virtual char *name() = 0;
     virtual int type() const = 0;
     virtual BIH *setBIH() { return 0; }
+    virtual void gentris(int frame, vector<BIH::tri> *tris) { } // INTENSITY: Made this 'public' by putting it here
     virtual bool envmapped() { return false; }
 
     virtual void setshader(Shader *shader) {}
