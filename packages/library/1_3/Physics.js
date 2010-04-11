@@ -557,6 +557,23 @@ PhysicalMapmodel = registerEntityClass(bakePlugins(Mapmodel, [
 
         clientActivate: function() {
             this.connect('client_onModify_modelName', this.refreshModel);
+
+            // Hackish way to ensure yaw is in sync, as yaw changes in sauer code are not
+            // noticed by us. FIXME: Perhaps update from in there?
+            this.lastYaw = -1000;
+            GameManager.getSingleton().eventManager.add({
+                secondsBetween: 1.0,
+                func: bind(function() {
+                    if (this.physicsHandle !== undefined) {
+                        if (this.yaw !== this.lastYaw) {
+                            Physics.Engine.setRotation(this, new Vector4().quatFromAxisAngle(new Vector3(0,0,1), this.yaw+180).asArray());
+                            this.lastYaw = this.yaw;
+                        }
+                    }
+                }, this),
+                entity: this,
+            });
+
         },
 
         createPhysicalObject: function(modelName) {
