@@ -112,6 +112,21 @@ RacingMode = {
                             size: 0.66,
                         });
 
+                        for (var i = 0; i < 3; i++) bind(function(i){
+                            this.eventManager.add({
+                                secondsBefore: 7+i,
+                                func: bind(function() {
+                                    this.addHUDMessage({
+                                        text: (3-i) + '...',
+                                        color: 0xFFEEAA,
+                                        duration: 1,
+                                        y: 0.333,
+                                        size: 1.0,
+                                    });
+                                }, this),
+                            });
+                        }, this)(i);
+
                         this.eventManager.add({
                             secondsBefore: 10,
                             func: bind(function() {
