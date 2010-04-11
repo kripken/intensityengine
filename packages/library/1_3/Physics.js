@@ -410,12 +410,12 @@ Physics = {
 
             jump: function() {
                 if (!Health.isActiveEntity(this)) return;
-//                if (this.isOnFloor() || World.getMaterial(this.position) === MATERIAL.WATER) {
+                if (this.isOnFloor() || World.getMaterial(this.position) === MATERIAL.WATER) {
 //                    this.velocity.z += this.movementSpeed*2;
                         var delta = Global.currTimeDelta;
                         CAPI.physicsAddBodyImpulse(this.physicsHandle, 0, 0, this.mass*this.movementSpeed);
 
-//                }
+                }
             },
 
             createRenderingArgs: function(mdlname, anim, o, yaw, pitch, flags, basetime) {
