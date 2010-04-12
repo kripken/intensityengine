@@ -260,9 +260,9 @@ ApplicationManager.setApplicationClass(Application.extend({
 //            WorldSignals.emit(SIGNAL.LOUD_NOISE, getPlayerEntity().getCenter());
 //        }
 //    },
-
-    actionKey: GameManager.managerPlugins.highScoreTable.actionKey,
 }));
+
+ApplicationManager.instance.connect('actionKey', GameManager.managerPlugins.highScoreTable.actionKey);
 
 // Setup game
 

@@ -150,6 +150,7 @@ Application = Class.extend({
     //! to actionkeyX in cubescript, where X is in the range 0 to 29. This lets people
     //! bind keys however they want, and games always deal with action keys 0-29.
     actionKey: function(index, down) {
+        this.emit.apply(this, ['actionKey'].concat(Array.prototype.slice.call(arguments)));
     },
 
     getScoreboardText: function() {
@@ -174,6 +175,8 @@ Application = Class.extend({
         return false;
     },
 });
+
+Object.addSignalMethods(Application.prototype);
 
 //! A simple Application class, used until replaced. This is just to prevent runtime errors in
 //! the case that the Application is *not* replaced (it should be)
