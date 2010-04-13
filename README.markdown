@@ -151,11 +151,8 @@ See docs/code.markdown.
 Notes
 =====
 
-1. The Intensity Engine is licensed under the GNU Affero General
-   Public License (GNU Affero GPL), see LICENSE.txt. For more about
-   licensing, visit our website, www.intensityengine.com.
-   (Some directories contain files under other licenses. See the
-   license descriptions in each such directory.)
+1. The Intensity Engine is licensed under the MIT/X11 
+   license. See COPYING.txt for details.
 2. For more information, including links to the mailing list,
    bugs, wiki, etc., see the main website,
 
