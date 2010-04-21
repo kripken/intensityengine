@@ -175,7 +175,8 @@ DynaPortals = {
                 portal.targetPort = port;
 
                 UserInterface.showInputDialog('Enter the portal duration in seconds (blank for 30, max 60):', function(secondsLeft) {
-                    portal.secondsLeft = secondsLeft ? Math.min(secondsLeft, 60) : 30;
+                    secondsLeft = parseFloat(secondsLeft);
+                    portal.secondsLeft = (secondsLeft && !isNaN(secondsLeft)) ? Math.min(secondsLeft, 60) : 30;
 
                     GameManager.getSingleton().newDynaPortal = portal;
                 });
