@@ -1,7 +1,7 @@
 Syntensity/the Intensity Engine is licensed under the MIT/X11 license:
 
 ==============================================================================
-Copyright (c) 2010 Alon Zakai ('kripken')
+Copyright (c) 2010 the Syntensity Contributors (see below)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ==============================================================================
+
+The Syntensity Contributors, who all agree to release their code under
+the above license, are:
+
+  * Alon 'kripken' Zakai
+
+
+------------------------------------------------------------------------------
 
 The codebase also contains code originating from Cube 2/Sauerbraten, see
 their license under src/readme_source.txt, and other open source projects
