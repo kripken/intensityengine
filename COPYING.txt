@@ -34,3 +34,7 @@ The codebase also contains code originating from Cube 2/Sauerbraten, see
 their license under src/readme_source.txt, and other open source projects
 may be bundled under thirdparty directories, with included license info.
 
+  * In addition, code has been ported from SauerEnhanced, whose license
+    is zlib (like Sauerbraten). Such code is demarked with // SAUER ENHANCED
+    Thanks to Q009 (SauerEnhanced author).
+
