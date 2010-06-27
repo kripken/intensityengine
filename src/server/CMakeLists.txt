@@ -71,6 +71,7 @@ target_link_libraries(Intensity_CServer
     ${SDLSOUND_LIBRARY}
     ${ZLIB_LIBRARIES}
     ${BULLET_LIBRARIES}
+    ${UTIL}
 )
 
 if(${WIN32})

@@ -14,6 +14,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "BSD")
     message(STATUS "...Linux...")
     add_definitions (-DLINUX)
     set(CMAKE_CXX_FLAGS "-g -O1 -Wall")# -Werror") # Due to warnings in BSD
+    set(UTIL util)
 else(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "BSD")
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
