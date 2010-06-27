@@ -96,7 +96,7 @@ Go to the V8 directory, ./src/thirdparty/v8, and run
 
     scons
 
-there. Then go back down to the base dir, and to ./cbuild, and run
+there. Then go back down to the base dir, and enter the directory 'cbuild', and run
 
     cmake ..
 
