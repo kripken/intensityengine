@@ -69,13 +69,14 @@ for x in AssetInfo.objects.all():
         g = str(x.comment)
     except UnicodeEncodeError:
         print x, "is bad"
-###        x.delete()
+        x.delete()
 # AssetInfo.objects.filter(location__startswith="base/...") # & fix it
 for x in Activity.objects.all():
     try:
         h = str(x.name)
     except UnicodeEncodeError:
         print x, "is bad"
+        x.delete()
 # Activity.objects.filter(name__startswith="...") # & fix it
 '''
 def check_ascii(value):
