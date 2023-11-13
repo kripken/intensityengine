@@ -1,4 +1,4 @@
-**This project has been inactive for many years. Links to syntensity.com no longer work. You can still find some videos on YouTube however that show what Syntensity was ([example](https://www.youtube.com/watch?v=J8KMwU1UJmw)**
+**This project has been inactive for many years. Links to syntensity.com no longer work. You can still find some videos on YouTube however that show what Syntensity was ([example](https://www.youtube.com/watch?v=J8KMwU1UJmw))**
 
 Intensity Engine
 ================
